@@ -34,7 +34,7 @@ const HeroSection = () => {
           <Button size="lg" className="shadow-btn" onClick={() => scrollTo("#pricing")}>
             View Packages <ArrowRight className="w-4 h-4 ml-2" />
           </Button>
-          <Button size="lg" variant="outline" className="border-white/30 text-white hover:bg-white/10" onClick={() => scrollTo("#contact")}>
+          <Button size="lg" variant="outline" className="border-white text-white bg-white/10 hover:bg-white/20" onClick={() => scrollTo("#contact")}>
             Talk to Us
           </Button>
         </div>
