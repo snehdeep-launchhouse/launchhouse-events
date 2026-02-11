@@ -71,7 +71,7 @@ const PricingSection = () => (
             <Button
               variant={p.featured ? "secondary" : "outline"}
               className="w-full"
-              onClick={() => window.open("https://forms.gle/YOUR_GOOGLE_FORM_ID", "_blank")}
+              onClick={() => window.open("https://docs.google.com/forms/d/e/1FAIpQLSeEYyhniQStWFKVJzK7zZionatyya3XTXS96yszdJkbE66UYQ/viewform?usp=header", "_blank")}
             >
               Get a Quote <ArrowUpRight className="w-4 h-4 ml-1" />
             </Button>
