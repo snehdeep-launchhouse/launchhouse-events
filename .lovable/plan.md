@@ -1,12 +1,18 @@
 
 
-## Add Google Analytics Tag
+## Add SEO Keywords Meta Tag
 
-Add the provided Google Analytics tracking snippet (G-JDM9N7HJD3) to `index.html`, immediately after the opening `<head>` tag.
+Add a `<meta name="keywords">` tag to `index.html` with relevant keywords for search engine crawlers.
+
+### Proposed Keywords
+
+Based on your site content (Cvent event registration management), here are the keywords I'll add:
+
+> Cvent, event registration, event management, Cvent consulting, event technology, registration management, corporate events, conference registration, event planning, LaunchHouse Events, Cvent experts, event registration setup, faster event registration, affordable event management
 
 ### Technical Details
 
 **File: `index.html`**
-- Insert the gtag.js script right after `<head>`, before the existing `<meta charset>` line
+- Add `<meta name="keywords" content="...">` after the existing `<meta name="description">` tag
 - No other files will be changed
 
