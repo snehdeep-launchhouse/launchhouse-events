@@ -1,16 +1,35 @@
+import { useNavigate, useLocation } from "react-router-dom";
 import Logo from "./Logo";
 import { Button } from "@/components/ui/button";
 
 const navLinks = [
-  { label: "Services", href: "#services" },
-  { label: "Why Us", href: "#why-us" },
-  { label: "Pricing", href: "#pricing" },
-  { label: "Contact", href: "#contact" },
+  { label: "Our Services", href: "/services", type: "route" as const },
+  { label: "Why Us", href: "#why-us", type: "scroll" as const },
+  { label: "Pricing", href: "#pricing", type: "scroll" as const },
+  { label: "Contact", href: "#contact", type: "scroll" as const },
 ];
 
 const Navbar = () => {
-  const scrollTo = (id: string) => {
-    document.querySelector(id)?.scrollIntoView({ behavior: "smooth" });
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const handleNav = (link: typeof navLinks[0]) => {
+    if (link.type === "route") {
+      navigate(link.href);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } else if (location.pathname !== "/") {
+      navigate("/" + link.href);
+    } else {
+      document.querySelector(link.href)?.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
+  const handleCta = () => {
+    if (location.pathname !== "/") {
+      navigate("/#contact");
+    } else {
+      document.querySelector("#contact")?.scrollIntoView({ behavior: "smooth" });
+    }
   };
 
   return (
@@ -21,14 +40,14 @@ const Navbar = () => {
           {navLinks.map((l) => (
             <button
               key={l.href}
-              onClick={() => scrollTo(l.href)}
+              onClick={() => handleNav(l)}
               className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
             >
               {l.label}
             </button>
           ))}
         </div>
-        <Button onClick={() => scrollTo("#contact")} size="sm">
+        <Button onClick={handleCta} size="sm">
           Get Started
         </Button>
       </div>
