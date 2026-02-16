@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Check, ArrowUpRight } from "lucide-react";
 
@@ -39,7 +40,9 @@ const additionalServices = [
   },
 ];
 
-const PricingSection = () => (
+const PricingSection = () => {
+  const navigate = useNavigate();
+  return (
   <section id="pricing" className="py-24 md:py-32">
     <div className="container">
       <div className="text-center mb-16">
@@ -56,7 +59,8 @@ const PricingSection = () => (
         {packages.map((p) => (
           <div
             key={p.name}
-            className="relative rounded-xl p-6 border transition-all duration-300 bg-primary text-primary-foreground border-primary shadow-btn"
+            onClick={() => navigate("/services")}
+            className="relative rounded-xl p-6 border transition-all duration-300 bg-primary text-primary-foreground border-primary shadow-btn cursor-pointer hover:scale-[1.03] hover:shadow-card-hover"
           >
             <h3 className="text-xl font-bold font-display mb-1">{p.name}</h3>
             <p className="text-sm mb-6 text-primary-foreground/70">
@@ -106,5 +110,7 @@ const PricingSection = () => (
     </div>
   </section>
 );
+
+};
 
 export default PricingSection;
