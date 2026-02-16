@@ -59,7 +59,7 @@ const PricingSection = () => {
         {packages.map((p) => (
           <div
             key={p.name}
-            onClick={() => navigate("/services")}
+            onClick={() => { navigate("/services"); window.scrollTo({ top: 0, behavior: "smooth" }); }}
             className="relative rounded-xl p-6 border transition-all duration-300 bg-primary text-primary-foreground border-primary shadow-btn cursor-pointer hover:scale-[1.03] hover:shadow-card-hover"
           >
             <h3 className="text-xl font-bold font-display mb-1">{p.name}</h3>
