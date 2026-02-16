@@ -79,15 +79,12 @@ const Services = () => (
         <img src={heroBanner} alt="" className="w-full h-full object-cover" />
         <div className="absolute inset-0 bg-[hsl(220,90%,10%)]/60" />
       </div>
-      <div className="container relative py-20 md:py-28 flex flex-col items-center text-center gap-6 animate-fade-in">
+      <div className="container relative py-16 md:py-22 flex flex-col items-center text-center gap-6 animate-fade-in">
         <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold font-display tracking-tight max-w-3xl leading-[1.1] text-white">
           The "White Glove" Approach to Event Tech
         </h1>
         <p className="text-lg md:text-xl text-white/80 max-w-2xl leading-relaxed">
           Reclaim your time. Let us architect the experience.
-        </p>
-        <p className="text-base text-white/60 max-w-2xl leading-relaxed">
-          Hand off the heavy lifting of website creation and registration workflows to a team that lives and breathes event technology. We translate your vision into a polished, fully branded digital reality.
         </p>
       </div>
     </section>
@@ -95,6 +92,9 @@ const Services = () => (
     {/* How Long Does It Take */}
     <section className="py-20 md:py-28">
       <div className="container">
+        <p className="text-muted-foreground text-center max-w-2xl mx-auto mb-12 leading-relaxed">
+          Hand off the heavy lifting of website creation and registration workflows to a team that lives and breathes event technology. We translate your vision into a polished, fully branded digital reality.
+        </p>
         <div className="text-center mb-4">
           <p className="text-sm font-semibold uppercase tracking-widest text-primary mb-3">Timeline</p>
           <h2 className="text-3xl md:text-4xl font-bold font-display tracking-tight">How Long Will It Take?</h2>
