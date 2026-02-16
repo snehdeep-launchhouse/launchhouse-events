@@ -10,6 +10,7 @@ import {
   Smartphone, Video, BookOpen, Headphones, Wrench,
 } from "lucide-react";
 import heroBanner from "@/assets/hero-banner.jpg";
+import eventCheckin from "@/assets/event-checkin.jpg";
 
 const GOOGLE_FORM = "https://docs.google.com/forms/d/e/1FAIpQLSeEYyhniQStWFKVJzK7zZionatyya3XTXS96yszdJkbE66UYQ/viewform?usp=header";
 
@@ -234,10 +235,14 @@ const Services = () => (
     </section>
 
     {/* Get a Quote CTA */}
-    <section className="py-20 md:py-28">
-      <div className="container text-center">
-        <h2 className="text-3xl md:text-4xl font-bold font-display tracking-tight mb-4">Ready to Get Started?</h2>
-        <p className="text-muted-foreground max-w-lg mx-auto mb-8">
+    <section className="relative py-20 md:py-28 overflow-hidden">
+      <div className="absolute inset-0">
+        <img src={eventCheckin} alt="" className="w-full h-full object-cover" />
+        <div className="absolute inset-0 bg-[hsl(220,90%,10%)]/75" />
+      </div>
+      <div className="container relative text-center">
+        <h2 className="text-3xl md:text-4xl font-bold font-display tracking-tight mb-4 text-white">Ready to Get Started?</h2>
+        <p className="text-white/80 max-w-lg mx-auto mb-8">
           Tell us about your event and we'll put together a tailored proposal within 24 hours.
         </p>
         <Button size="lg" className="shadow-btn" onClick={() => window.open(GOOGLE_FORM, "_blank")}>
