@@ -1,40 +1,37 @@
 
 
-## Add Cookie Consent Banner
+## Update Same-Day Delivery Price and Add T&C Tooltip
 
-A cookie consent banner that appears when visitors first land on the site, allowing them to accept or reject cookies (including Google Analytics).
+### Changes Overview
 
-### How It Works
+Update the price from $899 to $1,199 across all mentions, and add a "T&C Apply" text styled as a link that shows a tooltip on hover with the terms and conditions.
 
-- A banner appears at the bottom of the screen on first visit
-- Two buttons: "Accept All" and "Reject All"
-- The user's choice is saved in `localStorage` so the banner does not reappear
-- If the user rejects cookies, the Google Analytics scripts are disabled
-- If the user accepts, Google Analytics runs normally
+### Files to Modify
 
-### Technical Details
+#### 1. `src/components/HeroSection.tsx`
+- Change `$899` to `$1,199`
+- Add "T&C Apply" with a hover tooltip after the same-day delivery text
 
-#### 1. New Component: `src/components/CookieBanner.tsx`
+#### 2. `src/components/PricingSection.tsx`
+- Change `$899` in the subtitle to `$1,199`
+- Add "T&C Apply" tooltip next to the same-day delivery mention in the subtitle
+- Add "T&C Apply" tooltip inside the Simple package card's "Same-day turnaround" feature line
 
-- A fixed-position banner at the bottom of the viewport with a brief message about cookie usage
-- "Accept All" and "Reject All" buttons
-- On accept: store `cookie-consent: accepted` in localStorage, allow GA to fire
-- On reject: store `cookie-consent: rejected` in localStorage, disable GA tracking
-- On subsequent visits, check localStorage and skip showing the banner
+#### 3. `src/components/WhyUsSection.tsx`
+- Change `$899` to `$1,199` in the Same-Day Delivery card description
+- Add "T&C Apply" with hover tooltip
 
-#### 2. Update `index.html`
+### Tooltip Content (all locations use the same text)
 
-- Modify the Google Analytics script to not fire automatically
-- Instead, load it conditionally based on consent status (the component will handle enabling/disabling via `window.gtag`)
+- Applies to all Simple and eligible Medium Builds
+- Advance and Complex Builds do not qualify for Same Day Deliveries
+- Pre-Requisites for same day delivery -- Creative Assets Like Event Banner, Headers, Fonts, Branding Guidelines, Text Copies should be readily available. Also event logistics like number of registration types, sessions, Event Ticket types should be available from the onset.
+- Delays in handing the information will lead to delivery deadline being pushed
 
-#### 3. Update `src/App.tsx`
+### Technical Approach
 
-- Import and render `<CookieBanner />` alongside the existing layout so it appears on every page
-
-### Visual Design
-
-- Semi-transparent dark background bar fixed to the bottom of the screen
-- Clean text explaining cookie usage
-- Two styled buttons matching the site's existing design system (primary for Accept, outline for Reject)
-- Responsive layout that stacks buttons vertically on mobile
+- Use the existing Radix `Tooltip` component (`src/components/ui/tooltip.tsx`) already installed in the project
+- The "T&C Apply" text will be styled with an underline and primary color to look like a clickable link
+- The tooltip will display the bullet-pointed terms on hover
+- The `TooltipProvider` is already rendered in `App.tsx`, so tooltips will work globally
 
