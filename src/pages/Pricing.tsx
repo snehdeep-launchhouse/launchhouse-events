@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import TnCTooltip from "@/components/TnCTooltip";
 import {
   ArrowUpRight, DollarSign, Layers, Building2, Smartphone,
-  Headphones, Video, Code, CheckCircle2, HelpCircle,
+  Headphones, Video, Code, CheckCircle2, HelpCircle, Zap, Clock, Timer,
 } from "lucide-react";
 import heroBanner from "@/assets/hero-banner.jpg";
 import eventCheckin from "@/assets/event-checkin.jpg";
@@ -191,6 +191,53 @@ const Pricing = () => {
                 </div>
               );
             })}
+          </div>
+        </div>
+      </section>
+
+      {/* Expedited Builds */}
+      <section className="py-20 md:py-28">
+        <div className="container">
+          <div className="text-center mb-12">
+            <p className="text-sm font-semibold uppercase tracking-widest text-primary mb-3">Fast-Track</p>
+            <h2 className="text-3xl md:text-4xl font-bold font-display tracking-tight">Expedited Builds</h2>
+            <p className="text-muted-foreground mt-4 max-w-xl mx-auto">
+              Need your event live sooner? Our expedited service fast-tracks your build to the front of the queue — without compromising on quality.
+            </p>
+          </div>
+
+          <div className="max-w-3xl mx-auto rounded-xl border border-border/50 bg-card-gradient p-8 md:p-10 shadow-card hover:shadow-card-hover transition-all duration-300">
+            <div className="flex flex-col md:flex-row md:items-start gap-8">
+              <div className="flex-1">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <Zap className="w-5 h-5 text-primary" />
+                  </div>
+                  <h3 className="text-xl font-bold font-display">Priority Delivery</h3>
+                </div>
+                <p className="text-2xl font-bold font-display text-primary mb-4">$299 – $600</p>
+                <p className="text-sm text-muted-foreground leading-relaxed mb-6">
+                  When timelines are tight and deadlines are non-negotiable, our expedited service ensures your event registration is built, tested, and delivered ahead of schedule. The fee scales with the complexity of your build — a straightforward Simple registration sits at the lower end, while multi-layered Advanced or Complex builds command a higher premium.
+                </p>
+                <ul className="space-y-3 mb-6">
+                  <li className="flex items-start gap-2 text-sm text-muted-foreground">
+                    <Timer className="w-4 h-4 mt-0.5 flex-shrink-0 text-primary" />
+                    <span>Prioritised in the build queue — your project jumps to the front</span>
+                  </li>
+                  <li className="flex items-start gap-2 text-sm text-muted-foreground">
+                    <Clock className="w-4 h-4 mt-0.5 flex-shrink-0 text-primary" />
+                    <span>Accelerated turnaround without cutting corners on quality</span>
+                  </li>
+                  <li className="flex items-start gap-2 text-sm text-muted-foreground">
+                    <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0 text-primary" />
+                    <span>Available across all build tiers — Simple through Complex</span>
+                  </li>
+                </ul>
+                <Button onClick={() => window.open(GOOGLE_FORM, "_blank")}>
+                  Get Started <ArrowUpRight className="w-4 h-4 ml-1" />
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
       </section>
