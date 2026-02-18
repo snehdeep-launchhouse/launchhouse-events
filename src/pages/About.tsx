@@ -121,34 +121,6 @@ const About = () => {
         </div>
       </section>
 
-      {/* By the Numbers */}
-      <section className="py-20 md:py-28 bg-muted/30">
-        <div className="container">
-          <div className="text-center mb-12">
-            <p className="text-sm font-semibold uppercase tracking-widest text-primary mb-3">By the Numbers</p>
-            <h2 className="text-3xl md:text-4xl font-bold font-display tracking-tight">
-              The Facts Speak for Themselves
-            </h2>
-          </div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {stats.map((s) => {
-              const Icon = s.icon;
-              return (
-                <div
-                  key={s.label}
-                  className="rounded-xl border border-border/50 bg-card-gradient p-6 shadow-card hover:shadow-card-hover hover:scale-[1.02] transition-all duration-300 text-center"
-                >
-                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                    <Icon className="w-6 h-6 text-primary" />
-                  </div>
-                  <p className="text-3xl font-bold font-display text-primary mb-1">{s.value}</p>
-                  <p className="text-sm text-muted-foreground">{s.label}</p>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
 
       {/* Team DNA */}
       <section className="py-20 md:py-28">
