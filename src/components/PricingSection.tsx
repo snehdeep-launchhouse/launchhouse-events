@@ -1,12 +1,14 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Check, ArrowUpRight } from "lucide-react";
+import TnCTooltip from "@/components/TnCTooltip";
 
 const packages = [
   {
     name: "Simple",
     highlight: "Same-day delivery",
     features: ["Single-page registration", "Standard branding", "Basic email confirmation", "Same-day turnaround"],
+    hasTnC: true,
   },
   {
     name: "Medium",
@@ -51,7 +53,7 @@ const PricingSection = () => {
           Four Packages. One Goal.
         </h2>
         <p className="text-muted-foreground mt-4 max-w-xl mx-auto">
-          Starting at $899 for a same-day Simple build. Request a custom quote for your specific needs.
+          Starting at $1,199 for a same-day Simple build. <TnCTooltip /> Request a custom quote for your specific needs.
         </p>
       </div>
 
@@ -70,7 +72,10 @@ const PricingSection = () => {
               {p.features.map((f) => (
                 <li key={f} className="flex items-start gap-2 text-sm">
                   <Check className="w-4 h-4 mt-0.5 flex-shrink-0 text-primary-foreground/80" />
-                  <span>{f}</span>
+                  <span>
+                    {f}
+                    {p.hasTnC && f === "Same-day turnaround" && <> <TnCTooltip /></>}
+                  </span>
                 </li>
               ))}
             </ul>
