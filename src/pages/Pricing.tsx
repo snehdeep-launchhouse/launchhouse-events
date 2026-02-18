@@ -215,7 +215,7 @@ const Pricing = () => {
                   </div>
                   <h3 className="text-xl font-bold font-display">Priority Delivery</h3>
                 </div>
-                <p className="text-2xl font-bold font-display text-primary mb-4">$299 – $600</p>
+                <p className="text-2xl font-bold font-display text-primary mb-4">$299 – $599</p>
                 <p className="text-sm text-muted-foreground leading-relaxed mb-6">
                   When timelines are tight and deadlines are non-negotiable, our expedited service ensures your event registration is built, tested, and delivered ahead of schedule. The fee scales with the complexity of your build — a straightforward Simple registration sits at the lower end, while multi-layered Advanced or Complex builds command a higher premium.
                 </p>
