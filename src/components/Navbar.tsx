@@ -8,7 +8,7 @@ const navLinks = [
   { label: "Home", href: "/", type: "route" as const },
   { label: "Our Services", href: "/services", type: "route" as const },
   { label: "Why Us", href: "#why-us", type: "scroll" as const },
-  { label: "Pricing", href: "#pricing", type: "scroll" as const },
+  { label: "Pricing", href: "/pricing", type: "route" as const },
   { label: "Contact", href: "#contact", type: "scroll" as const },
 ];
 
