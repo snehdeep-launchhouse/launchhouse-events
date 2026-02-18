@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Zap } from "lucide-react";
 import heroBanner from "@/assets/hero-banner.jpg";
+import TnCTooltip from "@/components/TnCTooltip";
 
 const HeroSection = () => {
   const scrollTo = (id: string) => {
@@ -40,7 +41,7 @@ const HeroSection = () => {
         </div>
 
         <p className="text-sm text-white/60 mt-4">
-          Starting at <strong className="text-white">$899</strong> · Same-day delivery available
+          Starting at <strong className="text-white">$1,199</strong> · Same-day delivery available · <TnCTooltip />
         </p>
       </div>
     </section>

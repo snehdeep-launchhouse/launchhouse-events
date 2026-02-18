@@ -1,4 +1,5 @@
 import { ShieldCheck, Clock, Award, DollarSign } from "lucide-react";
+import TnCTooltip from "@/components/TnCTooltip";
 
 const reasons = [
   {
@@ -9,7 +10,8 @@ const reasons = [
   {
     icon: Clock,
     title: "Same-Day Delivery",
-    description: "Need it built today? Our Simple package includes same-day turnaround at just $899.",
+    description: "Need it built today? Our Simple package includes same-day turnaround at just $1,199.",
+    hasTnC: true,
   },
   {
     icon: DollarSign,
@@ -43,7 +45,10 @@ const WhyUsSection = () => (
               <r.icon className="w-6 h-6 text-primary" />
             </div>
             <h3 className="text-lg font-semibold font-display">{r.title}</h3>
-            <p className="text-sm text-muted-foreground leading-relaxed">{r.description}</p>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              {r.description}
+              {r.hasTnC && <> <TnCTooltip /></>}
+            </p>
           </div>
         ))}
       </div>
