@@ -186,6 +186,7 @@ const Pricing = () => {
                     onClick={() => window.open(GOOGLE_FORM, "_blank")}
                   >
                     {build.hasPrice ? "Get Started" : "Get a Quote"} <ArrowUpRight className="w-4 h-4 ml-1" />
+
                   </Button>
                 </div>
               );
@@ -219,8 +220,8 @@ const Pricing = () => {
                   <h3 className="text-lg font-bold font-display mb-1">{s.title}</h3>
                   <p className="text-2xl font-bold font-display text-primary mb-3">{s.price}</p>
                   <p className="text-sm text-muted-foreground leading-relaxed flex-1">{s.description}</p>
-                  <Button className="w-full mt-6" variant="outline" onClick={() => window.open(GOOGLE_FORM, "_blank")}>
-                    Get a Quote <ArrowUpRight className="w-4 h-4 ml-1" />
+                  <Button className="w-full mt-6" onClick={() => window.open(GOOGLE_FORM, "_blank")}>
+                    Get Started <ArrowUpRight className="w-4 h-4 ml-1" />
                   </Button>
                 </div>
               );
@@ -255,8 +256,8 @@ const Pricing = () => {
                   <h3 className="text-lg font-bold font-display mb-1">{s.title}</h3>
                   <p className="text-2xl font-bold font-display text-primary mb-3">{s.price}</p>
                   <p className="text-sm text-muted-foreground leading-relaxed flex-1">{s.description}</p>
-                  <Button className="w-full mt-6" variant="outline" onClick={() => window.open(GOOGLE_FORM, "_blank")}>
-                    Contact Us <ArrowUpRight className="w-4 h-4 ml-1" />
+                  <Button className="w-full mt-6" onClick={() => window.open(GOOGLE_FORM, "_blank")}>
+                    Get Started <ArrowUpRight className="w-4 h-4 ml-1" />
                   </Button>
                 </div>
               );
