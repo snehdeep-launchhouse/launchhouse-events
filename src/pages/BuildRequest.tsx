@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CalendarIcon, ArrowLeft, ArrowRight, X, Loader2 } from "lucide-react";
+import { CalendarIcon, ArrowLeft, ArrowRight, X, Loader2, Plus, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -69,15 +69,19 @@ const step1Schema = z.object({
   companyName: z.string().trim().min(1, "Company name is required").max(500),
 });
 
+const pocContactSchema = z.object({
+  fullName: z.string().trim().min(1, "Full name is required").max(100),
+  email: z.string().trim().email("Invalid email address").max(255),
+});
+
 const step2Schema = z.object({
-  pocNames: z.string().max(2000).optional(),
+  contacts: z.array(pocContactSchema).min(1, "At least one point of contact is required"),
   primaryPocPhone: z.string().trim().min(1, "Contact number is required").max(50),
   kickoffTimezone: z.string().min(1, "Time zone is required"),
   kickoffDate1: z.date({ required_error: "Preference 1 date is required" }),
   kickoffTime1: z.string().min(1, "Preference 1 time is required"),
   kickoffDate2: z.date().optional().nullable(),
   kickoffTime2: z.string().optional(),
-  buildEmails: z.string().max(2000).optional(),
   chosenSolutions: z.array(z.string()).min(1, "Select at least one solution"),
 });
 
@@ -134,7 +138,7 @@ const BuildRequest = () => {
   // Step 1
   const form1 = useForm<Step1>({ resolver: zodResolver(step1Schema), defaultValues: { firstName: "", lastName: "", email: "", companyName: "" } });
   // Step 2
-  const form2 = useForm<Step2>({ resolver: zodResolver(step2Schema), defaultValues: { pocNames: "", primaryPocPhone: "", kickoffTimezone: "", kickoffTime1: "", kickoffTime2: "", buildEmails: "", chosenSolutions: [] } });
+  const form2 = useForm<Step2>({ resolver: zodResolver(step2Schema), defaultValues: { contacts: [{ fullName: "", email: "" }], primaryPocPhone: "", kickoffTimezone: "", kickoffTime1: "", kickoffTime2: "", chosenSolutions: [] } });
   // Step 3
   const form3 = useForm<Step3>({ resolver: zodResolver(step3Schema), defaultValues: { accountNumber: "N/A", plannerFirstName: "", plannerLastName: "", plannerEmail: "", eventTitle: "", eventStartTime: "", eventEndTime: "", eventTimezone: "", additionalInfo: "" } });
 
@@ -326,9 +330,72 @@ const BuildRequest = () => {
           <form onSubmit={handleNext2} className="space-y-6">
             <h2 className="text-xl font-bold font-display">Contact Information</h2>
 
-            <div className="space-y-2">
-              <Label>Names of all point of contacts</Label>
-              <Textarea {...form2.register("pocNames")} placeholder="List all point of contacts for this event" />
+            {/* Dynamic POC contacts */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Label>Points of Contact *</Label>
+                {form2.watch("contacts").length < 8 && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      const current = form2.getValues("contacts");
+                      form2.setValue("contacts", [...current, { fullName: "", email: "" }], { shouldValidate: false });
+                    }}
+                    className="gap-1"
+                  >
+                    <Plus className="w-4 h-4" /> Add Contact
+                  </Button>
+                )}
+              </div>
+              {form2.watch("contacts").map((_, idx) => (
+                <div key={idx} className="rounded-lg border border-border p-4 space-y-3 relative">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-sm font-medium text-muted-foreground">Contact {idx + 1}{idx === 0 ? " (Primary)" : ""}</span>
+                    {idx > 0 && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          const current = form2.getValues("contacts");
+                          form2.setValue("contacts", current.filter((_, i) => i !== idx), { shouldValidate: true });
+                        }}
+                        className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    )}
+                  </div>
+                  <div className="grid sm:grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <Label className="text-xs">Full Name *</Label>
+                      <Input
+                        {...form2.register(`contacts.${idx}.fullName`)}
+                        placeholder="Jane Smith"
+                      />
+                      {form2.formState.errors.contacts?.[idx]?.fullName && (
+                        <p className="text-xs text-destructive">{form2.formState.errors.contacts[idx]?.fullName?.message}</p>
+                      )}
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Email Address *</Label>
+                      <Input
+                        {...form2.register(`contacts.${idx}.email`)}
+                        type="email"
+                        placeholder="jane@company.com"
+                      />
+                      {form2.formState.errors.contacts?.[idx]?.email && (
+                        <p className="text-xs text-destructive">{form2.formState.errors.contacts[idx]?.email?.message}</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+              {form2.formState.errors.contacts && !Array.isArray(form2.formState.errors.contacts) && (
+                <p className="text-sm text-destructive">{(form2.formState.errors.contacts as any).message}</p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -380,11 +447,6 @@ const BuildRequest = () => {
                   </SelectContent>
                 </Select>
               </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Email addresses for build process</Label>
-              <Textarea {...form2.register("buildEmails")} placeholder="Separate multiple emails with commas" />
             </div>
 
             {/* Cvent Links */}

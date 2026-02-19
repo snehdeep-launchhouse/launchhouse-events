@@ -26,15 +26,19 @@ serve(async (req) => {
       ["Last Name", payload.lastName ?? ""],
       ["Email Address", payload.email ?? ""],
       ["Company Name", payload.companyName ?? ""],
-      // Page 2
-      ["Names of All Point of Contacts", payload.pocNames ?? "N/A"],
+      // Page 2 - contacts
+      ...(Array.isArray(payload.contacts)
+        ? payload.contacts.map((c: { fullName: string; email: string }, i: number) => [
+            `Point of Contact ${i + 1}${i === 0 ? " (Primary)" : ""}`,
+            `${c.fullName} <${c.email}>`,
+          ] as [string, string])
+        : [["Points of Contact", "N/A"] as [string, string]]),
       ["Contact Number of Primary POC", payload.primaryPocPhone ?? ""],
       ["Preferred Time Zone (Kick Off)", payload.kickoffTimezone ?? ""],
       ["Kick Off Preference 1 – Date", payload.kickoffDate1 ?? ""],
       ["Kick Off Preference 1 – Time", payload.kickoffTime1 ?? ""],
       ["Kick Off Preference 2 – Date", payload.kickoffDate2 ?? "N/A"],
       ["Kick Off Preference 2 – Time", payload.kickoffTime2 ?? "N/A"],
-      ["Email Addresses for Build Process", payload.buildEmails ?? "N/A"],
       ["Solutions to Include", Array.isArray(payload.chosenSolutions) ? payload.chosenSolutions.join(", ") : (payload.chosenSolutions ?? "")],
       // Page 3
       ["Account Number", payload.accountNumber ?? ""],
