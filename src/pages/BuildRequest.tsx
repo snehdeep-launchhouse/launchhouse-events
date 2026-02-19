@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import DualListPicker from "@/components/DualListPicker";
 import Logo from "@/components/Logo";
+import Footer from "@/components/Footer";
 import bannerImg from "@/assets/event-checkin.jpg";
 
 /* ── Constants ──────────────────────────────────────────────────── */
@@ -593,6 +594,7 @@ const BuildRequest = () => {
           </form>
         )}
       </div>
+      <Footer />
     </div>
   );
 };
