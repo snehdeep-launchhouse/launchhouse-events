@@ -1,57 +1,63 @@
 
-## Add Privacy Policy & Terms of Service to Footer
+## Fix: Make the Terms of Service Page Fully Mobile-Friendly
 
-### Overview
-Create two new dedicated pages — Privacy Policy and Terms of Service — tailored to LaunchHouse Events / Rina Event Tech. Add links to both in the footer that open in a new tab. The pages will follow the existing site design (dark theme, branded layout with Navbar and Footer).
+### The Problem
+The Scope of Services table (Section 1) renders as a 3-column HTML table on all screen sizes. On mobile:
+- The 3 columns are too narrow to read comfortably
+- Users must scroll horizontally to see the "Out of Scope" column
+- The `overflow-x-auto` wrapper technically works but produces a poor reading experience
 
-### Content Approach
-Both pages will be specifically written for LaunchHouse Events, not generic boilerplate:
+All other sections (headings, paragraphs, bullet lists, the delivery timelines table in Section 2) are already responsive.
 
-**Privacy Policy** will cover:
-- Data collected via the Build Request form (name, email, phone, company, event details)
-- How data is used (service delivery only, no selling to third parties)
-- Data storage and retention
-- User rights (access, deletion requests via email)
-- Contact: snehdeep@launchhouse.events
-- Governing jurisdiction: India
+### Solution: Card-Based Layout on Mobile, Table on Desktop
 
-**Terms of Service** will cover:
-- Scope of services (Cvent event build and configuration)
-- Client obligations (timely provision of assets, content, feedback)
-- Delivery timelines and same-day delivery conditions (mirrors existing T&C on site)
-- Revision rounds per service tier
-- Payment terms (placeholder for you to fill in if needed)
-- Limitation of liability
-- Governing law: India
+On **mobile** (below `md` breakpoint): replace the 3-column table with stacked service cards. Each card shows:
+- Service name as a bold heading
+- "What's Included" bullet list
+- "Out of Scope" bullet list below it (if applicable), clearly labelled
 
-### Pages to Create
+On **desktop** (`md` and above): keep the existing 3-column table exactly as it is today.
 
-| File | Route | Purpose |
-|---|---|---|
-| `src/pages/PrivacyPolicy.tsx` | `/privacy-policy` | Full privacy policy page |
-| `src/pages/TermsOfService.tsx` | `/terms-of-service` | Full terms of service page |
+This is a common, well-established pattern for displaying comparison tables on mobile.
 
-### Files to Update
+### Visual Result
+
+**Mobile (stacked cards):**
+```text
+┌─────────────────────────────────┐
+│  Project Management             │
+│  ─────────────────              │
+│  INCLUDED                       │
+│  · Event setup call             │
+│  · Milestone walkthrough calls  │
+│  · ...                          │
+│                                 │
+│  OUT OF SCOPE                   │
+│  · Creation of graphics         │
+│  · ...                          │
+└─────────────────────────────────┘
+┌─────────────────────────────────┐
+│  Registration                   │
+│  ...                            │
+└─────────────────────────────────┘
+```
+
+**Desktop (unchanged 3-column table):**
+```text
+| Service     | Activities (In Scope) | Out of Scope |
+|─────────────|───────────────────────|──────────────|
+| Registration| · Path settings       | · No support |
+| Agenda      | · Sessions            |              |
+```
+
+### Files to Change
 
 | File | Change |
 |---|---|
-| `src/App.tsx` | Add two new routes: `/privacy-policy` and `/terms-of-service` |
-| `src/components/Footer.tsx` | Add Privacy Policy and Terms of Service links that open in a new tab |
+| `src/pages/TermsOfService.tsx` | 1. Update `TableRow` component to render a card layout on mobile (`md:hidden`) and keep the existing `<tr>` for desktop (`hidden md:table-row`). 2. Wrap the `<table>` in a `hidden md:block` div. 3. Add a `md:hidden` card list above the table that renders the same data as cards. |
 
-### Footer Layout After Change
-
-```text
-[ Logo ]    © 2025 LaunchHouse Events. A division of Rina Event Tech    [ Privacy Policy ]  [ Terms ]  [ Contact ]
-```
-
-On mobile it stacks vertically as the footer already does.
-
-### Page Layout
-Each policy page will:
-- Use the existing `<Navbar />` and `<Footer />` for consistency
-- Have a clean, readable layout with a page header and sectioned content
-- Match the existing dark theme and typography of the site
-- Be fully responsive on mobile
-
-### No Database Changes Required
-These are static content pages. No backend, no migrations, no edge functions needed.
+### Technical Approach
+- The `TableRow` component already receives `service`, `activities`, and `outOfScope` as props — we reuse the same data, just render it differently at different breakpoints.
+- The "Project Management" row is an inline block (not using `TableRow`) — it will also get a card version for mobile.
+- No new dependencies needed — pure Tailwind responsive classes.
+- No routing, database, or edge function changes required.
