@@ -32,11 +32,7 @@ const Navbar = () => {
 
   const handleCta = () => {
     setMobileOpen(false);
-    if (location.pathname !== "/") {
-      navigate("/#contact");
-    } else {
-      document.querySelector("#contact")?.scrollIntoView({ behavior: "smooth" });
-    }
+    window.open("/build-request", "_blank");
   };
 
   return (

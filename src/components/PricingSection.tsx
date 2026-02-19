@@ -82,7 +82,7 @@ const PricingSection = () => {
             <Button
               variant="secondary"
               className="w-full"
-              onClick={(e) => { e.stopPropagation(); window.open("https://docs.google.com/forms/d/e/1FAIpQLSeEYyhniQStWFKVJzK7zZionatyya3XTXS96yszdJkbE66UYQ/viewform?usp=header", "_blank"); }}
+              onClick={(e) => { e.stopPropagation(); window.open("/build-request", "_blank"); }}
             >
               Get a Quote <ArrowUpRight className="w-4 h-4 ml-1" />
             </Button>

@@ -10,7 +10,7 @@ import {
 import heroBanner from "@/assets/hero-banner.jpg";
 import eventCheckin from "@/assets/event-checkin.jpg";
 
-const GOOGLE_FORM = "https://docs.google.com/forms/d/e/1FAIpQLSeEYyhniQStWFKVJzK7zZionatyya3XTXS96yszdJkbE66UYQ/viewform?usp=header";
+const BUILD_REQUEST_URL = "/build-request";
 
 /* ── Event Build tiers ───────────────────────────────────────────── */
 const eventBuilds = [
@@ -183,7 +183,7 @@ const Pricing = () => {
                   <Button
                     className="w-full mt-auto"
                     variant={build.hasPrice ? "default" : "outline"}
-                    onClick={() => window.open(GOOGLE_FORM, "_blank")}
+                    onClick={() => window.open(BUILD_REQUEST_URL, "_blank")}
                   >
                     {build.hasPrice ? "Get Started" : "Get a Quote"} <ArrowUpRight className="w-4 h-4 ml-1" />
 
@@ -233,7 +233,7 @@ const Pricing = () => {
                     <span>Available across all build tiers — Simple through Complex</span>
                   </li>
                 </ul>
-                <Button onClick={() => window.open(GOOGLE_FORM, "_blank")}>
+                <Button onClick={() => window.open(BUILD_REQUEST_URL, "_blank")}>
                   Get Started <ArrowUpRight className="w-4 h-4 ml-1" />
                 </Button>
               </div>
@@ -267,7 +267,7 @@ const Pricing = () => {
                   <h3 className="text-lg font-bold font-display mb-1">{s.title}</h3>
                   <p className="text-2xl font-bold font-display text-primary mb-3">{s.price}</p>
                   <p className="text-sm text-muted-foreground leading-relaxed flex-1">{s.description}</p>
-                  <Button className="w-full mt-6" onClick={() => window.open(GOOGLE_FORM, "_blank")}>
+                  <Button className="w-full mt-6" onClick={() => window.open(BUILD_REQUEST_URL, "_blank")}>
                     Get Started <ArrowUpRight className="w-4 h-4 ml-1" />
                   </Button>
                 </div>
@@ -303,7 +303,7 @@ const Pricing = () => {
                   <h3 className="text-lg font-bold font-display mb-1">{s.title}</h3>
                   <p className="text-2xl font-bold font-display text-primary mb-3">{s.price}</p>
                   <p className="text-sm text-muted-foreground leading-relaxed flex-1">{s.description}</p>
-                  <Button className="w-full mt-6" onClick={() => window.open(GOOGLE_FORM, "_blank")}>
+                  <Button className="w-full mt-6" onClick={() => window.open(BUILD_REQUEST_URL, "_blank")}>
                     Get Started <ArrowUpRight className="w-4 h-4 ml-1" />
                   </Button>
                 </div>
@@ -326,7 +326,7 @@ const Pricing = () => {
           <p className="text-white/80 max-w-lg mx-auto mb-8">
             Tell us about your event and one of our sales consultants will reach out with a transparent, tailored quote within 24 hours.
           </p>
-          <Button size="lg" className="shadow-btn" onClick={() => window.open(GOOGLE_FORM, "_blank")}>
+          <Button size="lg" className="shadow-btn" onClick={() => window.open(BUILD_REQUEST_URL, "_blank")}>
             Contact Us <ArrowUpRight className="w-4 h-4 ml-1" />
           </Button>
         </div>
