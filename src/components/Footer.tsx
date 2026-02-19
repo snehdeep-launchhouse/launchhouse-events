@@ -9,6 +9,12 @@ const Footer = () => (
         <p>All rights reserved.</p>
       </div>
       <div className="flex gap-6 text-sm text-muted-foreground">
+        <a href="/privacy-policy" className="hover:text-primary transition-colors" target="_blank" rel="noopener noreferrer">
+          Privacy Policy
+        </a>
+        <a href="/terms-of-service" className="hover:text-primary transition-colors" target="_blank" rel="noopener noreferrer">
+          Terms
+        </a>
         <a href="mailto:snehdeep@launchhouse.events" className="hover:text-primary transition-colors" target="_blank" rel="noopener noreferrer">
           Contact
         </a>
