@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -16,6 +17,11 @@ serve(async (req) => {
     if (!RESEND_API_KEY) {
       throw new Error("RESEND_API_KEY is not configured");
     }
+
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
 
     const payload = await req.json();
 
@@ -151,6 +157,36 @@ serve(async (req) => {
 </html>`;
 
     
+    // Log submission to database
+    const { error: dbError } = await supabase.from("build_requests").insert({
+      first_name: payload.firstName ?? "",
+      last_name: payload.lastName ?? "",
+      email: payload.email ?? "",
+      company_name: payload.companyName ?? "",
+      contacts: payload.contacts ?? [],
+      primary_poc_phone: payload.primaryPocPhone ?? null,
+      kickoff_timezone: payload.kickoffTimezone ?? null,
+      kickoff_date_1: payload.kickoffDate1 ?? null,
+      kickoff_time_1: payload.kickoffTime1 ?? null,
+      kickoff_date_2: payload.kickoffDate2 ?? null,
+      kickoff_time_2: payload.kickoffTime2 ?? null,
+      chosen_solutions: Array.isArray(payload.chosenSolutions) ? payload.chosenSolutions : [],
+      account_number: payload.accountNumber ?? null,
+      planner_first_name: payload.plannerFirstName ?? null,
+      planner_last_name: payload.plannerLastName ?? null,
+      planner_email: payload.plannerEmail ?? null,
+      event_title: payload.eventTitle ?? "",
+      event_start_date: payload.eventStartDate ?? null,
+      event_start_time: payload.eventStartTime ?? null,
+      event_end_date: payload.eventEndDate ?? null,
+      event_end_time: payload.eventEndTime ?? null,
+      event_timezone: payload.eventTimezone ?? null,
+      go_live_date: payload.goLiveDate ?? null,
+      additional_info: payload.additionalInfo ?? null,
+      email_status: "sending",
+    });
+    if (dbError) console.error("DB insert error:", dbError);
+
     // Send sequentially to respect Resend's 2 req/sec rate limit
     const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -174,6 +210,16 @@ serve(async (req) => {
     results.push(await sendEmail({ from: "LaunchHouse Events <noreply@launchhouse.events>", to: ["snehdeep@launchhouse.events"], subject, html: htmlBody }));
     await sleep(600);
     results.push(await sendEmail({ from: "LaunchHouse Events <noreply@launchhouse.events>", to: [payload.email], subject: `We've received your build request – ${payload.eventTitle ?? "Your Event"}`, html: confirmationHtml }));
+
+    // Update email_status to 'sent'
+    if (!dbError) {
+      await supabase
+        .from("build_requests")
+        .update({ email_status: "sent" })
+        .eq("email", payload.email ?? "")
+        .order("submitted_at", { ascending: false })
+        .limit(1);
+    }
 
     return new Response(
       JSON.stringify({ success: true, results }),
