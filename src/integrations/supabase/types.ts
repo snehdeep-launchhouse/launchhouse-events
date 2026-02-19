@@ -22,6 +22,7 @@ export type Database = {
           company_name: string
           contacts: Json
           email: string
+          email_sent_at: string | null
           email_status: string
           event_end_date: string | null
           event_end_time: string | null
@@ -51,6 +52,7 @@ export type Database = {
           company_name: string
           contacts?: Json
           email: string
+          email_sent_at?: string | null
           email_status?: string
           event_end_date?: string | null
           event_end_time?: string | null
@@ -80,6 +82,7 @@ export type Database = {
           company_name?: string
           contacts?: Json
           email?: string
+          email_sent_at?: string | null
           email_status?: string
           event_end_date?: string | null
           event_end_time?: string | null

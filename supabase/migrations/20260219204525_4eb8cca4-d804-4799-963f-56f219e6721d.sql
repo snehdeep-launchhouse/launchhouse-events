@@ -1,0 +1,1 @@
+ALTER TABLE public.build_requests ADD COLUMN email_sent_at TIMESTAMP WITH TIME ZONE;

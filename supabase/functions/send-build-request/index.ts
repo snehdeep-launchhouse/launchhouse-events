@@ -211,11 +211,11 @@ serve(async (req) => {
     await sleep(600);
     results.push(await sendEmail({ from: "LaunchHouse Events <noreply@launchhouse.events>", to: [payload.email], subject: `We've received your build request – ${payload.eventTitle ?? "Your Event"}`, html: confirmationHtml }));
 
-    // Update email_status to 'sent'
+    // Update email_status and email_sent_at after successful delivery
     if (!dbError) {
       await supabase
         .from("build_requests")
-        .update({ email_status: "sent" })
+        .update({ email_status: "sent", email_sent_at: new Date().toISOString() })
         .eq("email", payload.email ?? "")
         .order("submitted_at", { ascending: false })
         .limit(1);
