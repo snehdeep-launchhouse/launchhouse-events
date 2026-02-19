@@ -189,15 +189,68 @@ const BuildRequest = () => {
   };
 
   if (submitted) {
+    const s1 = form1.getValues();
+    const s3 = form3.getValues();
     return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6">
-        <div className="max-w-md text-center space-y-4">
-          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
-            <svg className="w-8 h-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+      <div className="min-h-screen bg-background flex flex-col">
+        {/* Header strip */}
+        <div className="bg-primary py-5 px-6 flex items-center justify-center">
+          <Logo />
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 flex items-center justify-center p-6">
+          <div className="max-w-lg w-full text-center space-y-8">
+            {/* Checkmark */}
+            <div className="flex flex-col items-center gap-4">
+              <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center">
+                <svg className="w-10 h-10 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold font-display">Request Submitted!</h1>
+                <p className="text-muted-foreground mt-1 text-lg">
+                  Thank you, {s1.firstName}!
+                </p>
+              </div>
+            </div>
+
+            {/* Summary card */}
+            <div className="rounded-xl border border-border bg-card p-6 text-left space-y-4">
+              <h2 className="font-semibold font-display text-base">What happens next?</h2>
+              <ol className="space-y-3 text-sm text-muted-foreground list-none">
+                <li className="flex gap-3">
+                  <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs">1</span>
+                  <span>Our team will review your build request for <strong className="text-foreground">{s3.eventTitle}</strong>.</span>
+                </li>
+                <li className="flex gap-3">
+                  <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs">2</span>
+                  <span>We'll confirm your preferred kick-off call date and send you a calendar invite.</span>
+                </li>
+                <li className="flex gap-3">
+                  <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs">3</span>
+                  <span>A confirmation email has been sent to <strong className="text-foreground">{s1.email}</strong>.</span>
+                </li>
+              </ol>
+            </div>
+
+            <p className="text-sm text-muted-foreground">
+              Questions? Email us at{" "}
+              <a href="mailto:sam@launchhouse.events" className="text-primary underline hover:text-primary/80">
+                sam@launchhouse.events
+              </a>
+            </p>
+
+            <Button onClick={() => window.close()} size="lg" className="w-full sm:w-auto">
+              Close Window
+            </Button>
           </div>
-          <h1 className="text-2xl font-bold font-display">Thank You!</h1>
-          <p className="text-muted-foreground">Your build request has been submitted successfully. Our team will review your details and get back to you shortly.</p>
-          <Button onClick={() => window.close()}>Close Window</Button>
+        </div>
+
+        {/* Footer */}
+        <div className="py-4 text-center text-xs text-muted-foreground border-t border-border">
+          © {new Date().getFullYear()} LaunchHouse Events. All rights reserved.
         </div>
       </div>
     );
