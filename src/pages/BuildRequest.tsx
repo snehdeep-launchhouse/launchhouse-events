@@ -136,7 +136,7 @@ const BuildRequest = () => {
   // Step 2
   const form2 = useForm<Step2>({ resolver: zodResolver(step2Schema), defaultValues: { pocNames: "", primaryPocPhone: "", kickoffTimezone: "", kickoffTime1: "", kickoffTime2: "", buildEmails: "", chosenSolutions: [] } });
   // Step 3
-  const form3 = useForm<Step3>({ resolver: zodResolver(step3Schema), defaultValues: { accountNumber: "", plannerFirstName: "", plannerLastName: "", plannerEmail: "", eventTitle: "", eventStartTime: "", eventEndTime: "", eventTimezone: "", additionalInfo: "" } });
+  const form3 = useForm<Step3>({ resolver: zodResolver(step3Schema), defaultValues: { accountNumber: "N/A", plannerFirstName: "", plannerLastName: "", plannerEmail: "", eventTitle: "", eventStartTime: "", eventEndTime: "", eventTimezone: "", additionalInfo: "" } });
 
   const [availableSolutions, setAvailableSolutions] = useState<string[]>([...SOLUTIONS]);
   const [chosenSolutions, setChosenSolutions] = useState<string[]>([]);
