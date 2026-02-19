@@ -146,49 +146,30 @@ serve(async (req) => {
 </body>
 </html>`;
 
-    // Send internal notifications + confirmation email in parallel
-    const sendInternal = Promise.all(
-      internalRecipients.map((to) =>
-        fetch("https://api.resend.com/emails", {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${RESEND_API_KEY}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            from: "LaunchHouse Events <noreply@launchhouse.events>",
-            to: [to.email],
-            subject,
-            html: htmlBody,
-          }),
-        }).then(async (res) => {
-          const body = await res.json();
-          if (!res.ok) throw new Error(`Resend API error [${res.status}]: ${JSON.stringify(body)}`);
-          return body;
-        })
-      )
-    );
+    
+    // Send sequentially to respect Resend's 2 req/sec rate limit
+    const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-    const sendConfirmation = fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${RESEND_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        from: "LaunchHouse Events <noreply@launchhouse.events>",
-        to: [payload.email],
-        subject: `We've received your build request – ${payload.eventTitle ?? "Your Event"}`,
-        html: confirmationHtml,
-      }),
-    }).then(async (res) => {
-      const body = await res.json();
-      if (!res.ok) throw new Error(`Resend confirmation error [${res.status}]: ${JSON.stringify(body)}`);
-      return body;
-    });
+    const sendEmail = async (body: object) => {
+      const res = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${RESEND_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(`Resend API error [${res.status}]: ${JSON.stringify(json)}`);
+      return json;
+    };
 
-    const [internalResults, confirmationResult] = await Promise.all([sendInternal, sendConfirmation]);
-    const results = [...internalResults, confirmationResult];
+    const results = [];
+    results.push(await sendEmail({ from: "LaunchHouse Events <noreply@launchhouse.events>", to: ["sam@launchhouse.events"], subject, html: htmlBody }));
+    await sleep(600);
+    results.push(await sendEmail({ from: "LaunchHouse Events <noreply@launchhouse.events>", to: ["snehdeep@launchhouse.events"], subject, html: htmlBody }));
+    await sleep(600);
+    results.push(await sendEmail({ from: "LaunchHouse Events <noreply@launchhouse.events>", to: [payload.email], subject: `We've received your build request – ${payload.eventTitle ?? "Your Event"}`, html: confirmationHtml }));
 
     return new Response(
       JSON.stringify({ success: true, results }),
