@@ -14,7 +14,96 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      build_requests: {
+        Row: {
+          account_number: string | null
+          additional_info: string | null
+          chosen_solutions: string[]
+          company_name: string
+          contacts: Json
+          email: string
+          email_status: string
+          event_end_date: string | null
+          event_end_time: string | null
+          event_start_date: string | null
+          event_start_time: string | null
+          event_timezone: string | null
+          event_title: string
+          first_name: string
+          go_live_date: string | null
+          id: string
+          kickoff_date_1: string | null
+          kickoff_date_2: string | null
+          kickoff_time_1: string | null
+          kickoff_time_2: string | null
+          kickoff_timezone: string | null
+          last_name: string
+          planner_email: string | null
+          planner_first_name: string | null
+          planner_last_name: string | null
+          primary_poc_phone: string | null
+          submitted_at: string
+        }
+        Insert: {
+          account_number?: string | null
+          additional_info?: string | null
+          chosen_solutions?: string[]
+          company_name: string
+          contacts?: Json
+          email: string
+          email_status?: string
+          event_end_date?: string | null
+          event_end_time?: string | null
+          event_start_date?: string | null
+          event_start_time?: string | null
+          event_timezone?: string | null
+          event_title: string
+          first_name: string
+          go_live_date?: string | null
+          id?: string
+          kickoff_date_1?: string | null
+          kickoff_date_2?: string | null
+          kickoff_time_1?: string | null
+          kickoff_time_2?: string | null
+          kickoff_timezone?: string | null
+          last_name: string
+          planner_email?: string | null
+          planner_first_name?: string | null
+          planner_last_name?: string | null
+          primary_poc_phone?: string | null
+          submitted_at?: string
+        }
+        Update: {
+          account_number?: string | null
+          additional_info?: string | null
+          chosen_solutions?: string[]
+          company_name?: string
+          contacts?: Json
+          email?: string
+          email_status?: string
+          event_end_date?: string | null
+          event_end_time?: string | null
+          event_start_date?: string | null
+          event_start_time?: string | null
+          event_timezone?: string | null
+          event_title?: string
+          first_name?: string
+          go_live_date?: string | null
+          id?: string
+          kickoff_date_1?: string | null
+          kickoff_date_2?: string | null
+          kickoff_time_1?: string | null
+          kickoff_time_2?: string | null
+          kickoff_timezone?: string | null
+          last_name?: string
+          planner_email?: string | null
+          planner_first_name?: string | null
+          planner_last_name?: string | null
+          primary_poc_phone?: string | null
+          submitted_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
