@@ -55,6 +55,9 @@ const Navbar = () => {
           <Button onClick={handleCta} size="sm" className="hidden md:inline-flex">
             Get Started
           </Button>
+          <Button onClick={handleCta} size="sm" className="md:hidden">
+            Get Started
+          </Button>
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
             className="md:hidden p-2 text-foreground"
