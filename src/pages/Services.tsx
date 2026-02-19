@@ -12,7 +12,7 @@ import {
 import heroBanner from "@/assets/hero-banner.jpg";
 import eventCheckin from "@/assets/event-checkin.jpg";
 
-const GOOGLE_FORM = "https://docs.google.com/forms/d/e/1FAIpQLSeEYyhniQStWFKVJzK7zZionatyya3XTXS96yszdJkbE66UYQ/viewform?usp=header";
+const BUILD_REQUEST_URL = "/build-request";
 
 /* ── Timeline benchmarks ─────────────────────────────────────────── */
 const benchmarks = [
@@ -245,7 +245,7 @@ const Services = () => (
         <p className="text-white/80 max-w-lg mx-auto mb-8">
           Tell us about your event and we'll put together a tailored proposal within 24 hours.
         </p>
-        <Button size="lg" className="shadow-btn" onClick={() => window.open(GOOGLE_FORM, "_blank")}>
+        <Button size="lg" className="shadow-btn" onClick={() => window.open(BUILD_REQUEST_URL, "_blank")}>
           Get a Quote <ArrowUpRight className="w-4 h-4 ml-1" />
         </Button>
       </div>
