@@ -8,7 +8,41 @@ const Section = ({ title, children }: { title: string; children: React.ReactNode
   </section>
 );
 
-const TableRow = ({ service, activities, outOfScope }: { service: string; activities: string[]; outOfScope?: string[] }) => (
+interface ServiceRowData {
+  service: string;
+  activities: string[];
+  outOfScope?: string[];
+}
+
+const ServiceCard = ({ service, activities, outOfScope }: ServiceRowData) => (
+  <div className="rounded-lg border border-border/40 p-4 space-y-3">
+    <h3 className="font-semibold text-foreground text-sm">{service}</h3>
+    <div>
+      <p className="text-xs font-semibold uppercase tracking-wider text-primary mb-1.5">Included</p>
+      <ul className="space-y-1">
+        {activities.map((a, i) => (
+          <li key={i} className="text-sm flex gap-2 text-muted-foreground">
+            <span className="text-primary mt-1 shrink-0">·</span><span>{a}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+    {outOfScope && outOfScope.length > 0 && (
+      <div>
+        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">Out of Scope</p>
+        <ul className="space-y-1">
+          {outOfScope.map((o, i) => (
+            <li key={i} className="text-sm flex gap-2 text-muted-foreground/70">
+              <span className="text-muted-foreground/50 mt-1 shrink-0">·</span><span>{o}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    )}
+  </div>
+);
+
+const TableRow = ({ service, activities, outOfScope }: ServiceRowData) => (
   <tr className="border-b border-border/40">
     <td className="py-3 pr-4 align-top font-medium text-foreground w-1/5 text-sm">{service}</td>
     <td className="py-3 pr-4 align-top w-2/5">
@@ -29,6 +63,171 @@ const TableRow = ({ service, activities, outOfScope }: { service: string; activi
     </td>
   </tr>
 );
+
+const serviceRows: ServiceRowData[] = [
+  {
+    service: "Registration",
+    activities: [
+      "Path setting configurations",
+      "Registration questions/fields setup",
+      "Implementation of industry best practices",
+      "Complete testing and auditing before review submission",
+    ],
+    outOfScope: ["No support after event goes live unless purchased premium"],
+  },
+  {
+    service: "Agenda",
+    activities: [
+      "Implementation of admission items",
+      "Sessions",
+      "Optional items",
+      "Registration type availability",
+      "Session groups",
+    ],
+  },
+  {
+    service: "Fee",
+    activities: [
+      "Implementation of fee on individual items",
+      "Setting up refund policy if applicable",
+      "Associating available merchant account with the event",
+      "Assisting in conducting a test transaction before event launch",
+    ],
+    outOfScope: ["Associating merchant account with Cvent account"],
+  },
+  {
+    service: "Website",
+    activities: [
+      "Implementation of graphics provided by client",
+      "Activation of relevant web pages pertaining to client's request and event setup",
+      "Implementation of industry best practices",
+    ],
+  },
+  {
+    service: "Email",
+    activities: [
+      "Default email templates creation",
+      "Custom email templates based on event requirements",
+      "Implementation of graphics on email header and footer as provided by client",
+    ],
+  },
+  {
+    service: "Feedback Surveys",
+    activities: [
+      "Creation of questions as required based on Basic or Premium survey licence",
+      "Implementation of graphics as provided",
+    ],
+  },
+  {
+    service: "Reports",
+    activities: [
+      "Implementation of Master report",
+      "Custom reports based on client's requirements",
+    ],
+    outOfScope: ["Manual report tracking"],
+  },
+  {
+    service: "Speaker Resource Centre / Speaker Management",
+    activities: [
+      "Importing in bulk or creating speakers manually",
+      "Uploading speaker headshots",
+      "Sending speaker invitation email",
+      "Creating tasks as requested by client",
+      "Implementation of graphics as provided",
+    ],
+    outOfScope: [
+      "Speaker training",
+      "Moderator training",
+      "Speaker support",
+      "Group technical training",
+    ],
+  },
+  {
+    service: "Exhibitor Management",
+    activities: [
+      "Importing in bulk or creating exhibitors manually",
+      "Sending exhibitor invitation email",
+      "Creating exhibitor default templates",
+      "Creating tasks as requested by client",
+      "Exhibitor portal configuration settings",
+      "Sponsored sessions",
+      "Virtual Booth configuration",
+    ],
+    outOfScope: ["Exhibitor training"],
+  },
+  {
+    service: "Appointments",
+    activities: [
+      "Appointments setup configurations",
+      "Test appointment setup",
+      "Schedule rules, group assignments, time slots etc.",
+      "Virtual appointment setup",
+    ],
+    outOfScope: ["Appointment training"],
+  },
+  {
+    service: "Virtual Attendee Hub",
+    activities: [
+      "Implementation of graphics as provided by client",
+      "Settings configuration",
+      "Attendee hub walkthrough call",
+      "Event app walkthrough",
+      "Event app configuration",
+      "Dry run call",
+    ],
+    outOfScope: [
+      "Speaker or moderator trainings",
+      "Technical trainings",
+      "Day of support",
+      "Branded event app submission",
+    ],
+  },
+  {
+    service: "Cvent Studio",
+    activities: [
+      "Session configuration",
+      "Cvent Studio walkthrough",
+      "Cvent Studio prep call",
+      "Cvent Studio dry run",
+    ],
+    outOfScope: [
+      "Cvent Studio training",
+      "Video player in session configuration",
+      "Day of support",
+      "Debrief call",
+    ],
+  },
+];
+
+const projectMgmtActivities = [
+  "Event setup call (registration and website)",
+  "Milestone walkthrough calls (round of changes)",
+  "Project Plan and Timeline Creation",
+  "Project/Event consultation",
+  "Coordination and tracking of project activities",
+  "Outline of client deliverables",
+  "Email response within 1 business day",
+  "Virtual Event Platform configuration including implementation of client-provided graphics and virtual session configuration",
+  "Exhibitor portal/management configuration",
+  "Speaker Resource Center configuration",
+  "Appointment configuration",
+  "Feedback survey implementation",
+  "Timely delivery of drafts",
+  "Issue tracking and management",
+  "Testing of all deliverables prior to launch",
+  "Report creation and modification",
+  "Final sign off",
+];
+
+const projectMgmtOutOfScope = [
+  "Questions related to Advance Production, Day of Support, Trainings, Merchant account setup, Custom domain setup",
+  "Dry/Test Run – Virtual Session Configuration if a Project Manager is involved",
+  "Creation of graphics",
+  "Integration implementation, configuration, and support",
+  "Working with non-Cvent products",
+  "Content creation, including translation services",
+  "Staffing or support in-person at events",
+];
 
 const TermsOfService = () => (
   <div className="min-h-screen flex flex-col bg-background">
@@ -56,10 +255,24 @@ const TermsOfService = () => (
           </div>
         </section>
 
-        {/* Scope of Services Table */}
+        {/* Scope of Services */}
         <Section title="1. Event Build Scope of Services">
-          <p className="mb-4">The following table outlines what is included and excluded for each service area in a standard event build engagement.</p>
-          <div className="overflow-x-auto rounded-lg border border-border/40">
+          <p className="mb-4">The following outlines what is included and excluded for each service area in a standard event build engagement.</p>
+
+          {/* Mobile: Cards */}
+          <div className="md:hidden space-y-4">
+            <ServiceCard
+              service="Project Management (General)"
+              activities={projectMgmtActivities}
+              outOfScope={projectMgmtOutOfScope}
+            />
+            {serviceRows.map((row) => (
+              <ServiceCard key={row.service} {...row} />
+            ))}
+          </div>
+
+          {/* Desktop: Table */}
+          <div className="hidden md:block overflow-x-auto rounded-lg border border-border/40">
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-muted/30 border-b border-border/40">
@@ -73,177 +286,22 @@ const TermsOfService = () => (
                   <td className="py-3 pl-4 pr-4 align-top font-medium text-foreground text-sm">Project Management (General)</td>
                   <td className="py-3 pr-4 align-top">
                     <ul className="space-y-1">
-                      {[
-                        "Event setup call (registration and website)",
-                        "Milestone walkthrough calls (round of changes)",
-                        "Project Plan and Timeline Creation",
-                        "Project/Event consultation",
-                        "Coordination and tracking of project activities",
-                        "Outline of client deliverables",
-                        "Email response within 1 business day",
-                        "Virtual Event Platform configuration including implementation of client-provided graphics and virtual session configuration",
-                        "Exhibitor portal/management configuration",
-                        "Speaker Resource Center configuration",
-                        "Appointment configuration",
-                        "Feedback survey implementation",
-                        "Timely delivery of drafts",
-                        "Issue tracking and management",
-                        "Testing of all deliverables prior to launch",
-                        "Report creation and modification",
-                        "Final sign off",
-                      ].map((a, i) => (
+                      {projectMgmtActivities.map((a, i) => (
                         <li key={i} className="text-sm flex gap-2"><span className="text-primary mt-1 shrink-0">·</span><span>{a}</span></li>
                       ))}
                     </ul>
                   </td>
                   <td className="py-3 align-top">
                     <ul className="space-y-1">
-                      {[
-                        "Questions related to Advance Production, Day of Support, Trainings, Merchant account setup, Custom domain setup",
-                        "Dry/Test Run – Virtual Session Configuration if a Project Manager is involved",
-                        "Creation of graphics",
-                        "Integration implementation, configuration, and support",
-                        "Working with non-Cvent products",
-                        "Content creation, including translation services",
-                        "Staffing or support in-person at events",
-                      ].map((o, i) => (
+                      {projectMgmtOutOfScope.map((o, i) => (
                         <li key={i} className="text-sm flex gap-2"><span className="text-muted-foreground/50 mt-1 shrink-0">·</span><span className="text-muted-foreground/70">{o}</span></li>
                       ))}
                     </ul>
                   </td>
                 </tr>
-                <TableRow
-                  service="Registration"
-                  activities={[
-                    "Path setting configurations",
-                    "Registration questions/fields setup",
-                    "Implementation of industry best practices",
-                    "Complete testing and auditing before review submission",
-                  ]}
-                  outOfScope={["No support after event goes live unless purchased premium"]}
-                />
-                <TableRow
-                  service="Agenda"
-                  activities={[
-                    "Implementation of admission items",
-                    "Sessions",
-                    "Optional items",
-                    "Registration type availability",
-                    "Session groups",
-                  ]}
-                />
-                <TableRow
-                  service="Fee"
-                  activities={[
-                    "Implementation of fee on individual items",
-                    "Setting up refund policy if applicable",
-                    "Associating available merchant account with the event",
-                    "Assisting in conducting a test transaction before event launch",
-                  ]}
-                  outOfScope={["Associating merchant account with Cvent account"]}
-                />
-                <TableRow
-                  service="Website"
-                  activities={[
-                    "Implementation of graphics provided by client",
-                    "Activation of relevant web pages pertaining to client's request and event setup",
-                    "Implementation of industry best practices",
-                  ]}
-                />
-                <TableRow
-                  service="Email"
-                  activities={[
-                    "Default email templates creation",
-                    "Custom email templates based on event requirements",
-                    "Implementation of graphics on email header and footer as provided by client",
-                  ]}
-                />
-                <TableRow
-                  service="Feedback Surveys"
-                  activities={[
-                    "Creation of questions as required based on Basic or Premium survey licence",
-                    "Implementation of graphics as provided",
-                  ]}
-                />
-                <TableRow
-                  service="Reports"
-                  activities={[
-                    "Implementation of Master report",
-                    "Custom reports based on client's requirements",
-                  ]}
-                  outOfScope={["Manual report tracking"]}
-                />
-                <TableRow
-                  service="Speaker Resource Centre / Speaker Management"
-                  activities={[
-                    "Importing in bulk or creating speakers manually",
-                    "Uploading speaker headshots",
-                    "Sending speaker invitation email",
-                    "Creating tasks as requested by client",
-                    "Implementation of graphics as provided",
-                  ]}
-                  outOfScope={[
-                    "Speaker training",
-                    "Moderator training",
-                    "Speaker support",
-                    "Group technical training",
-                  ]}
-                />
-                <TableRow
-                  service="Exhibitor Management"
-                  activities={[
-                    "Importing in bulk or creating exhibitors manually",
-                    "Sending exhibitor invitation email",
-                    "Creating exhibitor default templates",
-                    "Creating tasks as requested by client",
-                    "Exhibitor portal configuration settings",
-                    "Sponsored sessions",
-                    "Virtual Booth configuration",
-                  ]}
-                  outOfScope={["Exhibitor training"]}
-                />
-                <TableRow
-                  service="Appointments"
-                  activities={[
-                    "Appointments setup configurations",
-                    "Test appointment setup",
-                    "Schedule rules, group assignments, time slots etc.",
-                    "Virtual appointment setup",
-                  ]}
-                  outOfScope={["Appointment training"]}
-                />
-                <TableRow
-                  service="Virtual Attendee Hub"
-                  activities={[
-                    "Implementation of graphics as provided by client",
-                    "Settings configuration",
-                    "Attendee hub walkthrough call",
-                    "Event app walkthrough",
-                    "Event app configuration",
-                    "Dry run call",
-                  ]}
-                  outOfScope={[
-                    "Speaker or moderator trainings",
-                    "Technical trainings",
-                    "Day of support",
-                    "Branded event app submission",
-                  ]}
-                />
-                <TableRow
-                  service="Cvent Studio"
-                  activities={[
-                    "Session configuration",
-                    "Cvent Studio walkthrough",
-                    "Cvent Studio prep call",
-                    "Cvent Studio dry run",
-                  ]}
-                  outOfScope={[
-                    "Cvent Studio training",
-                    "Video player in session configuration",
-                    "Day of support",
-                    "Debrief call",
-                  ]}
-                />
+                {serviceRows.map((row) => (
+                  <TableRow key={row.service} {...row} />
+                ))}
               </tbody>
             </table>
           </div>
