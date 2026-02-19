@@ -1,29 +1,42 @@
 
-## Fix: Add "Get Started" Button to Mobile Navbar
+## Add Footer to the Build Request Form Page
 
-### Problem
-On mobile, the "Get Started" button is only accessible after tapping the hamburger menu to open the dropdown. It is not immediately visible in the navbar itself, making it easy to miss and reducing conversion opportunities on mobile.
+### Overview
+Add the existing site footer to the bottom of the `/build-request` page so users have a consistent branded experience throughout the form flow. Any links in the footer (currently just the Contact email link) will open in a new tab, and the layout will be responsive on mobile.
 
-### Current Behaviour
-- Desktop: Logo | Nav links | **Get Started** button — always visible
-- Mobile: Logo | hamburger icon only — button hidden inside dropdown
+### What Needs to Change
 
-### Solution
-Add a compact "Get Started" button to the mobile navbar bar itself, so it sits between the Logo and the hamburger icon and is always visible on mobile — no need to open the menu first.
+**`src/pages/BuildRequest.tsx`** — two small updates:
 
-### File to Change
-`src/components/Navbar.tsx` — one small change:
+1. **Import the Footer component** at the top of the file alongside the other imports.
 
-- The desktop `Get Started` button currently has `className="hidden md:inline-flex"` — it is invisible on mobile.
-- Add a second compact button that is **only visible on mobile** (`md:hidden`) next to the hamburger toggle, so both the CTA and the menu icon appear side by side.
+2. **Add `<Footer />` below the closing `</div>` of the main page wrapper** (currently line 596), so it appears beneath the form card on every step — including the thank-you screen.
 
-### Visual Result (mobile navbar)
+### Footer Link Behaviour
+The existing Footer component has one link: `<a href="mailto:snehdeep@launchhouse.events">`. To open it in a new tab (consistent with the user's request), we'll update the `Footer` component to add `target="_blank" rel="noopener noreferrer"` to all anchor tags. This will apply everywhere the footer is used, which is appropriate.
+
+### Mobile Consistency
+The footer already uses a responsive layout (`flex-col md:flex-row`) so it stacks cleanly on mobile — no additional changes needed for mobile layout.
+
+### Files to Change
+
+| File | Change |
+|---|---|
+| `src/components/Footer.tsx` | Add `target="_blank" rel="noopener noreferrer"` to the Contact `<a>` tag |
+| `src/pages/BuildRequest.tsx` | Import `Footer` and render it after the closing wrapper `</div>` on line 596 |
+
+### Visual Result
+
 ```text
-[ Logo ]          [ Get Started ]  [ ☰ ]
+┌─────────────────────────────────┐
+│  [Banner / Logo]                │
+│  ┌───────────────────────────┐  │
+│  │  Form card (steps 1-3)    │  │
+│  │  or Thank You screen      │  │
+│  └───────────────────────────┘  │
+├─────────────────────────────────┤
+│  Footer: Logo | © Copy | Contact│  ← new
+└─────────────────────────────────┘
 ```
 
-### Technical Detail
-- The new mobile button will call the same `handleCta` function (opens `/build-request` in a new tab).
-- It will use `size="sm"` to keep it compact and fit alongside the hamburger icon.
-- The existing button inside the hamburger dropdown can remain as-is for completeness, or be removed to avoid duplication — keeping it in the dropdown is fine since it won't cause confusion.
-- No other files need to change.
+No database changes, no new dependencies, no edge function changes required.
