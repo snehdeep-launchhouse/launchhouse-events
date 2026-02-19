@@ -88,14 +88,67 @@ serve(async (req) => {
 
     const subject = `New Build Request – ${payload.eventTitle ?? "Untitled Event"} (${payload.companyName ?? ""})`;
 
-    const recipients = [
+    const internalRecipients = [
       { email: "sam@launchhouse.events", name: "Sam" },
       { email: "snehdeep@launchhouse.events", name: "Snehdeep" },
     ];
 
-    // Send to both recipients
-    const results = await Promise.all(
-      recipients.map((to) =>
+    // Confirmation email HTML for the submitter
+    const confirmationHtml = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"/></head>
+<body style="font-family:'Inter',Arial,sans-serif;color:#111827;background:#ffffff;margin:0;padding:24px;">
+  <div style="max-width:600px;margin:0 auto;">
+    <div style="background:#006AE1;padding:24px 32px;border-radius:8px 8px 0 0;">
+      <h1 style="margin:0;color:#ffffff;font-size:22px;font-family:'Space Grotesk',Arial,sans-serif;">
+        Thank You for Your Build Request!
+      </h1>
+    </div>
+    <div style="padding:32px;border:1px solid #d1d5db;border-top:none;border-radius:0 0 8px 8px;">
+      <p style="margin:0 0 16px;font-size:16px;">Hi ${payload.firstName ?? ""},</p>
+      <p style="margin:0 0 16px;font-size:15px;color:#374151;">
+        Thank you for submitting your event build request for <strong>${payload.eventTitle ?? "your event"}</strong>. We've received everything and our team will be in touch shortly to confirm your kick-off call.
+      </p>
+      <p style="margin:0 0 16px;font-size:15px;color:#374151;">
+        Here's a quick summary of what you submitted:
+      </p>
+      <table style="width:100%;border-collapse:collapse;margin-bottom:24px;">
+        <tr>
+          <td style="padding:8px 12px;border:1px solid #d1d5db;background:#f9fafb;font-weight:600;width:40%;vertical-align:top;">Event</td>
+          <td style="padding:8px 12px;border:1px solid #d1d5db;vertical-align:top;">${payload.eventTitle ?? ""}</td>
+        </tr>
+        <tr>
+          <td style="padding:8px 12px;border:1px solid #d1d5db;background:#f9fafb;font-weight:600;vertical-align:top;">Company</td>
+          <td style="padding:8px 12px;border:1px solid #d1d5db;vertical-align:top;">${payload.companyName ?? ""}</td>
+        </tr>
+        <tr>
+          <td style="padding:8px 12px;border:1px solid #d1d5db;background:#f9fafb;font-weight:600;vertical-align:top;">Kick-off Preference 1</td>
+          <td style="padding:8px 12px;border:1px solid #d1d5db;vertical-align:top;">${payload.kickoffDate1 ?? ""} at ${payload.kickoffTime1 ?? ""} (${payload.kickoffTimezone ?? ""})</td>
+        </tr>
+        <tr>
+          <td style="padding:8px 12px;border:1px solid #d1d5db;background:#f9fafb;font-weight:600;vertical-align:top;">Solutions Requested</td>
+          <td style="padding:8px 12px;border:1px solid #d1d5db;vertical-align:top;">${Array.isArray(payload.chosenSolutions) ? payload.chosenSolutions.join(", ") : (payload.chosenSolutions ?? "")}</td>
+        </tr>
+      </table>
+      <p style="margin:0 0 16px;font-size:15px;color:#374151;">
+        If you have any questions in the meantime, feel free to reply to this email.
+      </p>
+      <p style="margin:0;font-size:15px;color:#374151;">
+        Warm regards,<br/>
+        <strong>The LaunchHouse Events Team</strong>
+      </p>
+    </div>
+    <p style="margin-top:24px;font-size:12px;color:#6b7280;text-align:center;">
+      LaunchHouse Events · This is an automated confirmation email.
+    </p>
+  </div>
+</body>
+</html>`;
+
+    // Send internal notifications + confirmation email in parallel
+    const sendInternal = Promise.all(
+      internalRecipients.map((to) =>
         fetch("https://api.resend.com/emails", {
           method: "POST",
           headers: {
@@ -110,13 +163,32 @@ serve(async (req) => {
           }),
         }).then(async (res) => {
           const body = await res.json();
-          if (!res.ok) {
-            throw new Error(`Resend API error [${res.status}]: ${JSON.stringify(body)}`);
-          }
+          if (!res.ok) throw new Error(`Resend API error [${res.status}]: ${JSON.stringify(body)}`);
           return body;
         })
       )
     );
+
+    const sendConfirmation = fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${RESEND_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from: "LaunchHouse Events <noreply@launchhouse.events>",
+        to: [payload.email],
+        subject: `We've received your build request – ${payload.eventTitle ?? "Your Event"}`,
+        html: confirmationHtml,
+      }),
+    }).then(async (res) => {
+      const body = await res.json();
+      if (!res.ok) throw new Error(`Resend confirmation error [${res.status}]: ${JSON.stringify(body)}`);
+      return body;
+    });
+
+    const [internalResults, confirmationResult] = await Promise.all([sendInternal, sendConfirmation]);
+    const results = [...internalResults, confirmationResult];
 
     return new Response(
       JSON.stringify({ success: true, results }),
