@@ -199,7 +199,7 @@ const BuildRequest = () => {
       <div className="min-h-screen bg-background flex flex-col">
         {/* Header strip */}
         <div className="bg-primary py-5 px-6 flex items-center justify-center">
-          <Logo />
+          <Logo light />
         </div>
 
         {/* Content */}
@@ -267,7 +267,7 @@ const BuildRequest = () => {
         <img src={bannerImg} alt="Build Request" className="w-full h-full object-cover object-top" />
         <div className="absolute inset-0 bg-[hsl(220,90%,10%)]/80" />
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-4">
-          <Logo />
+          <Logo light />
           <h1 className="text-2xl md:text-3xl font-bold font-display text-white mt-3 drop-shadow-lg">Event Build Request</h1>
           <p className="text-white/90 text-sm mt-1 drop-shadow">Tell us about your event and we'll start building</p>
         </div>
