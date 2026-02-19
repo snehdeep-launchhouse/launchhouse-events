@@ -20,7 +20,7 @@ const eventBuilds = [
     price: "From $899",
     description: "Single-page registrations with standard branding and email confirmations. Same-day delivery available.",
     features: ["Single-page registration", "Standard branding", "Email confirmation", "Same-day turnaround"],
-    hasTnC: true,
+    hasTnC: false,
     hasPrice: true,
   },
   {
