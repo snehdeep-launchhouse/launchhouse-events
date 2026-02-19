@@ -8,46 +8,313 @@ const Section = ({ title, children }: { title: string; children: React.ReactNode
   </section>
 );
 
+const TableRow = ({ service, activities, outOfScope }: { service: string; activities: string[]; outOfScope?: string[] }) => (
+  <tr className="border-b border-border/40">
+    <td className="py-3 pr-4 align-top font-medium text-foreground w-1/5 text-sm">{service}</td>
+    <td className="py-3 pr-4 align-top w-2/5">
+      <ul className="space-y-1">
+        {activities.map((a, i) => (
+          <li key={i} className="text-sm flex gap-2"><span className="text-primary mt-1 shrink-0">·</span><span>{a}</span></li>
+        ))}
+      </ul>
+    </td>
+    <td className="py-3 align-top w-2/5">
+      {outOfScope && outOfScope.length > 0 ? (
+        <ul className="space-y-1">
+          {outOfScope.map((o, i) => (
+            <li key={i} className="text-sm flex gap-2"><span className="text-muted-foreground/50 mt-1 shrink-0">·</span><span className="text-muted-foreground/70">{o}</span></li>
+          ))}
+        </ul>
+      ) : null}
+    </td>
+  </tr>
+);
+
 const TermsOfService = () => (
   <div className="min-h-screen flex flex-col bg-background">
     <Navbar />
     <main className="flex-1 pt-[var(--nav-height)]">
-      <div className="container max-w-3xl py-16 px-4">
+      <div className="container max-w-5xl py-16 px-4">
+
         <div className="mb-10">
           <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">Terms of Service</h1>
           <p className="text-sm text-muted-foreground">Last updated: February 2026 · LaunchHouse Events, a division of Rina Event Tech</p>
         </div>
 
-        <Section title="1. About These Terms">
-          <p>
-            These Terms of Service ("Terms") govern your use of the services provided by LaunchHouse Events, a division of Rina Event Tech ("we," "us," or "our"). By submitting a Build Request or engaging our services, you agree to be bound by these Terms.
-          </p>
-          <p>
-            If you have any questions, contact us at{" "}
-            <a href="mailto:snehdeep@launchhouse.events" className="text-primary hover:underline">
-              snehdeep@launchhouse.events
-            </a>.
-          </p>
+        {/* Intro */}
+        <section className="mb-10">
+          <div className="text-muted-foreground leading-relaxed space-y-3">
+            <p>
+              These Terms of Service ("Terms") govern your use of the services provided by LaunchHouse Events, a division of Rina Event Tech ("we," "us," or "our"). By submitting a Build Request or engaging our services, you agree to be bound by these Terms.
+            </p>
+            <p>
+              LaunchHouse Events will perform the services described herein, including delivery of any tangible or intangible items ("Services") set forth below. LaunchHouse Events acknowledges that the customer is looking for a solution that can meet their specific event needs on the Cvent platform.
+            </p>
+            <p className="text-sm border border-border/50 rounded-md px-4 py-3 bg-muted/20">
+              <strong className="text-foreground">Note:</strong> Out-of-scope tasks can be supported if purchased in addition to the event build services.
+            </p>
+          </div>
+        </section>
+
+        {/* Scope of Services Table */}
+        <Section title="1. Event Build Scope of Services">
+          <p className="mb-4">The following table outlines what is included and excluded for each service area in a standard event build engagement.</p>
+          <div className="overflow-x-auto rounded-lg border border-border/40">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-muted/30 border-b border-border/40">
+                  <th className="py-3 pr-4 pl-4 text-left font-semibold text-foreground w-1/5">Service</th>
+                  <th className="py-3 pr-4 text-left font-semibold text-foreground w-2/5">Activities (In Scope)</th>
+                  <th className="py-3 text-left font-semibold text-muted-foreground w-2/5">Out of Scope</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border/30">
+                <tr className="border-b border-border/40">
+                  <td className="py-3 pl-4 pr-4 align-top font-medium text-foreground text-sm">Project Management (General)</td>
+                  <td className="py-3 pr-4 align-top">
+                    <ul className="space-y-1">
+                      {[
+                        "Event setup call (registration and website)",
+                        "Milestone walkthrough calls (round of changes)",
+                        "Project Plan and Timeline Creation",
+                        "Project/Event consultation",
+                        "Coordination and tracking of project activities",
+                        "Outline of client deliverables",
+                        "Email response within 1 business day",
+                        "Virtual Event Platform configuration including implementation of client-provided graphics and virtual session configuration",
+                        "Exhibitor portal/management configuration",
+                        "Speaker Resource Center configuration",
+                        "Appointment configuration",
+                        "Feedback survey implementation",
+                        "Timely delivery of drafts",
+                        "Issue tracking and management",
+                        "Testing of all deliverables prior to launch",
+                        "Report creation and modification",
+                        "Final sign off",
+                      ].map((a, i) => (
+                        <li key={i} className="text-sm flex gap-2"><span className="text-primary mt-1 shrink-0">·</span><span>{a}</span></li>
+                      ))}
+                    </ul>
+                  </td>
+                  <td className="py-3 align-top">
+                    <ul className="space-y-1">
+                      {[
+                        "Questions related to Advance Production, Day of Support, Trainings, Merchant account setup, Custom domain setup",
+                        "Dry/Test Run – Virtual Session Configuration if a Project Manager is involved",
+                        "Creation of graphics",
+                        "Integration implementation, configuration, and support",
+                        "Working with non-Cvent products",
+                        "Content creation, including translation services",
+                        "Staffing or support in-person at events",
+                      ].map((o, i) => (
+                        <li key={i} className="text-sm flex gap-2"><span className="text-muted-foreground/50 mt-1 shrink-0">·</span><span className="text-muted-foreground/70">{o}</span></li>
+                      ))}
+                    </ul>
+                  </td>
+                </tr>
+                <TableRow
+                  service="Registration"
+                  activities={[
+                    "Path setting configurations",
+                    "Registration questions/fields setup",
+                    "Implementation of industry best practices",
+                    "Complete testing and auditing before review submission",
+                  ]}
+                  outOfScope={["No support after event goes live unless purchased premium"]}
+                />
+                <TableRow
+                  service="Agenda"
+                  activities={[
+                    "Implementation of admission items",
+                    "Sessions",
+                    "Optional items",
+                    "Registration type availability",
+                    "Session groups",
+                  ]}
+                />
+                <TableRow
+                  service="Fee"
+                  activities={[
+                    "Implementation of fee on individual items",
+                    "Setting up refund policy if applicable",
+                    "Associating available merchant account with the event",
+                    "Assisting in conducting a test transaction before event launch",
+                  ]}
+                  outOfScope={["Associating merchant account with Cvent account"]}
+                />
+                <TableRow
+                  service="Website"
+                  activities={[
+                    "Implementation of graphics provided by client",
+                    "Activation of relevant web pages pertaining to client's request and event setup",
+                    "Implementation of industry best practices",
+                  ]}
+                />
+                <TableRow
+                  service="Email"
+                  activities={[
+                    "Default email templates creation",
+                    "Custom email templates based on event requirements",
+                    "Implementation of graphics on email header and footer as provided by client",
+                  ]}
+                />
+                <TableRow
+                  service="Feedback Surveys"
+                  activities={[
+                    "Creation of questions as required based on Basic or Premium survey licence",
+                    "Implementation of graphics as provided",
+                  ]}
+                />
+                <TableRow
+                  service="Reports"
+                  activities={[
+                    "Implementation of Master report",
+                    "Custom reports based on client's requirements",
+                  ]}
+                  outOfScope={["Manual report tracking"]}
+                />
+                <TableRow
+                  service="Speaker Resource Centre / Speaker Management"
+                  activities={[
+                    "Importing in bulk or creating speakers manually",
+                    "Uploading speaker headshots",
+                    "Sending speaker invitation email",
+                    "Creating tasks as requested by client",
+                    "Implementation of graphics as provided",
+                  ]}
+                  outOfScope={[
+                    "Speaker training",
+                    "Moderator training",
+                    "Speaker support",
+                    "Group technical training",
+                  ]}
+                />
+                <TableRow
+                  service="Exhibitor Management"
+                  activities={[
+                    "Importing in bulk or creating exhibitors manually",
+                    "Sending exhibitor invitation email",
+                    "Creating exhibitor default templates",
+                    "Creating tasks as requested by client",
+                    "Exhibitor portal configuration settings",
+                    "Sponsored sessions",
+                    "Virtual Booth configuration",
+                  ]}
+                  outOfScope={["Exhibitor training"]}
+                />
+                <TableRow
+                  service="Appointments"
+                  activities={[
+                    "Appointments setup configurations",
+                    "Test appointment setup",
+                    "Schedule rules, group assignments, time slots etc.",
+                    "Virtual appointment setup",
+                  ]}
+                  outOfScope={["Appointment training"]}
+                />
+                <TableRow
+                  service="Virtual Attendee Hub"
+                  activities={[
+                    "Implementation of graphics as provided by client",
+                    "Settings configuration",
+                    "Attendee hub walkthrough call",
+                    "Event app walkthrough",
+                    "Event app configuration",
+                    "Dry run call",
+                  ]}
+                  outOfScope={[
+                    "Speaker or moderator trainings",
+                    "Technical trainings",
+                    "Day of support",
+                    "Branded event app submission",
+                  ]}
+                />
+                <TableRow
+                  service="Cvent Studio"
+                  activities={[
+                    "Session configuration",
+                    "Cvent Studio walkthrough",
+                    "Cvent Studio prep call",
+                    "Cvent Studio dry run",
+                  ]}
+                  outOfScope={[
+                    "Cvent Studio training",
+                    "Video player in session configuration",
+                    "Day of support",
+                    "Debrief call",
+                  ]}
+                />
+              </tbody>
+            </table>
+          </div>
         </Section>
 
-        <Section title="2. Scope of Services">
+        {/* Project Plan */}
+        <Section title="2. Project Plan & Delivery Timelines">
           <p>
-            LaunchHouse Events specialises in the build and configuration of event technology solutions on the Cvent platform. Our services include, but are not limited to:
+            LaunchHouse Events will exercise reasonable best efforts to complete all deliverables based upon information provided prior to engagement commencement and the assumptions, project dependencies, and responsibilities set forth in these Terms. Actual dates may vary depending on start date and other factors; the schedule reflects the scope of effort assumed and is dependent on the client meeting all responsibilities in a timely manner.
           </p>
+          <div className="rounded-lg border border-border/40 overflow-hidden">
+            <table className="w-full text-sm">
+              <tbody>
+                {[
+                  ["First draft of website/registration", "4 business days after receiving all content"],
+                  ["Configuration changes (round of edits)", "3 business days"],
+                  ["Email communication response", "1 business day after receiving content"],
+                ].map(([item, timeline]) => (
+                  <tr key={item} className="border-b border-border/30 last:border-0">
+                    <td className="py-3 pl-4 pr-4 font-medium text-foreground">{item}</td>
+                    <td className="py-3 pr-4 text-muted-foreground">{timeline}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p>LaunchHouse Events will be responsible for the following deliverables:</p>
           <ul className="list-disc list-inside space-y-1 pl-2">
-            <li>Event website design and build</li>
-            <li>Registration form configuration</li>
-            <li>Speaker, session, and agenda management</li>
-            <li>Email marketing setup within Cvent</li>
-            <li>Reporting and data management configuration</li>
-            <li>Event app setup (where applicable)</li>
+            <li>Gather and analyse client requirements</li>
+            <li>Consult on features best suitable for the event and provide recommendations for any workarounds where applicable</li>
+            <li>Create event-specific deliverables according to client's templates, processes, or within brand guidelines</li>
+            <li>Share event-related industry standard best practices</li>
+            <li>Maintain graphic and document libraries</li>
+            <li>Maintain company event templates (ensuring branding guidelines are met)</li>
+            <li>Coordinate with the client's creative team for branding guidelines and graphics creation</li>
+            <li>Notify authorised users about any updates or maintenance performed on the Cvent system</li>
+            <li>Educate new users on client/company standard operating procedures and best practices associated with the website registration process</li>
           </ul>
           <p>
-            The exact scope of each engagement is defined at the time of the Build Request and confirmed prior to commencement of work.
+            All requests made in writing by the client will receive an acknowledgement of receipt before the end of the following working day. If the dedicated resource is out of the office, an acknowledgement will be sent within one (1) business day after returning to the office.
           </p>
         </Section>
 
-        <Section title="3. Client Obligations">
+        {/* Process */}
+        <Section title="3. Process & Hours">
+          <p>Each project comes with a set of hours allotted to them.</p>
+          <ul className="list-disc list-inside space-y-1 pl-2">
+            <li>A LaunchHouse Events consultant will sign off from the project/event when the allotted number of hours is consumed, or the event is launched — whichever comes earlier</li>
+            <li>Post event launch support is not included as part of a regular package</li>
+            <li>A premium hours-based project will cover post launch support if the event is launched with hours remaining</li>
+            <li>Additional project hours can be purchased at an additional cost — the number of hours required will be scoped by your LaunchHouse Events consultant</li>
+            <li>Any delays in receiving information will push deadlines and event launch dates; a revised project plan will be submitted accordingly</li>
+          </ul>
+        </Section>
+
+        {/* Project Change Control */}
+        <Section title="4. Project Change Control">
+          <p>
+            Either party may, from time to time, request a change to the agreed scope of services, deliverables, project schedule, fee, or any other aspect of the engagement. In response, LaunchHouse Events will prepare a Change Order reflecting the proposed changes — including but not limited to impact on deliverables, project schedule, and fees — and shall deliver such Change Order to the client for review and negotiation. Absent a Change Order signed by both parties, LaunchHouse Events shall not be bound to perform any additional or out-of-scope services beyond what is agreed.
+          </p>
+          <p className="font-semibold text-foreground">Important:</p>
+          <ul className="list-disc list-inside space-y-1 pl-2">
+            <li>Rounds of changes must be submitted by the client in a single consolidated document. Changes received across multiple emails will lead to delays in response and misses</li>
+            <li>Clients should thoroughly review all changes before submission</li>
+            <li>Completion of changes will vary depending on the number of updates to be implemented; LaunchHouse Events will inform the client upfront if additional time is required</li>
+            <li>Any delays in receiving the round of changes will lead to a delay in project/event launch</li>
+          </ul>
+        </Section>
+
+        {/* Client Obligations */}
+        <Section title="5. Client Obligations">
           <p>To enable timely delivery of your project, you agree to:</p>
           <ul className="list-disc list-inside space-y-1 pl-2">
             <li>Provide all required creative assets (event banner, headers, fonts, branding guidelines) at the start of the engagement</li>
@@ -57,26 +324,12 @@ const TermsOfService = () => (
             <li>Designate a clear point of contact for the duration of the project</li>
           </ul>
           <p>
-            Delays in providing required information will result in corresponding adjustments to the agreed delivery deadline. We will notify you as soon as a delay impacts the timeline.
+            Delays in providing required information will result in corresponding adjustments to the agreed delivery deadline. LaunchHouse Events will notify you as soon as a delay impacts the timeline.
           </p>
         </Section>
 
-        <Section title="4. Delivery Timelines & Same-Day Delivery">
-          <p>
-            We offer same-day delivery for eligible projects under the following conditions:
-          </p>
-          <ul className="list-disc list-inside space-y-1 pl-2">
-            <li>Applies to Simple Builds and eligible Medium Builds only</li>
-            <li>Advanced and Complex Builds do not qualify for same-day delivery</li>
-            <li>All creative assets, branding guidelines, text copies, and event logistics must be provided at the time of request</li>
-            <li>Requests received after 12:00 PM IST may be delivered the following business day at our discretion</li>
-          </ul>
-          <p>
-            Delivery timelines for Medium, Advanced, and Complex Builds will be communicated and agreed upon during the kickoff process.
-          </p>
-        </Section>
-
-        <Section title="5. Revision Rounds">
+        {/* Revision Rounds */}
+        <Section title="6. Revision Rounds">
           <p>Each service tier includes a defined number of revision rounds:</p>
           <ul className="list-disc list-inside space-y-1 pl-2">
             <li><strong className="text-foreground">Simple Build</strong> — 1 round of revisions</li>
@@ -89,25 +342,28 @@ const TermsOfService = () => (
           </p>
         </Section>
 
-        <Section title="6. Payment Terms">
+        {/* Payment */}
+        <Section title="7. Payment Terms">
           <p>
             Payment terms are agreed upon at the start of each engagement. <em>[Please update this section with your specific payment terms, invoicing schedule, and accepted payment methods.]</em>
           </p>
           <p>
-            We reserve the right to pause or withhold delivery of work in the event of outstanding payments.
+            LaunchHouse Events reserves the right to pause or withhold delivery of work in the event of outstanding payments.
           </p>
         </Section>
 
-        <Section title="7. Intellectual Property">
+        {/* IP */}
+        <Section title="8. Intellectual Property">
           <p>
             Upon receipt of full payment, all deliverables produced for your event will be owned by you. We retain the right to reference the engagement in our portfolio unless you request otherwise in writing.
           </p>
           <p>
-            You warrant that all assets, content, and materials you provide to us are owned by you or that you have the right to use them. We are not liable for any third-party intellectual property claims arising from materials you supply.
+            You warrant that all assets, content, and materials you provide to us are owned by you or that you have the right to use them. LaunchHouse Events is not liable for any third-party intellectual property claims arising from materials you supply.
           </p>
         </Section>
 
-        <Section title="8. Limitation of Liability">
+        {/* Liability */}
+        <Section title="9. Limitation of Liability">
           <p>
             To the maximum extent permitted by applicable law, LaunchHouse Events / Rina Event Tech shall not be liable for any indirect, incidental, consequential, or special damages arising out of or in connection with the services provided, even if we have been advised of the possibility of such damages.
           </p>
@@ -116,23 +372,33 @@ const TermsOfService = () => (
           </p>
         </Section>
 
-        <Section title="9. Termination">
+        {/* Termination */}
+        <Section title="10. Termination">
           <p>
-            Either party may terminate an engagement by providing written notice. In the event of termination, you are responsible for payment of all work completed up to the date of termination. We will provide a final invoice for work delivered.
+            Either party may terminate an engagement by providing written notice. In the event of termination, you are responsible for payment of all work completed up to the date of termination. LaunchHouse Events will provide a final invoice for work delivered.
           </p>
         </Section>
 
-        <Section title="10. Governing Law">
+        {/* Governing Law */}
+        <Section title="11. Governing Law">
           <p>
             These Terms are governed by and construed in accordance with the laws of India. Any disputes arising under or in connection with these Terms shall be subject to the exclusive jurisdiction of the courts of India.
           </p>
         </Section>
 
-        <Section title="11. Changes to These Terms">
+        {/* Changes */}
+        <Section title="12. Changes to These Terms">
           <p>
             We may update these Terms from time to time. The updated version will be posted on this page with a revised date. Continued use of our services after any update constitutes acceptance of the new Terms.
           </p>
+          <p>
+            If you have any questions, contact us at{" "}
+            <a href="mailto:snehdeep@launchhouse.events" className="text-primary hover:underline">
+              snehdeep@launchhouse.events
+            </a>.
+          </p>
         </Section>
+
       </div>
     </main>
     <Footer />

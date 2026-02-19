@@ -13,7 +13,7 @@ const Footer = () => (
           Privacy Policy
         </a>
         <a href="/terms-of-service" className="hover:text-primary transition-colors" target="_blank" rel="noopener noreferrer">
-          Terms
+          Terms of Service
         </a>
         <a href="mailto:snehdeep@launchhouse.events" className="hover:text-primary transition-colors" target="_blank" rel="noopener noreferrer">
           Contact
