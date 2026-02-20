@@ -18,7 +18,8 @@ const Navbar = () => {
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const handleNav = (link: typeof navLinks[0]) => {
+  const handleNav = (e: React.MouseEvent<HTMLAnchorElement>, link: typeof navLinks[0]) => {
+    e.preventDefault();
     setMobileOpen(false);
     if (link.type === "route") {
       navigate(link.href);
@@ -42,13 +43,14 @@ const Navbar = () => {
         {/* Desktop nav */}
         <div className="hidden md:flex items-center gap-8">
           {navLinks.map((l) => (
-            <button
+            <a
               key={l.href}
-              onClick={() => handleNav(l)}
+              href={l.type === "route" ? l.href : `/${l.href}`}
+              onClick={(e) => handleNav(e, l)}
               className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
             >
               {l.label}
-            </button>
+            </a>
           ))}
         </div>
         <div className="flex items-center gap-2">
@@ -73,13 +75,14 @@ const Navbar = () => {
         <div className="md:hidden border-t border-border/50 bg-background/95 backdrop-blur-lg">
           <div className="container py-4 flex flex-col gap-3">
             {navLinks.map((l) => (
-              <button
+              <a
                 key={l.href}
-                onClick={() => handleNav(l)}
+                href={l.type === "route" ? l.href : `/${l.href}`}
+                onClick={(e) => handleNav(e, l)}
                 className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors text-left py-2"
               >
                 {l.label}
-              </button>
+              </a>
             ))}
             <Button onClick={handleCta} size="sm" className="w-full mt-2">
               Get Started
