@@ -206,7 +206,7 @@ const projectMgmtActivities = [
   "Project/Event consultation",
   "Coordination and tracking of project activities",
   "Outline of client deliverables",
-  "Email response within 1 business day",
+  "Email response within 6 business hours (90 minutes for Same Day Delivery builds)",
   "Virtual Event Platform configuration including implementation of client-provided graphics and virtual session configuration",
   "Exhibitor portal/management configuration",
   "Speaker Resource Center configuration",
@@ -227,6 +227,21 @@ const projectMgmtOutOfScope = [
   "Working with non-Cvent products",
   "Content creation, including translation services",
   "Staffing or support in-person at events",
+];
+
+const slaRows = [
+  { level: "Simple", draft: "2 Business Days", revision: "1 Business Day" },
+  { level: "Medium", draft: "2 Business Days", revision: "2 Business Days" },
+  { level: "Advanced", draft: "3 Business Days", revision: "3 Business Days" },
+  { level: "Complex", draft: "4 Business Days", revision: "3 Business Days" },
+];
+
+const hoursRows = [
+  { build: "Simple", hours: "20 hours" },
+  { build: "Medium", hours: "45 hours" },
+  { build: "Advanced", hours: "65 hours" },
+  { build: "Complex", hours: "100 hours" },
+  { build: "Premium", hours: ">100 hours" },
 ];
 
 const TermsOfService = () => (
@@ -305,6 +320,17 @@ const TermsOfService = () => (
               </tbody>
             </table>
           </div>
+
+          {/* Same Day Delivery definition block */}
+          <div className="mt-6 rounded-lg border border-primary/30 bg-primary/5 px-5 py-4 space-y-2">
+            <p className="text-sm font-semibold text-foreground">Same Day Delivery</p>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Same Day Delivery is available exclusively for <strong className="text-foreground">Simple</strong> and eligible <strong className="text-foreground">Medium</strong> Builds. To qualify, the project must commence on or before <strong className="text-foreground">8:00 AM Eastern Time</strong> (Monday–Friday). Upon receipt of all required creative assets, event logistics, and <strong className="text-foreground">100% advance payment</strong>, LaunchHouse Events guarantees delivery by <strong className="text-foreground">8:00 PM Eastern Time</strong> on the same day — a 12-hour turnaround window.
+            </p>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Should LaunchHouse Events fail to meet this deadline, the client is entitled to a <strong className="text-foreground">full refund</strong>, which will be processed within <strong className="text-foreground">48 hours</strong>. Pre-requisites for same day delivery — creative assets such as Event Banner, Headers, Fonts, Branding Guidelines, and Text Copies must be readily available. Event logistics including number of registration types, sessions, and ticket types must also be confirmed from the onset. Any delays in handing over required information will push the delivery deadline accordingly.
+            </p>
+          </div>
         </Section>
 
         {/* Project Plan */}
@@ -314,20 +340,25 @@ const TermsOfService = () => (
           </p>
           <div className="rounded-lg border border-border/40 overflow-hidden">
             <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-muted/30 border-b border-border/40">
+                  <th className="py-3 pl-4 pr-4 text-left font-semibold text-foreground">Complexity</th>
+                  <th className="py-3 pr-4 text-left font-semibold text-foreground">First Draft</th>
+                  <th className="py-3 pr-4 text-left font-semibold text-foreground">Revision Turnaround</th>
+                </tr>
+              </thead>
               <tbody>
-                {[
-                  ["First draft of website/registration", "4 business days after receiving all content"],
-                  ["Configuration changes (round of edits)", "3 business days"],
-                  ["Email communication response", "1 business day after receiving content"],
-                ].map(([item, timeline]) => (
-                  <tr key={item} className="border-b border-border/30 last:border-0">
-                    <td className="py-3 pl-4 pr-4 font-medium text-foreground">{item}</td>
-                    <td className="py-3 pr-4 text-muted-foreground">{timeline}</td>
+                {slaRows.map((r) => (
+                  <tr key={r.level} className="border-b border-border/30 last:border-0">
+                    <td className="py-3 pl-4 pr-4 font-medium text-foreground">{r.level}</td>
+                    <td className="py-3 pr-4 text-muted-foreground">{r.draft}</td>
+                    <td className="py-3 pr-4 text-muted-foreground">{r.revision}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
+          <p className="text-xs text-muted-foreground/70 italic">Timelines begin once all necessary content and assets are provided.</p>
           <p>LaunchHouse Events will be responsible for the following deliverables:</p>
           <ul className="list-disc list-inside space-y-1 pl-2">
             <li>Gather and analyse client requirements</li>
@@ -337,17 +368,35 @@ const TermsOfService = () => (
             <li>Maintain graphic and document libraries</li>
             <li>Maintain company event templates (ensuring branding guidelines are met)</li>
             <li>Coordinate with the client's creative team for branding guidelines and graphics creation</li>
-            <li>Notify authorised users about any updates or maintenance performed on the Cvent system</li>
+            <li>Notify authorised users about any updates or maintenance performed on the Cvent system until project sign off</li>
             <li>Educate new users on client/company standard operating procedures and best practices associated with the website registration process</li>
           </ul>
           <p>
-            All requests made in writing by the client will receive an acknowledgement of receipt before the end of the following working day. If the dedicated resource is out of the office, an acknowledgement will be sent within one (1) business day after returning to the office.
+            All requests made in writing by the client will receive an acknowledgement of receipt within 6 hours of that very same day. If the dedicated resource is out of the office, an acknowledgement will be sent within one (1) business day after returning to the office.
           </p>
         </Section>
 
         {/* Process */}
         <Section title="3. Process & Hours">
-          <p>Each project comes with a set of hours allotted to them.</p>
+          <p>Each project comes with a set of hours allotted based on the build type, as defined below.</p>
+          <div className="rounded-lg border border-border/40 overflow-hidden">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-muted/30 border-b border-border/40">
+                  <th className="py-3 pl-4 pr-4 text-left font-semibold text-foreground">Build Type</th>
+                  <th className="py-3 pr-4 text-left font-semibold text-foreground">Hours Allocated</th>
+                </tr>
+              </thead>
+              <tbody>
+                {hoursRows.map((r) => (
+                  <tr key={r.build} className="border-b border-border/30 last:border-0">
+                    <td className="py-3 pl-4 pr-4 font-medium text-foreground">{r.build}</td>
+                    <td className="py-3 pr-4 text-muted-foreground">{r.hours}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
           <ul className="list-disc list-inside space-y-1 pl-2">
             <li>A LaunchHouse Events consultant will sign off from the project/event when the allotted number of hours is consumed, or the event is launched — whichever comes earlier</li>
             <li>Post event launch support is not included as part of a regular package</li>
@@ -388,25 +437,30 @@ const TermsOfService = () => (
 
         {/* Revision Rounds */}
         <Section title="6. Revision Rounds">
-          <p>Each service tier includes a defined number of revision rounds:</p>
-          <ul className="list-disc list-inside space-y-1 pl-2">
-            <li><strong className="text-foreground">Simple Build</strong> — 1 round of revisions</li>
-            <li><strong className="text-foreground">Medium Build</strong> — 2 rounds of revisions</li>
-            <li><strong className="text-foreground">Advanced Build</strong> — 3 rounds of revisions</li>
-            <li><strong className="text-foreground">Complex Build</strong> — As agreed at the time of scoping</li>
-          </ul>
           <p>
-            Additional revisions beyond the included rounds may be accommodated at our standard hourly rate or as a separate mini-project, subject to mutual agreement.
+            All build tiers include <strong className="text-foreground">unlimited rounds of revisions</strong>, provided they are completed within the hours allocated for that build type as defined at the onset of the engagement.
           </p>
         </Section>
 
-        {/* Payment */}
-        <Section title="7. Payment Terms">
-          <p>
-            Payment terms are agreed upon at the start of each engagement. <em>[Please update this section with your specific payment terms, invoicing schedule, and accepted payment methods.]</em>
-          </p>
+        {/* Payment & Refund Terms */}
+        <Section title="7. Payment & Refund Terms">
+          <p className="font-semibold text-foreground">Payment Options</p>
+          <div className="space-y-3">
+            <div className="rounded-md border border-border/40 px-4 py-3 bg-muted/10">
+              <p className="text-sm font-semibold text-foreground mb-1">Option 1 — Staged Payment</p>
+              <p className="text-sm text-muted-foreground">A minimum booking deposit of <strong className="text-foreground">50%</strong> is required to commence the project. The remaining balance must be settled upon submission of the First Draft.</p>
+            </div>
+            <div className="rounded-md border border-border/40 px-4 py-3 bg-muted/10">
+              <p className="text-sm font-semibold text-foreground mb-1">Option 2 — Full Advance Payment</p>
+              <p className="text-sm text-muted-foreground">Pay <strong className="text-foreground">100% upfront</strong> and receive a flat <strong className="text-foreground">10% discount</strong> applied to the final invoice.</p>
+            </div>
+          </div>
           <p>
             LaunchHouse Events reserves the right to pause or withhold delivery of work in the event of outstanding payments.
+          </p>
+          <p className="font-semibold text-foreground pt-1">Refunds</p>
+          <p>
+            All eligible refunds, as agreed per contract, will be issued by LaunchHouse Events within <strong className="text-foreground">48 hours</strong> of confirmed eligibility. We will always aim to refund to the original source of payment. If a client requests a refund to a different account or payment method, additional supporting documentation may be requested before the refund is processed.
           </p>
         </Section>
 
@@ -423,7 +477,7 @@ const TermsOfService = () => (
         {/* Liability */}
         <Section title="9. Limitation of Liability">
           <p>
-            To the maximum extent permitted by applicable law, LaunchHouse Events / Rina Event Tech shall not be liable for any indirect, incidental, consequential, or special damages arising out of or in connection with the services provided, even if we have been advised of the possibility of such damages.
+            To the maximum extent permitted by applicable law, LaunchHouse Events / Rina Event Tech (GSTIN: 29AIKPC3628E1ZE · IEC: AIKPC3628E) shall not be liable for any indirect, incidental, consequential, or special damages arising out of or in connection with the services provided, even if we have been advised of the possibility of such damages.
           </p>
           <p>
             Our total liability to you for any claim arising out of or relating to these Terms shall not exceed the total fees paid by you for the specific service giving rise to the claim.
