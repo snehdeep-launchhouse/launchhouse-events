@@ -31,7 +31,7 @@ const CVENT_TECHNOLOGIES = [
   "Other",
 ];
 
-const REGISTRATION_OPTIONS = ["Single Days Only", "Full Day"];
+const REGISTRATION_OPTIONS = ["Single Days Only", "Multiple Days", "Both"];
 
 /* ── Schema ──────────────────────────────────────────────────────── */
 const quoteSchema = z
