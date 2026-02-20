@@ -107,6 +107,60 @@ export type Database = {
         }
         Relationships: []
       }
+      quote_requests: {
+        Row: {
+          cvent_technologies: string[]
+          cvent_technologies_other: string | null
+          email: string
+          email_sent_at: string | null
+          email_status: string
+          event_launch_date: string
+          event_type: string
+          event_type_new_or_clone: string
+          full_name: string
+          id: string
+          quote_number: number
+          registration_options: string[]
+          registration_types_count: string
+          sessions_count: string
+          submitted_at: string
+        }
+        Insert: {
+          cvent_technologies?: string[]
+          cvent_technologies_other?: string | null
+          email: string
+          email_sent_at?: string | null
+          email_status?: string
+          event_launch_date: string
+          event_type: string
+          event_type_new_or_clone: string
+          full_name: string
+          id?: string
+          quote_number?: number
+          registration_options?: string[]
+          registration_types_count: string
+          sessions_count: string
+          submitted_at?: string
+        }
+        Update: {
+          cvent_technologies?: string[]
+          cvent_technologies_other?: string | null
+          email?: string
+          email_sent_at?: string | null
+          email_status?: string
+          event_launch_date?: string
+          event_type?: string
+          event_type_new_or_clone?: string
+          full_name?: string
+          id?: string
+          quote_number?: number
+          registration_options?: string[]
+          registration_types_count?: string
+          sessions_count?: string
+          submitted_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

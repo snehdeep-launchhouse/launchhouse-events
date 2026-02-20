@@ -11,6 +11,7 @@ import heroBanner from "@/assets/hero-banner.jpg";
 import eventCheckin from "@/assets/event-checkin.jpg";
 
 const BUILD_REQUEST_URL = "/build-request";
+const GET_A_QUOTE_URL = "/get-a-quote";
 
 /* ── Event Build tiers ───────────────────────────────────────────── */
 const eventBuilds = [
@@ -183,10 +184,9 @@ const Pricing = () => {
                   <Button
                     className="w-full mt-auto"
                     variant={build.hasPrice ? "default" : "outline"}
-                    onClick={() => window.open(BUILD_REQUEST_URL, "_blank")}
+                    onClick={() => window.open(build.hasPrice ? BUILD_REQUEST_URL : GET_A_QUOTE_URL, "_blank")}
                   >
                     {build.hasPrice ? "Get Started" : "Get a Quote"} <ArrowUpRight className="w-4 h-4 ml-1" />
-
                   </Button>
                 </div>
               );
