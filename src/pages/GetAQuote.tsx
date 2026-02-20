@@ -54,9 +54,7 @@ const quoteSchema = z
     sessionsCount: z.enum(["0–10", "11–20", "More than 21"], {
       required_error: "Please select a range",
     }),
-    registrationOptions: z
-      .array(z.string())
-      .min(1, "Select at least one registration option"),
+    registrationOptions: z.string().min(1, "Please select a registration option"),
     eventLaunchDate: z.date({ required_error: "Event launch date is required" }),
   })
   .refine(
@@ -152,13 +150,13 @@ const GetAQuote = () => {
       fullName: "",
       email: "",
       cventTechnologies: [],
-      registrationOptions: [],
+      registrationOptions: "",
       cventTechnologiesOther: "",
     },
   });
 
   const watchedTech = watch("cventTechnologies") ?? [];
-  const watchedRegOptions = watch("registrationOptions") ?? [];
+  const watchedRegOption = watch("registrationOptions") ?? "";
 
   const onSubmit = async (data: QuoteForm) => {
     setSubmitting(true);
@@ -175,7 +173,7 @@ const GetAQuote = () => {
             cventTechnologiesOther: data.cventTechnologiesOther ?? null,
             registrationTypesCount: data.registrationTypesCount,
             sessionsCount: data.sessionsCount,
-            registrationOptions: data.registrationOptions,
+            registrationOptions: [data.registrationOptions],
             eventLaunchDate: format(data.eventLaunchDate, "PPP"),
           },
         }
@@ -552,22 +550,18 @@ const GetAQuote = () => {
                     key={opt}
                     className={cn(
                       "flex items-center gap-3 rounded-lg border px-4 py-3 cursor-pointer transition-colors flex-1",
-                      watchedRegOptions.includes(opt)
+                      watchedRegOption === opt
                         ? "border-primary bg-secondary/50"
                         : "border-border hover:border-primary/50"
                     )}
                   >
-                    <Checkbox
-                      checked={watchedRegOptions.includes(opt)}
-                      onCheckedChange={(checked) => {
-                        const current = watchedRegOptions;
-                        const updated = checked
-                          ? [...current, opt]
-                          : current.filter((o) => o !== opt);
-                        setValue("registrationOptions", updated, {
-                          shouldValidate: true,
-                        });
-                      }}
+                    <input
+                      type="radio"
+                      name="registrationOptions"
+                      value={opt}
+                      checked={watchedRegOption === opt}
+                      onChange={() => setValue("registrationOptions", opt, { shouldValidate: true })}
+                      className="accent-primary w-4 h-4"
                     />
                     <span className="text-sm font-medium">{opt}</span>
                   </label>
