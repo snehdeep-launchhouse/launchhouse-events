@@ -12,6 +12,7 @@ import BuildRequest from "./pages/BuildRequest";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import CookieBanner from "./components/CookieBanner";
+import GetAQuote from "./pages/GetAQuote";
 
 const queryClient = new QueryClient();
 
@@ -28,6 +29,7 @@ const App = () => (
           <Route path="/services" element={<Services />} />
           <Route path="/pricing" element={<Pricing />} />
           <Route path="/build-request" element={<BuildRequest />} />
+          <Route path="/get-a-quote" element={<GetAQuote />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/terms-of-service" element={<TermsOfService />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

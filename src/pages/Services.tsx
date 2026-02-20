@@ -13,6 +13,7 @@ import heroBanner from "@/assets/hero-banner.jpg";
 import eventCheckin from "@/assets/event-checkin.jpg";
 
 const BUILD_REQUEST_URL = "/build-request";
+const GET_A_QUOTE_URL = "/get-a-quote";
 
 /* ── Timeline benchmarks ─────────────────────────────────────────── */
 const benchmarks = [
@@ -245,7 +246,7 @@ const Services = () => (
         <p className="text-white/80 max-w-lg mx-auto mb-8">
           Tell us about your event and we'll put together a tailored proposal within 24 hours.
         </p>
-        <Button size="lg" className="shadow-btn" onClick={() => window.open(BUILD_REQUEST_URL, "_blank")}>
+        <Button size="lg" className="shadow-btn" onClick={() => window.open(GET_A_QUOTE_URL, "_blank")}>
           Get a Quote <ArrowUpRight className="w-4 h-4 ml-1" />
         </Button>
       </div>
