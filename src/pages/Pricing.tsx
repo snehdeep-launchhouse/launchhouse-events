@@ -313,6 +313,66 @@ const Pricing = () => {
         </div>
       </section>
 
+      {/* Payment Options */}
+      <section className="py-20 md:py-28">
+        <div className="container">
+          <div className="text-center mb-12">
+            <p className="text-sm font-semibold uppercase tracking-widest text-primary mb-3">Payment Terms</p>
+            <h2 className="text-3xl md:text-4xl font-bold font-display tracking-tight">Flexible Payment Options</h2>
+            <p className="text-muted-foreground mt-4 max-w-xl mx-auto">
+              Choose the payment structure that works best for you. Both options are available across all build tiers.
+            </p>
+          </div>
+
+          <div className="grid sm:grid-cols-2 gap-6 max-w-3xl mx-auto">
+            {/* Option 1 */}
+            <div className="rounded-xl border border-border/50 bg-card-gradient p-8 shadow-card hover:shadow-card-hover hover:scale-[1.02] transition-all duration-300 flex flex-col">
+              <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-3">Option 1</p>
+              <h3 className="text-xl font-bold font-display mb-2">Staged Payment</h3>
+              <p className="text-3xl font-bold font-display text-primary mb-4">50% + 50%</p>
+              <p className="text-sm text-muted-foreground leading-relaxed flex-1">
+                Pay a minimum booking deposit of <strong className="text-foreground">50%</strong> to kick off your project. The remaining balance is due upon submission of the First Draft.
+              </p>
+              <ul className="mt-6 space-y-2 text-sm text-muted-foreground">
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0 text-primary" />
+                  50% deposit to secure your build slot
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0 text-primary" />
+                  Balance due on first draft delivery
+                </li>
+              </ul>
+            </div>
+
+            {/* Option 2 */}
+            <div className="rounded-xl border-2 border-primary bg-primary/5 p-8 shadow-card hover:shadow-card-hover hover:scale-[1.02] transition-all duration-300 flex flex-col relative overflow-hidden">
+              <div className="absolute top-4 right-4 bg-primary text-primary-foreground text-xs font-bold px-3 py-1 rounded-full">Save 10%</div>
+              <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-3">Option 2</p>
+              <h3 className="text-xl font-bold font-display mb-2">Full Advance</h3>
+              <p className="text-3xl font-bold font-display text-primary mb-4">100% Upfront</p>
+              <p className="text-sm text-muted-foreground leading-relaxed flex-1">
+                Pay the full amount upfront and receive a <strong className="text-foreground">flat 10% discount</strong> applied to your final invoice — the best value for committed clients.
+              </p>
+              <ul className="mt-6 space-y-2 text-sm text-muted-foreground">
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0 text-primary" />
+                  10% discount on the total invoice
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0 text-primary" />
+                  Mandatory for Same Day Delivery builds
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <p className="text-center text-sm text-muted-foreground mt-8 max-w-xl mx-auto">
+            LaunchHouse Events reserves the right to pause or withhold delivery of work in the event of outstanding payments.
+          </p>
+        </div>
+      </section>
+
       {/* CTA */}
       <section className="relative py-20 md:py-28 overflow-hidden">
         <div className="absolute inset-0">
