@@ -15,7 +15,7 @@ const TnCTooltip = () => {
           T&C Apply
         </span>
       </PopoverTrigger>
-      <PopoverContent side="bottom" className="max-w-xs p-4 text-left relative">
+      <PopoverContent side="bottom" className="max-w-sm p-4 text-left relative">
         <button
           onClick={(e) => { e.stopPropagation(); setOpen(false); }}
           className="absolute top-2 right-2 text-muted-foreground hover:text-foreground transition-colors"
@@ -23,11 +23,16 @@ const TnCTooltip = () => {
         >
           <X className="w-4 h-4" />
         </button>
+        <p className="text-xs font-semibold uppercase tracking-wider text-primary mb-2 pr-5">Same Day Delivery — Terms & Conditions</p>
         <ul className="list-disc list-inside space-y-2 text-xs leading-relaxed pr-4">
-          <li>Applies to all Simple and eligible Medium Builds</li>
+          <li>Applies to all Simple and eligible Medium Builds only</li>
           <li>Advanced and Complex Builds do not qualify for Same Day Deliveries</li>
-          <li>Pre-Requisites for same day delivery — Creative Assets like Event Banner, Headers, Fonts, Branding Guidelines, Text Copies should be readily available. Also event logistics like number of registration types, sessions, Event Ticket types should be available from the onset.</li>
-          <li>Delays in handing the information will lead to delivery deadline being pushed</li>
+          <li>Same Day Delivery means the project will be delivered within 12 hours of receiving all required documents and full advance payment</li>
+          <li>Projects must commence on or before 8:00 AM Eastern Time, Monday to Friday, for same-day delivery by 8:00 PM Eastern Time on the same day</li>
+          <li>Full payment (100%) in advance is mandatory for all Same Day Delivery engagements</li>
+          <li>All creative assets (event banner, headers, fonts, branding guidelines, text copies) and event logistics (registration types, sessions, ticket types) must be provided in full at project commencement</li>
+          <li>Delays in handing over any required information will push the delivery deadline accordingly</li>
+          <li>If LaunchHouse Events misses the agreed same-day delivery deadline, the client has the right to claim a full refund, which will be processed within 48 hours</li>
         </ul>
       </PopoverContent>
     </Popover>
