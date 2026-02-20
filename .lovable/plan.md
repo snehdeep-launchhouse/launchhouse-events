@@ -1,27 +1,27 @@
 
-## Update Registration Options — Add "Multiple Days" and "Both"
+## Enable Right-Click "Open in New Tab/Window" on Navbar Links
 
-### What's Changing
-The last question on the Get a Quote form — **"What registration options will be available to attendees?"** — currently has two checkboxes:
-- Single Days Only
-- Full Day
+### The Problem
+All navbar links are rendered as `<button>` elements. Browsers only show "Open in new tab / Open in new window" in the right-click context menu for real `<a>` (anchor) elements. Buttons cannot be right-clicked to open in a new tab — they have no `href` for the browser to act on.
 
-It will be updated to three checkboxes:
-- Single Days Only
-- Multiple Days
-- Both
+### The Fix
+Replace `<button>` with `<a>` tags for every navbar link, providing a real `href` the browser can resolve. The existing click handler logic (smooth-scroll for hash links, SPA navigation for routes) is preserved via `onClick` with `e.preventDefault()` so the page doesn't do a full reload on left-click. Right-click and middle-click will work natively because the `<a>` tag has a valid `href`.
 
-"Full Day" is replaced with "Multiple Days" and a third option "Both" is added.
+### Behavior After the Change
 
-### Files to Change
+| Action | Route links (e.g. /about) | Scroll links (e.g. #why-us) |
+|---|---|---|
+| Left-click | SPA navigation (no reload, smooth) | Smooth scroll to section |
+| Right-click | "Open in new tab / window" available | "Open in new tab / window" available (navigates to `/#why-us`) |
+| Middle-click | Opens in new tab | Opens in new tab at `/#why-us` |
+| Cmd/Ctrl+click | Opens in new tab | Opens in new tab at `/#why-us` |
 
-| File | Change |
-|---|---|
-| `src/pages/GetAQuote.tsx` | Update line 34: change `REGISTRATION_OPTIONS` constant from `["Single Days Only", "Full Day"]` to `["Single Days Only", "Multiple Days", "Both"]` |
+### Technical Details
 
-### Technical Notes
-- The Zod schema for `registrationOptions` is already `z.array(z.string()).min(1, …)` — it accepts any string values, so no schema change is needed.
-- The edge function (`send-quote-request`) stores the selection as a `text[]` array — it will correctly store whichever options are submitted, no backend change needed.
-- The checkbox render loop uses `REGISTRATION_OPTIONS.map(...)` so the third option appears automatically.
-- The flex row layout (`flex flex-col sm:flex-row`) will accommodate three chips cleanly on desktop; on mobile they stack vertically.
-- No database migration is needed — the `registration_options text[]` column stores whatever strings are submitted.
+- **Route links** (`type: "route"`): `href` is set to the route path (e.g. `/about`). `onClick` calls `e.preventDefault()` then `navigate(href)` + `scrollTo(top)` for SPA behaviour on left-click.
+- **Scroll links** (`type: "scroll"`): `href` is set to `/#why-us` / `/#contact` so right-click/middle-click land on the home page at the correct anchor. Left-click `onClick` calls `e.preventDefault()` and handles the smooth scroll or navigate-then-scroll logic as before.
+- The mobile menu uses the same `<a>` elements, so the fix applies there too.
+- The "Get Started" CTA button already uses `window.open` so it opens in a new tab by default — no change needed there.
+
+### File Changed
+- `src/components/Navbar.tsx` — replace `<button>` with `<a>` in both desktop and mobile nav, update `handleNav` to accept `e: React.MouseEvent<HTMLAnchorElement>` and call `e.preventDefault()`.
