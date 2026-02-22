@@ -7,6 +7,108 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+// ── Google Drive helpers ────────────────────────────────────────────
+
+function base64url(data: Uint8Array): string {
+  let binary = "";
+  for (const byte of data) binary += String.fromCharCode(byte);
+  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+async function getGoogleAccessToken(serviceAccountJson: string): Promise<string> {
+  const sa = JSON.parse(serviceAccountJson);
+  const now = Math.floor(Date.now() / 1000);
+
+  const header = base64url(new TextEncoder().encode(JSON.stringify({ alg: "RS256", typ: "JWT" })));
+  const claimSet = base64url(
+    new TextEncoder().encode(
+      JSON.stringify({
+        iss: sa.client_email,
+        scope: "https://www.googleapis.com/auth/drive",
+        aud: "https://oauth2.googleapis.com/token",
+        iat: now,
+        exp: now + 3600,
+      })
+    )
+  );
+
+  const signingInput = `${header}.${claimSet}`;
+
+  // Import the private key
+  const pemBody = sa.private_key
+    .replace(/-----BEGIN PRIVATE KEY-----/, "")
+    .replace(/-----END PRIVATE KEY-----/, "")
+    .replace(/\s/g, "");
+  const keyData = Uint8Array.from(atob(pemBody), (c) => c.charCodeAt(0));
+
+  const cryptoKey = await crypto.subtle.importKey(
+    "pkcs8",
+    keyData,
+    { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
+    false,
+    ["sign"]
+  );
+
+  const signature = base64url(
+    new Uint8Array(await crypto.subtle.sign("RSASSA-PKCS1-v1_5", cryptoKey, new TextEncoder().encode(signingInput)))
+  );
+
+  const jwt = `${signingInput}.${signature}`;
+
+  const tokenRes = await fetch("https://oauth2.googleapis.com/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: `grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer&assertion=${jwt}`,
+  });
+
+  const tokenJson = await tokenRes.json();
+  if (!tokenRes.ok) throw new Error(`Google token error: ${JSON.stringify(tokenJson)}`);
+  return tokenJson.access_token;
+}
+
+async function createDriveFolder(
+  accessToken: string,
+  parentFolderId: string,
+  folderName: string
+): Promise<string | null> {
+  const headers = {
+    Authorization: `Bearer ${accessToken}`,
+    "Content-Type": "application/json",
+  };
+
+  // 1. Create folder
+  const createRes = await fetch("https://www.googleapis.com/drive/v3/files", {
+    method: "POST",
+    headers,
+    body: JSON.stringify({
+      name: folderName,
+      mimeType: "application/vnd.google-apps.folder",
+      parents: [parentFolderId],
+    }),
+  });
+  const folder = await createRes.json();
+  if (!createRes.ok) throw new Error(`Drive create error: ${JSON.stringify(folder)}`);
+
+  const folderId = folder.id;
+
+  // 2. Set anyone-can-upload permission
+  await fetch(`https://www.googleapis.com/drive/v3/files/${folderId}/permissions`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({ type: "anyone", role: "writer" }),
+  });
+
+  // 3. Get shareable link
+  const metaRes = await fetch(
+    `https://www.googleapis.com/drive/v3/files/${folderId}?fields=webViewLink`,
+    { headers }
+  );
+  const meta = await metaRes.json();
+  return meta.webViewLink ?? `https://drive.google.com/drive/folders/${folderId}`;
+}
+
+// ── Main handler ────────────────────────────────────────────────────
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -61,8 +163,61 @@ serve(async (req) => {
       ["Additional Information", payload.additionalInfo ?? "N/A"],
     ];
 
-    // Build an HTML email body with a styled table
-    const tableRows = rows
+    // Log submission to database
+    const { error: dbError } = await supabase.from("build_requests").insert({
+      first_name: payload.firstName ?? "",
+      last_name: payload.lastName ?? "",
+      email: payload.email ?? "",
+      company_name: payload.companyName ?? "",
+      contacts: payload.contacts ?? [],
+      primary_poc_phone: payload.primaryPocPhone ?? null,
+      kickoff_timezone: payload.kickoffTimezone ?? null,
+      kickoff_date_1: payload.kickoffDate1 ?? null,
+      kickoff_time_1: payload.kickoffTime1 ?? null,
+      kickoff_date_2: payload.kickoffDate2 ?? null,
+      kickoff_time_2: payload.kickoffTime2 ?? null,
+      chosen_solutions: Array.isArray(payload.chosenSolutions) ? payload.chosenSolutions : [],
+      account_number: payload.accountNumber ?? null,
+      planner_first_name: payload.plannerFirstName ?? null,
+      planner_last_name: payload.plannerLastName ?? null,
+      planner_email: payload.plannerEmail ?? null,
+      event_title: payload.eventTitle ?? "",
+      event_start_date: payload.eventStartDate ?? null,
+      event_start_time: payload.eventStartTime ?? null,
+      event_end_date: payload.eventEndDate ?? null,
+      event_end_time: payload.eventEndTime ?? null,
+      event_timezone: payload.eventTimezone ?? null,
+      go_live_date: payload.goLiveDate ?? null,
+      additional_info: payload.additionalInfo ?? null,
+      email_status: "sending",
+    });
+    if (dbError) console.error("DB insert error:", dbError);
+
+    // ── Google Drive folder creation (graceful fallback) ──────────
+    let driveFolderLink: string | null = null;
+    try {
+      const serviceAccountKey = Deno.env.get("GOOGLE_SERVICE_ACCOUNT_KEY");
+      const parentFolderId = Deno.env.get("GOOGLE_DRIVE_PARENT_FOLDER_ID");
+
+      if (serviceAccountKey && parentFolderId) {
+        const accessToken = await getGoogleAccessToken(serviceAccountKey);
+        const eventTitle = payload.eventTitle || "Untitled Event";
+        driveFolderLink = await createDriveFolder(accessToken, parentFolderId, eventTitle);
+        console.log("Google Drive folder created:", driveFolderLink);
+      } else {
+        console.log("Google Drive secrets not configured — skipping folder creation.");
+      }
+    } catch (driveErr) {
+      console.error("Google Drive folder creation failed (continuing without link):", driveErr);
+    }
+
+    // ── Build internal email HTML ─────────────────────────────────
+    // Inject Drive link row if available
+    const allRows = driveFolderLink
+      ? [...rows, ["Google Drive Folder", `<a href="${driveFolderLink}" style="color:#006AE1;text-decoration:underline;">Open Folder</a>`] as [string, string]]
+      : rows;
+
+    const tableRows = allRows
       .map(
         ([field, value]) => `
         <tr>
@@ -98,12 +253,18 @@ serve(async (req) => {
 
     const subject = `New Build Request – ${payload.eventTitle ?? "Untitled Event"} (${payload.companyName ?? ""})`;
 
-    const internalRecipients = [
-      { email: "sam@launchhouse.events", name: "Sam" },
-      { email: "snehdeep@launchhouse.events", name: "Snehdeep" },
-    ];
+    // ── Build confirmation email HTML ─────────────────────────────
+    const driveBlock = driveFolderLink
+      ? `<p style="margin:0 0 16px;font-size:15px;color:#374151;">
+           Please use this Google Drive folder link to upload any additional information and supply us with all necessary documents for building your event:
+         </p>
+         <p style="margin:0 0 24px;">
+           <a href="${driveFolderLink}" style="display:inline-block;background:#006AE1;color:#ffffff;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:600;font-size:15px;">
+             Upload Documents to Google Drive
+           </a>
+         </p>`
+      : "";
 
-    // Confirmation email HTML for the submitter
     const confirmationHtml = `
 <!DOCTYPE html>
 <html>
@@ -141,6 +302,7 @@ serve(async (req) => {
           <td style="padding:8px 12px;border:1px solid #d1d5db;vertical-align:top;">${Array.isArray(payload.chosenSolutions) ? payload.chosenSolutions.join(", ") : (payload.chosenSolutions ?? "")}</td>
         </tr>
       </table>
+      ${driveBlock}
       <p style="margin:0 0 16px;font-size:15px;color:#374151;">
         If you have any questions in the meantime, feel free to reply to this email.
       </p>
@@ -155,37 +317,6 @@ serve(async (req) => {
   </div>
 </body>
 </html>`;
-
-    
-    // Log submission to database
-    const { error: dbError } = await supabase.from("build_requests").insert({
-      first_name: payload.firstName ?? "",
-      last_name: payload.lastName ?? "",
-      email: payload.email ?? "",
-      company_name: payload.companyName ?? "",
-      contacts: payload.contacts ?? [],
-      primary_poc_phone: payload.primaryPocPhone ?? null,
-      kickoff_timezone: payload.kickoffTimezone ?? null,
-      kickoff_date_1: payload.kickoffDate1 ?? null,
-      kickoff_time_1: payload.kickoffTime1 ?? null,
-      kickoff_date_2: payload.kickoffDate2 ?? null,
-      kickoff_time_2: payload.kickoffTime2 ?? null,
-      chosen_solutions: Array.isArray(payload.chosenSolutions) ? payload.chosenSolutions : [],
-      account_number: payload.accountNumber ?? null,
-      planner_first_name: payload.plannerFirstName ?? null,
-      planner_last_name: payload.plannerLastName ?? null,
-      planner_email: payload.plannerEmail ?? null,
-      event_title: payload.eventTitle ?? "",
-      event_start_date: payload.eventStartDate ?? null,
-      event_start_time: payload.eventStartTime ?? null,
-      event_end_date: payload.eventEndDate ?? null,
-      event_end_time: payload.eventEndTime ?? null,
-      event_timezone: payload.eventTimezone ?? null,
-      go_live_date: payload.goLiveDate ?? null,
-      additional_info: payload.additionalInfo ?? null,
-      email_status: "sending",
-    });
-    if (dbError) console.error("DB insert error:", dbError);
 
     // Send sequentially to respect Resend's 2 req/sec rate limit
     const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
