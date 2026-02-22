@@ -77,7 +77,7 @@ async function createDriveFolder(
   };
 
   // 1. Create folder
-  const createRes = await fetch("https://www.googleapis.com/drive/v3/files", {
+  const createRes = await fetch("https://www.googleapis.com/drive/v3/files?supportsAllDrives=true", {
     method: "POST",
     headers,
     body: JSON.stringify({
@@ -92,7 +92,7 @@ async function createDriveFolder(
   const folderId = folder.id;
 
   // 2. Set anyone-can-upload permission
-  await fetch(`https://www.googleapis.com/drive/v3/files/${folderId}/permissions`, {
+  await fetch(`https://www.googleapis.com/drive/v3/files/${folderId}/permissions?supportsAllDrives=true`, {
     method: "POST",
     headers,
     body: JSON.stringify({ type: "anyone", role: "writer" }),
@@ -100,7 +100,7 @@ async function createDriveFolder(
 
   // 3. Get shareable link
   const metaRes = await fetch(
-    `https://www.googleapis.com/drive/v3/files/${folderId}?fields=webViewLink`,
+    `https://www.googleapis.com/drive/v3/files/${folderId}?fields=webViewLink&supportsAllDrives=true`,
     { headers }
   );
   const meta = await metaRes.json();
