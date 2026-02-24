@@ -4,6 +4,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import EmailInput from "@/components/EmailInput";
+import { zodEmail } from "@/lib/email-validation";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -37,7 +39,7 @@ const REGISTRATION_OPTIONS = ["Single Days Only", "Multiple Days", "Both"];
 const quoteSchema = z
   .object({
     fullName: z.string().trim().min(1, "Full name is required").max(200),
-    email: z.string().trim().email("Invalid email address").max(255),
+    email: zodEmail(),
     eventTypeNewOrClone: z.enum(["New Event", "Existing Event"], {
       required_error: "Please select an option",
     }),
@@ -304,11 +306,10 @@ const GetAQuote = () => {
             </Field>
 
             <Field label="Email" required error={errors.email?.message}>
-              <Input
-                type="email"
+              <EmailInput
                 {...register("email")}
                 placeholder="jane@company.com"
-                className={errors.email ? "border-destructive" : ""}
+                externalError={errors.email?.message}
               />
             </Field>
           </div>
