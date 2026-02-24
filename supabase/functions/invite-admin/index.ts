@@ -7,7 +7,7 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const MASTER_ADMIN_ID = "b426c88b-14a2-46ed-93f3-08cb00282b83";
+const ADMIN_STATUS_ACTIVE = "active";
 const REDIRECT_URL = "https://launchhouse-events.lovable.app/reset-password";
 
 serve(async (req: Request) => {
@@ -25,15 +25,23 @@ serve(async (req: Request) => {
 
     const supabaseAdmin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 
-    // Verify caller is the master admin
+    // Verify caller is an active admin
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) throw new Error("Missing authorization header");
 
     const token = authHeader.replace("Bearer ", "");
     const { data: { user: caller }, error: authError } = await supabaseAdmin.auth.getUser(token);
     if (authError || !caller) throw new Error("Unauthorized");
-    if (caller.id !== MASTER_ADMIN_ID) {
-      throw new Error("Only the master admin can invite users");
+
+    const { data: adminAccess } = await supabaseAdmin
+      .from("admin_users")
+      .select("id, status")
+      .eq("id", caller.id)
+      .eq("status", ADMIN_STATUS_ACTIVE)
+      .maybeSingle();
+
+    if (!adminAccess) {
+      throw new Error("Only active admins can invite users");
     }
 
     const { email } = await req.json();
