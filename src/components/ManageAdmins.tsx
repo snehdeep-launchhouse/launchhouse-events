@@ -6,11 +6,13 @@ import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Loader2, Trash2, Mail, UserPlus, ArrowLeft, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { Badge } from "@/components/ui/badge";
 
 interface AdminUser {
   id: string;
   email: string | null;
   created_at: string | null;
+  status: string;
 }
 
 const MASTER_ADMIN_ID = "b426c88b-14a2-46ed-93f3-08cb00282b83";
@@ -26,48 +28,50 @@ const ManageAdmins = ({ onBack, currentUserId }: ManageAdminsProps) => {
   const [admins, setAdmins] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [newEmail, setNewEmail] = useState("");
-  const [newPassword, setNewPassword] = useState("");
   const [creating, setCreating] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   const fetchAdmins = useCallback(async () => {
     setLoading(true);
-    const { data, error } = await supabase.from("admin_users").select("id, email, created_at").order("created_at", { ascending: true });
+    const { data, error } = await supabase.from("admin_users").select("id, email, created_at, status").order("created_at", { ascending: true });
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
-      setAdmins(data ?? []);
+      setAdmins((data as AdminUser[]) ?? []);
     }
     setLoading(false);
   }, [toast]);
 
   useEffect(() => { fetchAdmins(); }, [fetchAdmins]);
 
-  const handleCreate = async (e: React.FormEvent) => {
+  const handleInvite = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newEmail.trim() || !newPassword.trim()) return;
+    if (!newEmail.trim()) return;
     setCreating(true);
     try {
-      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-        email: newEmail.trim(),
-        password: newPassword.trim(),
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast({ title: "Error", description: "Not authenticated.", variant: "destructive" });
+        return;
+      }
+
+      const res = await supabase.functions.invoke("invite-admin", {
+        body: { email: newEmail.trim() },
       });
-      if (signUpError) {
-        toast({ title: "Signup failed", description: signUpError.message, variant: "destructive" });
+
+      if (res.error) {
+        toast({ title: "Invite failed", description: res.error.message, variant: "destructive" });
         return;
       }
-      if (!signUpData.user) {
-        toast({ title: "Error", description: "User creation returned no user.", variant: "destructive" });
+
+      const result = res.data as { success: boolean; error?: string };
+      if (!result.success) {
+        toast({ title: "Invite failed", description: result.error ?? "Unknown error", variant: "destructive" });
         return;
       }
-      const { error: insertError } = await supabase.from("admin_users").insert({ id: signUpData.user.id, email: newEmail.trim() });
-      if (insertError) {
-        toast({ title: "User created but admin insert failed", description: insertError.message, variant: "destructive" });
-        return;
-      }
-      toast({ title: "Admin created", description: `${newEmail.trim()} has been added as an admin.` });
+
+      toast({ title: "Invite sent", description: `Invitation email sent to ${newEmail.trim()}.` });
       setNewEmail("");
-      setNewPassword("");
       fetchAdmins();
     } catch {
       toast({ title: "Error", description: "Network error.", variant: "destructive" });
@@ -106,6 +110,11 @@ const ManageAdmins = ({ onBack, currentUserId }: ManageAdminsProps) => {
     setActionLoading(null);
   };
 
+  const statusBadge = (status: string) => {
+    if (status === "invited") return <Badge variant="secondary">Invited</Badge>;
+    return <Badge variant="default">Active</Badge>;
+  };
+
   return (
     <div className="min-h-screen bg-background p-6">
       <div className="max-w-4xl mx-auto space-y-8">
@@ -116,27 +125,23 @@ const ManageAdmins = ({ onBack, currentUserId }: ManageAdminsProps) => {
           </Button>
           <div>
             <h1 className="text-2xl font-bold font-display">Manage System Admins</h1>
-            <p className="text-sm text-muted-foreground">Add, remove, or reset passwords for admin users</p>
+            <p className="text-sm text-muted-foreground">Invite, remove, or reset passwords for admin users</p>
           </div>
         </div>
 
-        {/* Create New Admin */}
+        {/* Invite New Admin */}
         <div className="rounded-xl border border-border bg-card p-6 space-y-4">
           <h2 className="text-lg font-semibold font-display flex items-center gap-2">
-            <UserPlus className="w-5 h-5 text-primary" /> Create New Admin
+            <UserPlus className="w-5 h-5 text-primary" /> Invite New Admin
           </h2>
-          <form onSubmit={handleCreate} className="flex flex-col sm:flex-row gap-3 items-end">
+          <form onSubmit={handleInvite} className="flex flex-col sm:flex-row gap-3 items-end">
             <div className="flex-1 space-y-1.5">
               <Label htmlFor="new-email">Email</Label>
               <Input id="new-email" type="email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} placeholder="admin@example.com" required />
             </div>
-            <div className="flex-1 space-y-1.5">
-              <Label htmlFor="new-password">Password</Label>
-              <Input id="new-password" type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="Min 6 characters" minLength={6} required />
-            </div>
             <Button type="submit" disabled={creating} className="gap-1.5">
               {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserPlus className="w-4 h-4" />}
-              {creating ? "Creating..." : "Create Admin"}
+              {creating ? "Sending..." : "Send Invite"}
             </Button>
           </form>
         </div>
@@ -162,6 +167,7 @@ const ManageAdmins = ({ onBack, currentUserId }: ManageAdminsProps) => {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Email</TableHead>
+                    <TableHead>Status</TableHead>
                     <TableHead>User ID</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
@@ -170,6 +176,7 @@ const ManageAdmins = ({ onBack, currentUserId }: ManageAdminsProps) => {
                   {admins.map((admin) => (
                     <TableRow key={admin.id}>
                       <TableCell className="font-medium">{admin.email ?? "—"}</TableCell>
+                      <TableCell>{statusBadge(admin.status)}</TableCell>
                       <TableCell className="text-muted-foreground text-xs font-mono">{admin.id}</TableCell>
                       <TableCell className="text-right space-x-2">
                         {isMasterAdmin && (
