@@ -159,19 +159,21 @@ const BuildRequest = () => {
   /* ── Abandoned form tracking ─────────────────────────────────── */
   const handleNext1 = form1.handleSubmit(async (data1) => {
     try {
-      const { data, error } = await supabase
-        .from("abandoned_eb_forms" as any)
+      const id = crypto.randomUUID();
+      const { error } = await supabase
+        .from("abandoned_eb_forms")
         .insert({
+          id,
           first_name: data1.firstName,
           last_name: data1.lastName,
           email: data1.email,
           company_name: data1.companyName,
           last_page_visited: 1,
-        } as any)
-        .select("id")
-        .single();
-      if (!error && data) {
-        setAbandonedFormId((data as any).id);
+        });
+      if (!error) {
+        setAbandonedFormId(id);
+      } else {
+        console.error("Abandoned form insert error:", error);
       }
     } catch (e) {
       console.error("Abandoned form tracking error:", e);
@@ -183,8 +185,8 @@ const BuildRequest = () => {
     if (abandonedFormId) {
       try {
         await supabase
-          .from("abandoned_eb_forms" as any)
-          .update({ last_page_visited: 2, updated_at: new Date().toISOString() } as any)
+          .from("abandoned_eb_forms")
+          .update({ last_page_visited: 2, updated_at: new Date().toISOString() })
           .eq("id", abandonedFormId);
       } catch (e) {
         console.error("Abandoned form tracking error:", e);
@@ -215,8 +217,8 @@ const BuildRequest = () => {
       if (abandonedFormId) {
         try {
           await supabase
-            .from("abandoned_eb_forms" as any)
-            .update({ last_page_visited: 3, completed: true, updated_at: new Date().toISOString() } as any)
+            .from("abandoned_eb_forms")
+            .update({ last_page_visited: 3, completed: true, updated_at: new Date().toISOString() })
             .eq("id", abandonedFormId);
         } catch (e) {
           console.error("Abandoned form tracking error:", e);
