@@ -1,33 +1,68 @@
 
 
-## Redesign Admin Management: Clear Admin vs User Separation + Live Acceptance Status
+## Smart Email Validation for Public Forms
 
-### What Changes
+### Scope
 
-**1. Split the user list into two clear sections**
-- A prominent **"Admin (You)"** card at the top showing your account with a special "Owner" or "Master Admin" badge -- always visible, never removable
-- A separate **"Invited Users"** section below listing everyone else
+Three public forms need enhanced email validation:
+1. **Build Request** (`src/pages/BuildRequest.tsx`) — primary email + POC contact emails
+2. **Get A Quote** (`src/pages/GetAQuote.tsx`) — single email field
+3. **Contact Section** (`src/components/ContactSection.tsx`) — single email field (no zod, uses basic state)
 
-**2. Better status labels**
-- Invited users who haven't accepted yet will show a **"Not Accepted"** badge (yellow/orange)
-- Once they click the invite link and log in, their status automatically flips to **"Accepted"** (green badge)
-- Your own card always shows **"Master Admin"**
+### Current State
 
-**3. Auto-update status on first login**
-- When an invited user logs into the admin dashboard for the first time, the system will automatically update their status from `invited` to `active` in the database
-- Next time you refresh the Manage Admins page, their badge will show "Accepted"
+- Build Request and Get A Quote already use `zod` with `.email()` — basic format check only, no domain validation.
+- Contact Section uses raw `useState` with no validation beyond `type="email"`.
 
-### Files to Change
+### Plan
 
-| File | Change |
+**Step 1: Create a shared email validation utility** (`src/lib/email-validation.ts`)
+
+- Export a strict regex that requires `name@domain.tld` where the TLD is at least 2 characters (catches `test@test`).
+- Export a `validateEmail(value: string)` function returning `{ valid: boolean; message?: string }`.
+- Export a custom zod `.refine()` helper for use in zod schemas.
+
+```
+Regex: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
+```
+
+**Step 2: Create a reusable `EmailInput` component** (`src/components/EmailInput.tsx`)
+
+- Wraps the existing `Input` component.
+- Accepts standard input props plus an optional `value` or react-hook-form `register` props.
+- Shows real-time visual feedback:
+  - Empty → neutral (no indicator)
+  - Valid → green border + small green checkmark icon
+  - Invalid → red border + helper text "Please enter a valid email address."
+- All validation is client-side only; no API calls.
+
+**Step 3: Update the three forms**
+
+| Form | Change |
 |------|--------|
-| `src/components/ManageAdmins.tsx` | Redesign layout: Master Admin card on top, invited users listed separately with "Not Accepted" / "Accepted" badges. Hide remove button for the master admin row. |
-| `src/pages/AdminReport.tsx` | After successful login, update the logged-in user's `admin_users.status` to `active` so acceptance is tracked automatically. |
+| **BuildRequest** | Replace `.email()` in both `requestorSchema` and `pocContactSchema` with custom `.refine()` using the shared validator. Swap `<Input type="email">` for `<EmailInput>` on all email fields. |
+| **GetAQuote** | Same zod `.refine()` swap. Swap `<Input>` for `<EmailInput>`. |
+| **ContactSection** | Add inline validation using the shared `validateEmail` function on the email `onChange`/`onBlur`. Swap to `<EmailInput>`. |
+
+**Step 4: Styling**
+
+- Valid state: `ring-green-500 border-green-500` + a `CheckCircle2` icon (already imported in some files).
+- Invalid state: `ring-destructive border-destructive` + error message text below.
+- Transitions on border color for polish.
+
+### Files to Create/Edit
+
+| File | Action |
+|------|--------|
+| `src/lib/email-validation.ts` | **Create** — regex, validator, zod refine helper |
+| `src/components/EmailInput.tsx` | **Create** — reusable input with live feedback |
+| `src/pages/BuildRequest.tsx` | **Edit** — update zod schemas + swap input components |
+| `src/pages/GetAQuote.tsx` | **Edit** — update zod schema + swap input component |
+| `src/components/ContactSection.tsx` | **Edit** — add validation + swap input component |
 
 ### Technical Details
 
-- The master admin row (ID `b426c88b-...`) is filtered out of the regular users list and displayed in its own highlighted card
-- Status mapping: `invited` displays as "Not Accepted", `active` displays as "Accepted"
-- The status update on login uses a simple `supabase.from("admin_users").update({ status: "active" })` call, which runs after authentication is confirmed
-- No database migration needed -- the existing `status` column already supports this
+- Zero backend calls — purely client-side regex + visual UX.
+- The `EmailInput` component uses `onBlur` to trigger validation (avoids noisy errors while typing) and re-validates on every change once the field has been "touched."
+- Zod `.refine()` ensures the same regex runs at form submission time, providing a consistent double-check.
 
