@@ -164,23 +164,21 @@ const ManageAdmins = ({ onBack, currentUserId }: ManageAdminsProps) => {
         )}
 
         {/* Invite New User */}
-        {isMasterAdmin && (
-          <div className="rounded-xl border border-border bg-card p-6 space-y-4">
-            <h2 className="text-lg font-semibold font-display flex items-center gap-2">
-              <UserPlus className="w-5 h-5 text-primary" /> Invite New User
-            </h2>
-            <form onSubmit={handleInvite} className="flex flex-col sm:flex-row gap-3 items-end">
-              <div className="flex-1 space-y-1.5">
-                <Label htmlFor="new-email">Email</Label>
-                <Input id="new-email" type="email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} placeholder="user@example.com" required />
-              </div>
-              <Button type="submit" disabled={creating} className="gap-1.5">
-                {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserPlus className="w-4 h-4" />}
-                {creating ? "Sending..." : "Send Invite"}
-              </Button>
-            </form>
-          </div>
-        )}
+        <div className="rounded-xl border border-border bg-card p-6 space-y-4">
+          <h2 className="text-lg font-semibold font-display flex items-center gap-2">
+            <UserPlus className="w-5 h-5 text-primary" /> Invite New User
+          </h2>
+          <form onSubmit={handleInvite} className="flex flex-col sm:flex-row gap-3 items-end">
+            <div className="flex-1 space-y-1.5">
+              <Label htmlFor="new-email">Email</Label>
+              <Input id="new-email" type="email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} placeholder="user@example.com" required />
+            </div>
+            <Button type="submit" disabled={creating} className="gap-1.5">
+              {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserPlus className="w-4 h-4" />}
+              {creating ? "Sending..." : "Send Invite"}
+            </Button>
+          </form>
+        </div>
 
         {/* Invited Users List */}
         <div className="rounded-xl border border-border bg-card p-6 space-y-4">
