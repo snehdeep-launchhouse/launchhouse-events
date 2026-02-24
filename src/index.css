@@ -44,6 +44,14 @@
     --shadow-card-hover: 0 8px 32px -4px hsl(212 100% 44% / 0.15);
     --shadow-btn: 0 2px 12px -2px hsl(212 100% 44% / 0.3);
 
+    /* Ignition dashboard tokens */
+    --ignition-navy: 220 50% 14%;
+    --ignition-navy-light: 220 40% 22%;
+    --ignition-orange: 24 95% 53%;
+    --ignition-orange-foreground: 0 0% 100%;
+    --ignition-surface: 220 20% 97%;
+    --ignition-border: 220 15% 88%;
+
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
     --sidebar-primary: 240 5.9% 10%;
