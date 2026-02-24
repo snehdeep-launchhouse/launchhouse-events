@@ -42,6 +42,7 @@ const downloadCSV = (rows: Record<string, unknown>[], filename: string) => {
 /* ── Main Component ───────────────────────────────────────────── */
 const AdminReport = () => {
   const [authState, setAuthState] = useState<"loading" | "login" | "authenticated">("loading");
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [currentUserEmail, setCurrentUserEmail] = useState<string | null>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -58,6 +59,7 @@ const AdminReport = () => {
       if (user) {
         const { data } = await supabase.from("admin_users").select("id").eq("id", user.id).single();
         if (data) {
+          setCurrentUserId(user.id);
           setCurrentUserEmail(user.email ?? null);
           setAuthState("authenticated");
           return;
@@ -86,6 +88,7 @@ const AdminReport = () => {
         setLoginError("You are not authorized to access this dashboard.");
         return;
       }
+      setCurrentUserId(authData.user.id);
       setCurrentUserEmail(authData.user.email ?? null);
       setAuthState("authenticated");
     } catch (err) {
@@ -166,7 +169,7 @@ const AdminReport = () => {
 
   /* ── Manage Admins View ─────────────────────────────────────── */
   if (activeReport === "manage_admins") {
-    return <ManageAdmins onBack={() => setActiveReport(null)} />;
+    return <ManageAdmins onBack={() => setActiveReport(null)} currentUserId={currentUserId ?? undefined} />;
   }
 
   /* ── Report Picker (Cards) ────────────────────────────────────── */
