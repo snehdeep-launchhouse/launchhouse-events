@@ -8,6 +8,7 @@ const corsHeaders = {
 };
 
 const MASTER_ADMIN_ID = "b426c88b-14a2-46ed-93f3-08cb00282b83";
+const REDIRECT_URL = "https://launchhouse-events.lovable.app/admin-report";
 
 serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
@@ -38,24 +39,46 @@ serve(async (req: Request) => {
     const { email } = await req.json();
     if (!email) throw new Error("Email is required");
 
-    // 1. Generate invite link via admin API
+    let userId: string;
+    let inviteLink: string;
+
+    // Try to generate invite link (works for new users)
     const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
       type: "invite",
       email,
-      options: {
-        redirectTo: "https://launchhouse-events.lovable.app/admin-report",
-      },
+      options: { redirectTo: REDIRECT_URL },
     });
 
-    if (linkError) throw new Error(`generateLink failed: ${linkError.message}`);
+    if (linkError) {
+      // User already exists in auth — look them up and generate a magic link instead
+      const { data: listData } = await supabaseAdmin.auth.admin.listUsers();
+      const existingUser = listData?.users?.find((u: { email?: string }) => u.email === email);
 
-    const inviteLink = linkData?.properties?.action_link;
-    if (!inviteLink) throw new Error("No invite link returned");
+      if (!existingUser) {
+        throw new Error(`Could not find or create user for ${email}: ${linkError.message}`);
+      }
 
-    const userId = linkData.user?.id;
-    if (!userId) throw new Error("No user ID returned from invite");
+      userId = existingUser.id;
 
-    // 2. Send invite email via Resend
+      // Generate a magic link for existing user
+      const { data: magicData, error: magicError } = await supabaseAdmin.auth.admin.generateLink({
+        type: "magiclink",
+        email,
+        options: { redirectTo: REDIRECT_URL },
+      });
+
+      if (magicError || !magicData?.properties?.action_link) {
+        throw new Error(`Magic link failed: ${magicError?.message ?? "No link returned"}`);
+      }
+
+      inviteLink = magicData.properties.action_link;
+    } else {
+      inviteLink = linkData?.properties?.action_link ?? "";
+      userId = linkData?.user?.id ?? "";
+      if (!inviteLink || !userId) throw new Error("No invite link or user ID returned");
+    }
+
+    // Send invite email via Resend
     const emailRes = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
@@ -65,7 +88,7 @@ serve(async (req: Request) => {
       body: JSON.stringify({
         from: "LaunchHouse Events <noreply@launchhouse.events>",
         to: [email],
-        subject: "You've been invited to LaunchHouse Events Admin",
+        subject: "You've been invited to LaunchHouse Events",
         html: `<!DOCTYPE html>
 <html>
 <head><meta charset="UTF-8"/></head>
@@ -79,7 +102,7 @@ serve(async (req: Request) => {
     <div style="padding:32px;border:1px solid #d1d5db;border-top:none;border-radius:0 0 8px 8px;">
       <p style="margin:0 0 16px;font-size:16px;">Hi,</p>
       <p style="margin:0 0 24px;font-size:15px;color:#374151;">
-        You have been invited to <strong>LaunchHouse Events</strong> as a user. Click the button below to accept your invitation and set your password.
+        You have been invited to <strong>LaunchHouse Events</strong>. Click the button below to accept your invitation.
       </p>
       <p style="margin:0 0 24px;text-align:center;">
         <a href="${inviteLink}" style="display:inline-block;background:#006AE1;color:#ffffff;padding:14px 32px;border-radius:6px;text-decoration:none;font-weight:600;font-size:15px;">
@@ -102,7 +125,7 @@ serve(async (req: Request) => {
     const emailJson = await emailRes.json();
     if (!emailRes.ok) throw new Error(`Resend error [${emailRes.status}]: ${JSON.stringify(emailJson)}`);
 
-    // 3. Insert into admin_users with status 'invited'
+    // Upsert into admin_users with status 'invited'
     const { error: insertError } = await supabaseAdmin
       .from("admin_users")
       .upsert({ id: userId, email, status: "invited" }, { onConflict: "id" });
