@@ -13,11 +13,15 @@ interface AdminUser {
   created_at: string | null;
 }
 
+const MASTER_ADMIN_ID = "b426c88b-14a2-46ed-93f3-08cb00282b83";
+
 interface ManageAdminsProps {
   onBack: () => void;
+  currentUserId?: string;
 }
 
-const ManageAdmins = ({ onBack }: ManageAdminsProps) => {
+const ManageAdmins = ({ onBack, currentUserId }: ManageAdminsProps) => {
+  const isMasterAdmin = currentUserId === MASTER_ADMIN_ID;
   const { toast } = useToast();
   const [admins, setAdmins] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
@@ -92,12 +96,12 @@ const ManageAdmins = ({ onBack }: ManageAdminsProps) => {
     }
     setActionLoading(admin.id);
     const { error } = await supabase.auth.resetPasswordForEmail(admin.email, {
-      redirectTo: `${window.location.origin}/admin-report`,
+      redirectTo: `${window.location.origin}/`,
     });
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: "Email sent", description: `Password reset email sent to ${admin.email}.` });
+      toast({ title: "Reset link sent", description: `Reset link sent to ${admin.email}.` });
     }
     setActionLoading(null);
   };
@@ -168,15 +172,17 @@ const ManageAdmins = ({ onBack }: ManageAdminsProps) => {
                       <TableCell className="font-medium">{admin.email ?? "—"}</TableCell>
                       <TableCell className="text-muted-foreground text-xs font-mono">{admin.id}</TableCell>
                       <TableCell className="text-right space-x-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleResetPassword(admin)}
-                          disabled={actionLoading === admin.id}
-                          className="gap-1"
-                        >
-                          <Mail className="w-3.5 h-3.5" /> Reset Password
-                        </Button>
+                        {isMasterAdmin && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleResetPassword(admin)}
+                            disabled={actionLoading === admin.id}
+                            className="gap-1"
+                          >
+                            <Mail className="w-3.5 h-3.5" /> Send Password Reset
+                          </Button>
+                        )}
                         <Button
                           variant="destructive"
                           size="sm"
