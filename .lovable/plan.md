@@ -1,28 +1,33 @@
 
 
-## Fix: Blank Page Flash on Initial Load
+## Redesign Admin Management: Clear Admin vs User Separation + Live Acceptance Status
 
-### Problem
-When visiting the site fresh, there's a ~1 second blank white page before content appears. This happens because:
-1. The `<div id="root"></div>` in the HTML is completely empty until React's JavaScript downloads, parses, and renders
-2. Google Fonts are loaded via a blocking `@import` in CSS, which delays rendering further
+### What Changes
 
-### Solution
+**1. Split the user list into two clear sections**
+- A prominent **"Admin (You)"** card at the top showing your account with a special "Owner" or "Master Admin" badge -- always visible, never removable
+- A separate **"Invited Users"** section below listing everyone else
 
-**1. Add inline styles and a lightweight loader to `index.html`**
-- Set the page background color to match the site's dark hero area so there's no white flash
-- Add a simple CSS spinner/logo placeholder inside the `#root` div that shows instantly and gets replaced when React mounts
+**2. Better status labels**
+- Invited users who haven't accepted yet will show a **"Not Accepted"** badge (yellow/orange)
+- Once they click the invite link and log in, their status automatically flips to **"Accepted"** (green badge)
+- Your own card always shows **"Master Admin"**
 
-**2. Move Google Fonts from CSS `@import` to HTML `<link>` tags**
-- Change the font loading from a blocking `@import url(...)` in `src/index.css` to `<link rel="preconnect">` and `<link rel="stylesheet">` tags in `index.html`
-- This allows fonts to load in parallel with other resources instead of blocking CSS rendering
+**3. Auto-update status on first login**
+- When an invited user logs into the admin dashboard for the first time, the system will automatically update their status from `invited` to `active` in the database
+- Next time you refresh the Manage Admins page, their badge will show "Accepted"
 
 ### Files to Change
 
 | File | Change |
 |------|--------|
-| `index.html` | Add inline background style, a lightweight spinner inside `#root`, and font `<link>` tags with `preconnect` |
-| `src/index.css` | Remove the `@import url(...)` line for Google Fonts (line 5) |
+| `src/components/ManageAdmins.tsx` | Redesign layout: Master Admin card on top, invited users listed separately with "Not Accepted" / "Accepted" badges. Hide remove button for the master admin row. |
+| `src/pages/AdminReport.tsx` | After successful login, update the logged-in user's `admin_users.status` to `active` so acceptance is tracked automatically. |
 
-### What the User Will See
-Instead of a blank white page, visitors will see the site's dark background color immediately with a subtle loading spinner that smoothly transitions into the full page content.
+### Technical Details
+
+- The master admin row (ID `b426c88b-...`) is filtered out of the regular users list and displayed in its own highlighted card
+- Status mapping: `invited` displays as "Not Accepted", `active` displays as "Accepted"
+- The status update on login uses a simple `supabase.from("admin_users").update({ status: "active" })` call, which runs after authentication is confirmed
+- No database migration needed -- the existing `status` column already supports this
+
