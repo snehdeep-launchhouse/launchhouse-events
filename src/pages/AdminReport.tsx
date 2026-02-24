@@ -4,14 +4,16 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Loader2, Lock, RefreshCw, Download, ArrowLeft, FileText, Users, ClipboardList, LogOut } from "lucide-react";
+import { Loader2, Lock, RefreshCw, Download, ArrowLeft, FileText, Users, ClipboardList, LogOut, ShieldCheck } from "lucide-react";
+import ManageAdmins from "@/components/ManageAdmins";
 
-type ReportType = "abandoned" | "build_requests" | "quote_requests" | null;
+type ReportType = "abandoned" | "build_requests" | "quote_requests" | "manage_admins" | null;
 
 const REPORT_CARDS: { key: ReportType; title: string; description: string; icon: React.ReactNode }[] = [
   { key: "abandoned", title: "Abandoned EB Forms", description: "Partial form submissions that were not completed", icon: <ClipboardList className="w-8 h-8" /> },
   { key: "build_requests", title: "Build Requests", description: "All submitted event build requests", icon: <FileText className="w-8 h-8" /> },
   { key: "quote_requests", title: "Quote Requests", description: "All submitted quote requests", icon: <Users className="w-8 h-8" /> },
+  { key: "manage_admins", title: "Manage System Admins", description: "Add, remove, or reset passwords for admin users", icon: <ShieldCheck className="w-8 h-8" /> },
 ];
 
 /* ── CSV Download helper ──────────────────────────────────────── */
@@ -116,7 +118,7 @@ const AdminReport = () => {
 
   const openReport = (type: ReportType) => {
     setActiveReport(type);
-    fetchReport(type);
+    if (type && type !== "manage_admins") fetchReport(type);
   };
 
   const handleRefresh = () => fetchReport(activeReport);
@@ -157,6 +159,11 @@ const AdminReport = () => {
         </form>
       </div>
     );
+  }
+
+  /* ── Manage Admins View ─────────────────────────────────────── */
+  if (activeReport === "manage_admins") {
+    return <ManageAdmins onBack={() => setActiveReport(null)} />;
   }
 
   /* ── Report Picker (Cards) ────────────────────────────────────── */
