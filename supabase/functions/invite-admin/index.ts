@@ -8,7 +8,7 @@ const corsHeaders = {
 };
 
 const MASTER_ADMIN_ID = "b426c88b-14a2-46ed-93f3-08cb00282b83";
-const REDIRECT_URL = "https://launchhouse-events.lovable.app/admin-report";
+const REDIRECT_URL = "https://launchhouse-events.lovable.app/reset-password";
 
 serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
