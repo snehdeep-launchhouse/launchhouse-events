@@ -15,11 +15,15 @@ const AdminSignup = () => {
     e.preventDefault();
     setLoading(true);
     setMessage("");
-    const { data, error } = await supabase.auth.signUp({ email, password });
-    if (error) {
-      setMessage(error.message);
-    } else {
-      setMessage(`Account created! Your user ID is: ${data.user?.id ?? "unknown"}. Check your email to confirm, then add this ID to admin_users.`);
+    try {
+      const { data, error } = await supabase.auth.signUp({ email, password });
+      if (error) {
+        setMessage(`Error: ${error.message}`);
+      } else {
+        setMessage(`Account created! Your user ID is: ${data.user?.id ?? "unknown"}. Add this ID to the admin_users table.`);
+      }
+    } catch (err) {
+      setMessage("Network error — please try again from the published URL: https://launchhouse-events.lovable.app/admin-signup");
     }
     setLoading(false);
   };
