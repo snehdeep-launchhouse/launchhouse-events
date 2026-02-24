@@ -14,6 +14,7 @@ import TermsOfService from "./pages/TermsOfService";
 import CookieBanner from "./components/CookieBanner";
 import GetAQuote from "./pages/GetAQuote";
 import AdminReport from "./pages/AdminReport";
+import AdminSignup from "./pages/AdminSignup";
 
 const queryClient = new QueryClient();
 
@@ -34,6 +35,7 @@ const App = () => (
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/terms-of-service" element={<TermsOfService />} />
           <Route path="/admin-report" element={<AdminReport />} />
+          <Route path="/admin-signup" element={<AdminSignup />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
