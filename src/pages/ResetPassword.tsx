@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,6 +13,7 @@ const ResetPassword = () => {
   const [saving, setSaving] = useState(false);
   const [ready, setReady] = useState(false);
   const [success, setSuccess] = useState(false);
+  const resolved = useRef(false);
 
   const linkType = useMemo(() => {
     const hash = window.location.hash.startsWith("#") ? window.location.hash.slice(1) : window.location.hash;
@@ -21,44 +22,39 @@ const ResetPassword = () => {
   }, []);
 
   useEffect(() => {
-    let active = true;
-
-    const hydrateSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!active) return;
-
-      if (session?.user) {
-        setEmail(session.user.email ?? null);
-        setReady(true);
-        return;
-      }
-
-      // Give the auth client a moment to process recovery/invite hash tokens.
-      window.setTimeout(async () => {
-        const { data: { session: delayedSession } } = await supabase.auth.getSession();
-        if (!active) return;
-
-        if (delayedSession?.user) {
-          setEmail(delayedSession.user.email ?? null);
-          setReady(true);
-          return;
-        }
-
-        setError("This password setup link is invalid or expired.");
-        setReady(true);
-      }, 500);
+    const markReady = (userEmail: string | undefined | null) => {
+      if (resolved.current) return;
+      resolved.current = true;
+      setEmail(userEmail ?? null);
+      setReady(true);
     };
 
-    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!active || !session?.user) return;
-      setEmail(session.user.email ?? null);
-      setReady(true);
+    // Listen for auth state changes — this fires when the client processes the
+    // hash fragment tokens (recovery / invite links).
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session?.user) {
+        markReady(session.user.email);
+      }
     });
 
-    hydrateSession();
+    // Also check if there's already a session (e.g. page refresh after token exchange).
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        markReady(session.user.email);
+      }
+    });
+
+    // Generous fallback — if after 4s we still don't have a session, show error.
+    const timeout = window.setTimeout(() => {
+      if (!resolved.current) {
+        resolved.current = true;
+        setError("This password setup link is invalid or expired. Please request a new invite.");
+        setReady(true);
+      }
+    }, 4000);
 
     return () => {
-      active = false;
+      window.clearTimeout(timeout);
       authListener.subscription.unsubscribe();
     };
   }, []);
@@ -77,6 +73,15 @@ const ResetPassword = () => {
     }
 
     setSaving(true);
+
+    // Verify we still have a session before attempting update
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      setError("Your session has expired. Please use the invite link again.");
+      setSaving(false);
+      return;
+    }
+
     const { error: updateError } = await supabase.auth.updateUser({ password });
 
     if (updateError) {
