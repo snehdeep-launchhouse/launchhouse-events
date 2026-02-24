@@ -60,15 +60,15 @@ serve(async (req: Request) => {
 
       userId = existingUser.id;
 
-      // Generate a magic link for existing user
+      // Generate a recovery (password reset) link for existing user so they set a password
       const { data: magicData, error: magicError } = await supabaseAdmin.auth.admin.generateLink({
-        type: "magiclink",
+        type: "recovery",
         email,
         options: { redirectTo: REDIRECT_URL },
       });
 
       if (magicError || !magicData?.properties?.action_link) {
-        throw new Error(`Magic link failed: ${magicError?.message ?? "No link returned"}`);
+        throw new Error(`Recovery link failed: ${magicError?.message ?? "No link returned"}`);
       }
 
       inviteLink = magicData.properties.action_link;
