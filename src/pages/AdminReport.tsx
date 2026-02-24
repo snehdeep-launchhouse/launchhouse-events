@@ -43,6 +43,7 @@ const AdminReport = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loginError, setLoginError] = useState("");
+  const [loginLoading, setLoginLoading] = useState(false);
   const [activeReport, setActiveReport] = useState<ReportType>(null);
   const [records, setRecords] = useState<Record<string, unknown>[]>([]);
   const [loading, setLoading] = useState(false);
@@ -67,19 +68,26 @@ const AdminReport = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoginError("");
-    const { data: authData, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) {
-      setLoginError(error.message);
-      return;
+    setLoginLoading(true);
+    try {
+      const { data: authData, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) {
+        setLoginError(error.message);
+        return;
+      }
+      // Verify user is in admin_users table
+      const { data, error: adminError } = await supabase.from("admin_users").select("id").eq("id", authData.user.id).single();
+      if (adminError || !data) {
+        await supabase.auth.signOut();
+        setLoginError("You are not authorized to access this dashboard.");
+        return;
+      }
+      setAuthState("authenticated");
+    } catch (err) {
+      setLoginError("Network error — please try from the published URL.");
+    } finally {
+      setLoginLoading(false);
     }
-    // Verify user is in admin_users table
-    const { data } = await supabase.from("admin_users").select("id").eq("id", authData.user.id).single();
-    if (!data) {
-      await supabase.auth.signOut();
-      setLoginError("You are not authorized to access this dashboard.");
-      return;
-    }
-    setAuthState("authenticated");
   };
 
   const handleLogout = async () => {
@@ -143,7 +151,9 @@ const AdminReport = () => {
             <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" />
           </div>
           {loginError && <p className="text-sm text-destructive">{loginError}</p>}
-          <Button type="submit" className="w-full">Sign In</Button>
+          <Button type="submit" className="w-full" disabled={loginLoading}>
+            {loginLoading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Signing in...</> : "Sign In"}
+          </Button>
         </form>
       </div>
     );
