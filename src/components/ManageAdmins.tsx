@@ -3,8 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Loader2, Trash2, Mail, UserPlus, ArrowLeft, RefreshCw } from "lucide-react";
+import { Loader2, Trash2, Mail, UserPlus, ArrowLeft, RefreshCw, ShieldCheck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 
@@ -44,6 +43,9 @@ const ManageAdmins = ({ onBack, currentUserId }: ManageAdminsProps) => {
 
   useEffect(() => { fetchAdmins(); }, [fetchAdmins]);
 
+  const masterAdmin = admins.find((a) => a.id === MASTER_ADMIN_ID);
+  const invitedUsers = admins.filter((a) => a.id !== MASTER_ADMIN_ID);
+
   const handleInvite = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newEmail.trim()) return;
@@ -54,22 +56,18 @@ const ManageAdmins = ({ onBack, currentUserId }: ManageAdminsProps) => {
         toast({ title: "Error", description: "Not authenticated.", variant: "destructive" });
         return;
       }
-
       const res = await supabase.functions.invoke("invite-admin", {
         body: { email: newEmail.trim() },
       });
-
       if (res.error) {
         toast({ title: "Invite failed", description: res.error.message, variant: "destructive" });
         return;
       }
-
       const result = res.data as { success: boolean; error?: string };
       if (!result.success) {
         toast({ title: "Invite failed", description: result.error ?? "Unknown error", variant: "destructive" });
         return;
       }
-
       toast({ title: "Invite sent", description: `Invitation email sent to ${newEmail.trim()}.` });
       setNewEmail("");
       fetchAdmins();
@@ -110,11 +108,6 @@ const ManageAdmins = ({ onBack, currentUserId }: ManageAdminsProps) => {
     setActionLoading(null);
   };
 
-  const statusBadge = (status: string) => {
-    if (status === "invited") return <Badge variant="secondary">Invited</Badge>;
-    return <Badge variant="default">Active</Badge>;
-  };
-
   return (
     <div className="min-h-screen bg-background p-6">
       <div className="max-w-4xl mx-auto space-y-8">
@@ -129,15 +122,33 @@ const ManageAdmins = ({ onBack, currentUserId }: ManageAdminsProps) => {
           </div>
         </div>
 
-        {/* Invite New Admin */}
+        {/* Master Admin Card */}
+        {masterAdmin && (
+          <div className="rounded-xl border-2 border-primary/30 bg-primary/5 p-6">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                <ShieldCheck className="w-6 h-6 text-primary" />
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold text-lg">{masterAdmin.email ?? "—"}</span>
+                  <Badge className="bg-primary text-primary-foreground">Master Admin</Badge>
+                </div>
+                <p className="text-sm text-muted-foreground mt-0.5">Owner · Full system access</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Invite New User */}
         <div className="rounded-xl border border-border bg-card p-6 space-y-4">
           <h2 className="text-lg font-semibold font-display flex items-center gap-2">
-            <UserPlus className="w-5 h-5 text-primary" /> Invite New Admin
+            <UserPlus className="w-5 h-5 text-primary" /> Invite New User
           </h2>
           <form onSubmit={handleInvite} className="flex flex-col sm:flex-row gap-3 items-end">
             <div className="flex-1 space-y-1.5">
               <Label htmlFor="new-email">Email</Label>
-              <Input id="new-email" type="email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} placeholder="admin@example.com" required />
+              <Input id="new-email" type="email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} placeholder="user@example.com" required />
             </div>
             <Button type="submit" disabled={creating} className="gap-1.5">
               {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserPlus className="w-4 h-4" />}
@@ -146,10 +157,10 @@ const ManageAdmins = ({ onBack, currentUserId }: ManageAdminsProps) => {
           </form>
         </div>
 
-        {/* Admin List */}
+        {/* Invited Users List */}
         <div className="rounded-xl border border-border bg-card p-6 space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold font-display">Current Admins</h2>
+            <h2 className="text-lg font-semibold font-display">Invited Users</h2>
             <Button variant="outline" size="sm" onClick={fetchAdmins} disabled={loading} className="gap-1.5">
               <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} /> Refresh
             </Button>
@@ -159,51 +170,49 @@ const ManageAdmins = ({ onBack, currentUserId }: ManageAdminsProps) => {
             <div className="flex justify-center py-10">
               <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
             </div>
-          ) : admins.length === 0 ? (
-            <p className="text-center py-10 text-muted-foreground">No admin users found.</p>
+          ) : invitedUsers.length === 0 ? (
+            <p className="text-center py-10 text-muted-foreground">No invited users yet.</p>
           ) : (
-            <div className="rounded-lg border border-border overflow-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>User ID</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {admins.map((admin) => (
-                    <TableRow key={admin.id}>
-                      <TableCell className="font-medium">{admin.email ?? "—"}</TableCell>
-                      <TableCell>{statusBadge(admin.status)}</TableCell>
-                      <TableCell className="text-muted-foreground text-xs font-mono">{admin.id}</TableCell>
-                      <TableCell className="text-right space-x-2">
-                        {isMasterAdmin && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleResetPassword(admin)}
-                            disabled={actionLoading === admin.id}
-                            className="gap-1"
-                          >
-                            <Mail className="w-3.5 h-3.5" /> Send Password Reset
-                          </Button>
-                        )}
+            <div className="space-y-3">
+              {invitedUsers.map((user) => (
+                <div key={user.id} className="flex items-center justify-between rounded-lg border border-border p-4">
+                  <div className="flex items-center gap-3">
+                    <div>
+                      <p className="font-medium">{user.email ?? "—"}</p>
+                      <p className="text-xs text-muted-foreground font-mono">{user.id}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    {user.status === "invited" ? (
+                      <Badge variant="outline" className="border-orange-400 text-orange-600 bg-orange-50">Not Accepted</Badge>
+                    ) : (
+                      <Badge variant="outline" className="border-green-500 text-green-700 bg-green-50">Accepted</Badge>
+                    )}
+                    <div className="flex gap-1.5">
+                      {isMasterAdmin && (
                         <Button
-                          variant="destructive"
+                          variant="outline"
                           size="sm"
-                          onClick={() => handleRemove(admin)}
-                          disabled={actionLoading === admin.id}
+                          onClick={() => handleResetPassword(user)}
+                          disabled={actionLoading === user.id}
                           className="gap-1"
                         >
-                          <Trash2 className="w-3.5 h-3.5" /> Remove Access
+                          <Mail className="w-3.5 h-3.5" /> Reset Password
                         </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                      )}
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => handleRemove(user)}
+                        disabled={actionLoading === user.id}
+                        className="gap-1"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" /> Remove
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </div>
