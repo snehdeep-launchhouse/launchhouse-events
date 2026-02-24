@@ -5,7 +5,7 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import EmailInput from "@/components/EmailInput";
-import { zodEmail } from "@/lib/email-validation";
+import { zodEmail, type VerificationStatus } from "@/lib/email-validation";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -131,6 +131,7 @@ const GetAQuote = () => {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [quoteNumber, setQuoteNumber] = useState<string>("");
+  const [emailVerification, setEmailVerification] = useState<VerificationStatus>("idle");
 
   useEffect(() => {
     document.title = "Get a Quote — LaunchHouse Events";
@@ -310,6 +311,7 @@ const GetAQuote = () => {
                 {...register("email")}
                 placeholder="jane@company.com"
                 externalError={errors.email?.message}
+                onVerificationChange={setEmailVerification}
               />
             </Field>
           </div>
@@ -580,7 +582,7 @@ const GetAQuote = () => {
             >
               Cancel
             </Button>
-            <Button type="submit" size="lg" disabled={submitting} className="shadow-btn">
+            <Button type="submit" size="lg" disabled={submitting || emailVerification === "verifying"} className="shadow-btn">
               {submitting ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />

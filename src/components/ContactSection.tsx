@@ -5,11 +5,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Mail, Send } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import EmailInput from "@/components/EmailInput";
-import { validateEmail } from "@/lib/email-validation";
+import { validateEmail, type VerificationStatus } from "@/lib/email-validation";
 
 const ContactSection = () => {
   const { toast } = useToast();
   const [form, setForm] = useState({ name: "", email: "", message: "" });
+  const [emailVerification, setEmailVerification] = useState<VerificationStatus>("idle");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,6 +60,7 @@ const ContactSection = () => {
                 placeholder="you@company.com"
                 value={form.email}
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
+                onVerificationChange={setEmailVerification}
               />
             </div>
           </div>
@@ -72,7 +74,7 @@ const ContactSection = () => {
               onChange={(e) => setForm({ ...form, message: e.target.value })}
             />
           </div>
-          <Button type="submit" className="w-full shadow-btn">
+          <Button type="submit" disabled={emailVerification === "verifying"} className="w-full shadow-btn">
             <Send className="w-4 h-4 mr-2" /> Send Message
           </Button>
         </form>
