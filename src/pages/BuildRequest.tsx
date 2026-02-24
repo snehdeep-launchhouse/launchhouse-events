@@ -132,7 +132,7 @@ const BuildRequest = () => {
   const [step, setStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const [abandonedFormId, setAbandonedFormId] = useState<string | null>(null);
+  
 
   // Step 1
   const form1 = useForm<Step1>({ resolver: zodResolver(step1Schema), defaultValues: { firstName: "", lastName: "", email: "", companyName: "" } });
@@ -157,41 +157,36 @@ const BuildRequest = () => {
   const progress = step === 1 ? 33 : step === 2 ? 67 : 100;
 
   /* ── Abandoned form tracking ─────────────────────────────────── */
-  const handleNext1 = form1.handleSubmit(async (data1) => {
+  const upsertAbandonedForm = async (page: number, extraData?: Record<string, unknown>) => {
     try {
-      const id = crypto.randomUUID();
-      const { error } = await supabase
-        .from("abandoned_eb_forms")
-        .insert({
-          id,
-          first_name: data1.firstName,
-          last_name: data1.lastName,
-          email: data1.email,
-          company_name: data1.companyName,
-          last_page_visited: 1,
-        });
-      if (!error) {
-        setAbandonedFormId(id);
-      } else {
-        console.error("Abandoned form insert error:", error);
-      }
+      const data1 = form1.getValues();
+      await (supabase
+        .from("abandoned_eb_forms") as any)
+        .upsert(
+          {
+            email: data1.email,
+            first_name: data1.firstName,
+            last_name: data1.lastName,
+            company_name: data1.companyName,
+            last_page_visited: page,
+            status: "partial",
+            form_data: { page1: data1, ...extraData },
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: "email" }
+        );
     } catch (e) {
       console.error("Abandoned form tracking error:", e);
     }
+  };
+
+  const handleNext1 = form1.handleSubmit(async () => {
+    await upsertAbandonedForm(1);
     setStep(2);
   });
 
   const handleNext2 = form2.handleSubmit(async () => {
-    if (abandonedFormId) {
-      try {
-        await supabase
-          .from("abandoned_eb_forms")
-          .update({ last_page_visited: 2, updated_at: new Date().toISOString() })
-          .eq("id", abandonedFormId);
-      } catch (e) {
-        console.error("Abandoned form tracking error:", e);
-      }
-    }
+    await upsertAbandonedForm(2, { page2: form2.getValues() });
     setStep(3);
   });
 
@@ -214,15 +209,26 @@ const BuildRequest = () => {
       if (error) throw error;
 
       // Mark abandoned form as completed
-      if (abandonedFormId) {
-        try {
-          await supabase
-            .from("abandoned_eb_forms")
-            .update({ last_page_visited: 3, completed: true, updated_at: new Date().toISOString() })
-            .eq("id", abandonedFormId);
-        } catch (e) {
-          console.error("Abandoned form tracking error:", e);
-        }
+      try {
+        const data1 = form1.getValues();
+        await (supabase
+          .from("abandoned_eb_forms") as any)
+          .upsert(
+            {
+              email: data1.email,
+              first_name: data1.firstName,
+              last_name: data1.lastName,
+              company_name: data1.companyName,
+              last_page_visited: 3,
+              status: "completed",
+              completed: true,
+              form_data: { page1: data1, page2: form2.getValues(), page3: data3 },
+              updated_at: new Date().toISOString(),
+            },
+            { onConflict: "email" }
+          );
+      } catch (e) {
+        console.error("Abandoned form tracking error:", e);
       }
 
       setSubmitted(true);

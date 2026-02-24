@@ -16,36 +16,45 @@ export type Database = {
     Tables: {
       abandoned_eb_forms: {
         Row: {
+          company: string | null
           company_name: string
           completed: boolean
           created_at: string
           email: string
           first_name: string
+          form_data: Json | null
           id: string
           last_name: string
           last_page_visited: number
+          status: string | null
           updated_at: string
         }
         Insert: {
+          company?: string | null
           company_name: string
           completed?: boolean
           created_at?: string
           email: string
           first_name: string
+          form_data?: Json | null
           id?: string
           last_name: string
           last_page_visited?: number
+          status?: string | null
           updated_at?: string
         }
         Update: {
+          company?: string | null
           company_name?: string
           completed?: boolean
           created_at?: string
           email?: string
           first_name?: string
+          form_data?: Json | null
           id?: string
           last_name?: string
           last_page_visited?: number
+          status?: string | null
           updated_at?: string
         }
         Relationships: []
