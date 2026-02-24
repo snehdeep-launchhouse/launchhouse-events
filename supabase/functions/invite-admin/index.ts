@@ -8,6 +8,7 @@ const corsHeaders = {
 };
 
 const ADMIN_STATUS_ACTIVE = "active";
+const SUPER_ADMIN_EMAIL = "snehdeep@launchhouse.events";
 const REDIRECT_URL = "https://launchhouse-events.lovable.app/reset-password";
 
 serve(async (req: Request) => {
@@ -42,6 +43,11 @@ serve(async (req: Request) => {
 
     if (!adminAccess) {
       throw new Error("Only active admins can invite users");
+    }
+
+    // Only the super admin (snehdeep@launchhouse.events) can invite new users
+    if (caller.email !== SUPER_ADMIN_EMAIL) {
+      throw new Error("Only the super admin can invite new users");
     }
 
     const { email } = await req.json();
