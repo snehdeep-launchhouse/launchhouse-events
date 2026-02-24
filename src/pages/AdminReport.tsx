@@ -42,6 +42,7 @@ const downloadCSV = (rows: Record<string, unknown>[], filename: string) => {
 /* ── Main Component ───────────────────────────────────────────── */
 const AdminReport = () => {
   const [authState, setAuthState] = useState<"loading" | "login" | "authenticated">("loading");
+  const [currentUserEmail, setCurrentUserEmail] = useState<string | null>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loginError, setLoginError] = useState("");
@@ -57,6 +58,7 @@ const AdminReport = () => {
       if (user) {
         const { data } = await supabase.from("admin_users").select("id").eq("id", user.id).single();
         if (data) {
+          setCurrentUserEmail(user.email ?? null);
           setAuthState("authenticated");
           return;
         }
@@ -84,6 +86,7 @@ const AdminReport = () => {
         setLoginError("You are not authorized to access this dashboard.");
         return;
       }
+      setCurrentUserEmail(authData.user.email ?? null);
       setAuthState("authenticated");
     } catch (err) {
       setLoginError("Network error — please try from the published URL.");
@@ -174,7 +177,9 @@ const AdminReport = () => {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold font-display">Admin Dashboard</h1>
-              <p className="text-sm text-muted-foreground">Select a report to view</p>
+              <p className="text-sm text-muted-foreground">
+                Logged in as <span className="font-medium text-foreground">{currentUserEmail}</span>
+              </p>
             </div>
             <Button variant="outline" onClick={handleLogout} className="gap-1.5"><LogOut className="w-4 h-4" /> Logout</Button>
           </div>
