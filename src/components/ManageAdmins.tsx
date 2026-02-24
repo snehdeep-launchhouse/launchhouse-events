@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Trash2, Mail, UserPlus, ArrowLeft, RefreshCw, ShieldCheck } from "lucide-react";
+import { Loader2, Trash2, Mail, UserPlus, ArrowLeft, RefreshCw, ShieldCheck, Send } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 
@@ -108,6 +108,29 @@ const ManageAdmins = ({ onBack, currentUserId }: ManageAdminsProps) => {
     setActionLoading(null);
   };
 
+  const handleResendInvite = async (admin: AdminUser) => {
+    if (!admin.email) return;
+    setActionLoading(admin.id);
+    try {
+      const res = await supabase.functions.invoke("invite-admin", {
+        body: { email: admin.email },
+      });
+      if (res.error) {
+        toast({ title: "Resend failed", description: res.error.message, variant: "destructive" });
+      } else {
+        const result = res.data as { success: boolean; error?: string };
+        if (!result.success) {
+          toast({ title: "Resend failed", description: result.error ?? "Unknown error", variant: "destructive" });
+        } else {
+          toast({ title: "Invite resent", description: `Invitation re-sent to ${admin.email}.` });
+        }
+      }
+    } catch {
+      toast({ title: "Error", description: "Network error.", variant: "destructive" });
+    }
+    setActionLoading(null);
+  };
+
   return (
     <div className="min-h-screen bg-background p-6">
       <div className="max-w-4xl mx-auto space-y-8">
@@ -189,6 +212,17 @@ const ManageAdmins = ({ onBack, currentUserId }: ManageAdminsProps) => {
                       <Badge variant="outline" className="border-green-500 text-green-700 bg-green-50">Accepted</Badge>
                     )}
                     <div className="flex gap-1.5">
+                      {user.status === "invited" && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleResendInvite(user)}
+                          disabled={actionLoading === user.id}
+                          className="gap-1"
+                        >
+                          <Send className="w-3.5 h-3.5" /> Resend Invite
+                        </Button>
+                      )}
                       {isMasterAdmin && (
                         <Button
                           variant="outline"
