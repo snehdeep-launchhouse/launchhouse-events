@@ -90,6 +90,8 @@ const AdminReport = () => {
       }
       setCurrentUserId(authData.user.id);
       setCurrentUserEmail(authData.user.email ?? null);
+      // Auto-update status to active on login (marks invite as accepted)
+      await supabase.from("admin_users").update({ status: "active" }).eq("id", authData.user.id);
       setAuthState("authenticated");
     } catch (err) {
       setLoginError("Network error — please try from the published URL.");
