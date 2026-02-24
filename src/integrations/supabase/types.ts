@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      abandoned_eb_forms: {
+        Row: {
+          company_name: string
+          completed: boolean
+          created_at: string
+          email: string
+          first_name: string
+          id: string
+          last_name: string
+          last_page_visited: number
+          updated_at: string
+        }
+        Insert: {
+          company_name: string
+          completed?: boolean
+          created_at?: string
+          email: string
+          first_name: string
+          id?: string
+          last_name: string
+          last_page_visited?: number
+          updated_at?: string
+        }
+        Update: {
+          company_name?: string
+          completed?: boolean
+          created_at?: string
+          email?: string
+          first_name?: string
+          id?: string
+          last_name?: string
+          last_page_visited?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       build_requests: {
         Row: {
           account_number: string | null

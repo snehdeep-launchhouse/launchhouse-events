@@ -88,9 +88,6 @@ const step2Schema = z.object({
 
 const step3Schema = z.object({
   accountNumber: z.string().trim().min(1, "Account number is required").max(100),
-  plannerFirstName: z.string().trim().min(1, "Planner first name is required").max(100),
-  plannerLastName: z.string().trim().min(1, "Planner last name is required").max(100),
-  plannerEmail: z.string().trim().email("Invalid email address").max(255),
   eventTitle: z.string().trim().min(1, "Event title is required").max(500),
   eventStartDate: z.date({ required_error: "Start date is required" }),
   eventStartTime: z.string().min(1, "Start time is required"),
@@ -135,13 +132,14 @@ const BuildRequest = () => {
   const [step, setStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [abandonedFormId, setAbandonedFormId] = useState<string | null>(null);
 
   // Step 1
   const form1 = useForm<Step1>({ resolver: zodResolver(step1Schema), defaultValues: { firstName: "", lastName: "", email: "", companyName: "" } });
   // Step 2
   const form2 = useForm<Step2>({ resolver: zodResolver(step2Schema), defaultValues: { contacts: [{ fullName: "", email: "" }], primaryPocPhone: "", kickoffTimezone: "", kickoffTime1: "", kickoffTime2: "", chosenSolutions: [] } });
   // Step 3
-  const form3 = useForm<Step3>({ resolver: zodResolver(step3Schema), defaultValues: { accountNumber: "N/A", plannerFirstName: "", plannerLastName: "", plannerEmail: "", eventTitle: "", eventStartTime: "", eventEndTime: "", eventTimezone: "", additionalInfo: "" } });
+  const form3 = useForm<Step3>({ resolver: zodResolver(step3Schema), defaultValues: { accountNumber: "N/A", eventTitle: "", eventStartTime: "", eventEndTime: "", eventTimezone: "", additionalInfo: "" } });
 
   const [availableSolutions, setAvailableSolutions] = useState<string[]>([...SOLUTIONS]);
   const [chosenSolutions, setChosenSolutions] = useState<string[]>([]);
@@ -158,8 +156,42 @@ const BuildRequest = () => {
 
   const progress = step === 1 ? 33 : step === 2 ? 67 : 100;
 
-  const handleNext1 = form1.handleSubmit(() => setStep(2));
-  const handleNext2 = form2.handleSubmit(() => setStep(3));
+  /* ── Abandoned form tracking ─────────────────────────────────── */
+  const handleNext1 = form1.handleSubmit(async (data1) => {
+    try {
+      const { data, error } = await supabase
+        .from("abandoned_eb_forms" as any)
+        .insert({
+          first_name: data1.firstName,
+          last_name: data1.lastName,
+          email: data1.email,
+          company_name: data1.companyName,
+          last_page_visited: 1,
+        } as any)
+        .select("id")
+        .single();
+      if (!error && data) {
+        setAbandonedFormId((data as any).id);
+      }
+    } catch (e) {
+      console.error("Abandoned form tracking error:", e);
+    }
+    setStep(2);
+  });
+
+  const handleNext2 = form2.handleSubmit(async () => {
+    if (abandonedFormId) {
+      try {
+        await supabase
+          .from("abandoned_eb_forms" as any)
+          .update({ last_page_visited: 2, updated_at: new Date().toISOString() } as any)
+          .eq("id", abandonedFormId);
+      } catch (e) {
+        console.error("Abandoned form tracking error:", e);
+      }
+    }
+    setStep(3);
+  });
 
   const handleSubmit = form3.handleSubmit(async (data3) => {
     setSubmitting(true);
@@ -168,7 +200,6 @@ const BuildRequest = () => {
         ...form1.getValues(),
         ...form2.getValues(),
         ...data3,
-        // Format dates as strings
         kickoffDate1: form2.getValues().kickoffDate1 ? format(form2.getValues().kickoffDate1!, "PPP") : "",
         kickoffDate2: form2.getValues().kickoffDate2 ? format(form2.getValues().kickoffDate2!, "PPP") : "",
         eventStartDate: format(data3.eventStartDate, "PPP"),
@@ -179,6 +210,19 @@ const BuildRequest = () => {
 
       const { data, error } = await supabase.functions.invoke("send-build-request", { body: payload });
       if (error) throw error;
+
+      // Mark abandoned form as completed
+      if (abandonedFormId) {
+        try {
+          await supabase
+            .from("abandoned_eb_forms" as any)
+            .update({ last_page_visited: 3, completed: true, updated_at: new Date().toISOString() } as any)
+            .eq("id", abandonedFormId);
+        } catch (e) {
+          console.error("Abandoned form tracking error:", e);
+        }
+      }
+
       setSubmitted(true);
       toast.success("Build request submitted successfully!");
     } catch (err: any) {
@@ -307,16 +351,17 @@ const BuildRequest = () => {
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="email">Email Address *</Label>
-              <Input id="email" type="email" {...form1.register("email")} placeholder="john@company.com" />
-              {form1.formState.errors.email && <p className="text-sm text-destructive">{form1.formState.errors.email.message}</p>}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="companyName">Company Name *</Label>
-              <Textarea id="companyName" {...form1.register("companyName")} placeholder="Your company name" />
-              {form1.formState.errors.companyName && <p className="text-sm text-destructive">{form1.formState.errors.companyName.message}</p>}
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="email">Email Address *</Label>
+                <Input id="email" type="email" {...form1.register("email")} placeholder="john@company.com" />
+                {form1.formState.errors.email && <p className="text-sm text-destructive">{form1.formState.errors.email.message}</p>}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="companyName">Company Name *</Label>
+                <Input id="companyName" {...form1.register("companyName")} placeholder="Your company name" />
+                {form1.formState.errors.companyName && <p className="text-sm text-destructive">{form1.formState.errors.companyName.message}</p>}
+              </div>
             </div>
 
             <div className="flex justify-end gap-3 pt-4">
@@ -333,23 +378,7 @@ const BuildRequest = () => {
 
             {/* Dynamic POC contacts */}
             <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <Label>Points of Contact *</Label>
-                {form2.watch("contacts").length < 8 && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      const current = form2.getValues("contacts");
-                      form2.setValue("contacts", [...current, { fullName: "", email: "" }], { shouldValidate: false });
-                    }}
-                    className="gap-1"
-                  >
-                    <Plus className="w-4 h-4" /> Add Contact
-                  </Button>
-                )}
-              </div>
+              <Label>Planner Contact *</Label>
               {form2.watch("contacts").map((_, idx) => (
                 <div key={idx} className="rounded-lg border border-border p-4 space-y-3 relative">
                   <div className="flex items-center justify-between mb-1">
@@ -394,6 +423,20 @@ const BuildRequest = () => {
                   </div>
                 </div>
               ))}
+              {form2.watch("contacts").length < 8 && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const current = form2.getValues("contacts");
+                    form2.setValue("contacts", [...current, { fullName: "", email: "" }], { shouldValidate: false });
+                  }}
+                  className="gap-1"
+                >
+                  <Plus className="w-4 h-4" /> Add Additional Planner
+                </Button>
+              )}
               {form2.formState.errors.contacts && !Array.isArray(form2.formState.errors.contacts) && (
                 <p className="text-sm text-destructive">{(form2.formState.errors.contacts as any).message}</p>
               )}
@@ -450,16 +493,16 @@ const BuildRequest = () => {
               </div>
             </div>
 
-            {/* Cvent Links */}
+            {/* Cvent Info - plain text, no links */}
             <div className="rounded-lg border border-border/50 bg-muted/30 p-4 space-y-2">
               <p className="text-sm text-muted-foreground">
-                New to Cvent or not sure which platform to use? Click the links below to learn more before making your selection.
+                New to Cvent or not sure which platform to use? Review the products below to learn more before making your selection.
               </p>
               <div className="flex flex-wrap gap-3">
                 {CVENT_LINKS.map((link) => (
-                  <a key={link.label} href={link.url} target="_blank" rel="noopener noreferrer" className="text-sm text-primary underline hover:text-primary/80">
+                  <span key={link.label} className="text-sm font-medium text-foreground">
                     {link.label}
-                  </a>
+                  </span>
                 ))}
               </div>
             </div>
@@ -477,7 +520,7 @@ const BuildRequest = () => {
             </div>
 
             <div className="flex justify-between gap-3 pt-4">
-              <Button type="button" variant="outline" onClick={() => setStep(1)}><ArrowLeft className="w-4 h-4 mr-1" /> Previous</Button>
+              <Button type="button" variant="outline" className="border-2 border-primary" onClick={() => setStep(1)}><ArrowLeft className="w-4 h-4 mr-1" /> Previous</Button>
               <div className="flex gap-3">
                 <Button type="button" variant="outline" onClick={handleCancel}>Cancel</Button>
                 <Button type="submit">Next <ArrowRight className="w-4 h-4 ml-1" /></Button>
@@ -496,26 +539,6 @@ const BuildRequest = () => {
               <Label>Account Number (write N/A if you don't have one) *</Label>
               <Input {...form3.register("accountNumber")} placeholder="N/A" />
               {form3.formState.errors.accountNumber && <p className="text-sm text-destructive">{form3.formState.errors.accountNumber.message}</p>}
-            </div>
-
-            <div className="grid sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Planner First Name *</Label>
-                <Input {...form3.register("plannerFirstName")} />
-                {form3.formState.errors.plannerFirstName && <p className="text-sm text-destructive">{form3.formState.errors.plannerFirstName.message}</p>}
-              </div>
-              <div className="space-y-2">
-                <Label>Planner Last Name *</Label>
-                <Input {...form3.register("plannerLastName")} />
-                {form3.formState.errors.plannerLastName && <p className="text-sm text-destructive">{form3.formState.errors.plannerLastName.message}</p>}
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Planner Email Address *</Label>
-              <Input type="email" {...form3.register("plannerEmail")} placeholder="planner@company.com" />
-              <p className="text-xs text-muted-foreground">It will be used for email communication via event</p>
-              {form3.formState.errors.plannerEmail && <p className="text-sm text-destructive">{form3.formState.errors.plannerEmail.message}</p>}
             </div>
 
             <div className="space-y-2">
@@ -583,7 +606,7 @@ const BuildRequest = () => {
             </div>
 
             <div className="flex justify-between gap-3 pt-4">
-              <Button type="button" variant="outline" onClick={() => setStep(2)}><ArrowLeft className="w-4 h-4 mr-1" /> Previous</Button>
+              <Button type="button" variant="outline" className="border-2 border-primary" onClick={() => setStep(2)}><ArrowLeft className="w-4 h-4 mr-1" /> Previous</Button>
               <div className="flex gap-3">
                 <Button type="button" variant="outline" onClick={handleCancel}>Cancel</Button>
                 <Button type="submit" disabled={submitting}>
