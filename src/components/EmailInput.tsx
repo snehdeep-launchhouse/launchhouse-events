@@ -1,20 +1,25 @@
 import * as React from "react";
 import { Input } from "@/components/ui/input";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { validateEmail } from "@/lib/email-validation";
+import { validateEmail, verifyEmailDomain, type VerificationStatus } from "@/lib/email-validation";
 
 interface EmailInputProps extends React.ComponentProps<"input"> {
   /** External error message from form validation (e.g. zod via react-hook-form) */
   externalError?: string;
+  /** Callback so parent forms can track domain verification status */
+  onVerificationChange?: (status: VerificationStatus) => void;
 }
 
 const EmailInput = React.forwardRef<HTMLInputElement, EmailInputProps>(
-  ({ className, externalError, onBlur, onChange, ...props }, ref) => {
+  ({ className, externalError, onBlur, onChange, onVerificationChange, ...props }, ref) => {
     const [touched, setTouched] = React.useState(false);
     const [localValue, setLocalValue] = React.useState(
       (props.value as string) ?? (props.defaultValue as string) ?? ""
     );
+    const [verifying, setVerifying] = React.useState(false);
+    const [domainError, setDomainError] = React.useState<string | null>(null);
+    const [domainValid, setDomainValid] = React.useState(false);
 
     // Keep in sync with controlled value
     React.useEffect(() => {
@@ -22,17 +27,60 @@ const EmailInput = React.forwardRef<HTMLInputElement, EmailInputProps>(
     }, [props.value]);
 
     const result = localValue ? validateEmail(localValue) : null;
-    const showValid = touched && result?.valid === true && !externalError;
+    const regexValid = result?.valid === true;
+    
+    const showValid = touched && regexValid && domainValid && !externalError && !verifying;
     const showInvalid =
-      (touched && result?.valid === false && !!localValue) || !!externalError;
+      (touched && result?.valid === false && !!localValue) ||
+      !!externalError ||
+      !!domainError;
 
-    const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    const updateStatus = React.useCallback((status: VerificationStatus) => {
+      onVerificationChange?.(status);
+    }, [onVerificationChange]);
+
+    const handleBlur = async (e: React.FocusEvent<HTMLInputElement>) => {
       setTouched(true);
       onBlur?.(e);
+
+      const val = e.target.value;
+      const check = validateEmail(val);
+
+      if (!check.valid) {
+        setDomainError(null);
+        setDomainValid(false);
+        updateStatus("idle");
+        return;
+      }
+
+      // Regex passed — now verify domain
+      setVerifying(true);
+      setDomainError(null);
+      setDomainValid(false);
+      updateStatus("verifying");
+
+      const domainResult = await verifyEmailDomain(val);
+      
+      setVerifying(false);
+      if (domainResult.valid) {
+        setDomainValid(true);
+        setDomainError(null);
+        updateStatus("valid");
+      } else {
+        setDomainValid(false);
+        setDomainError(domainResult.message || null);
+        updateStatus("invalid");
+      }
     };
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       setLocalValue(e.target.value);
+      // Reset domain state on change
+      setDomainError(null);
+      setDomainValid(false);
+      if (touched) {
+        updateStatus("idle");
+      }
       onChange?.(e);
     };
 
@@ -51,11 +99,14 @@ const EmailInput = React.forwardRef<HTMLInputElement, EmailInputProps>(
           onChange={handleChange}
           {...props}
         />
-        {showValid && (
+        {verifying && (
+          <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground animate-spin pointer-events-none" />
+        )}
+        {showValid && !verifying && (
           <CheckCircle2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-green-500 pointer-events-none" />
         )}
-        {showInvalid && !externalError && result?.message && (
-          <p className="text-xs text-destructive mt-1">{result.message}</p>
+        {showInvalid && !externalError && (result?.message || domainError) && (
+          <p className="text-xs text-destructive mt-1">{domainError || result?.message}</p>
         )}
       </div>
     );

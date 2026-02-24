@@ -6,7 +6,7 @@ import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import EmailInput from "@/components/EmailInput";
-import { zodEmail } from "@/lib/email-validation";
+import { zodEmail, type VerificationStatus } from "@/lib/email-validation";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Calendar } from "@/components/ui/calendar";
@@ -134,6 +134,7 @@ const BuildRequest = () => {
   const [step, setStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [emailVerification, setEmailVerification] = useState<VerificationStatus>("idle");
   
 
   // Step 1
@@ -364,7 +365,7 @@ const BuildRequest = () => {
             <div className="grid sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Email Address *</Label>
-                <EmailInput id="email" {...form1.register("email")} placeholder="john@company.com" externalError={form1.formState.errors.email?.message} />
+                <EmailInput id="email" {...form1.register("email")} placeholder="john@company.com" externalError={form1.formState.errors.email?.message} onVerificationChange={setEmailVerification} />
                 {form1.formState.errors.email && <p className="text-sm text-destructive">{form1.formState.errors.email.message}</p>}
               </div>
               <div className="space-y-2">
@@ -376,7 +377,7 @@ const BuildRequest = () => {
 
             <div className="flex justify-end gap-3 pt-4">
               <Button type="button" variant="outline" onClick={handleCancel}>Cancel</Button>
-              <Button type="submit">Next <ArrowRight className="w-4 h-4 ml-1" /></Button>
+              <Button type="submit" disabled={emailVerification === "verifying"}>Next <ArrowRight className="w-4 h-4 ml-1" /></Button>
             </div>
           </form>
         )}
