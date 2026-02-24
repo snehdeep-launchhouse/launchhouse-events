@@ -1,61 +1,61 @@
 
 
-## Add Google Drive Folder Creation to Build Request Edge Function
+## EB Form Changes + Abandoned Form Tracking
 
-### Overview
-When a build request form is submitted, a new Google Drive folder will be created automatically (named after the event), shared publicly for uploads, and the folder link will be injected into all three emails — all before the existing Resend email logic runs.
+### Summary
+Six UI changes across the 3 form pages, plus a new "Abandoned EB Form Report" feature that saves partial form data to the database whenever a user completes page 1 and navigates forward.
 
-### Prerequisites — Two New Secrets Needed
-Before implementing, you will need to add two secrets:
+---
 
-1. **GOOGLE_SERVICE_ACCOUNT_KEY** — The full JSON string of your Google Cloud Service Account credentials (the service account must have Google Drive API enabled)
-2. **GOOGLE_DRIVE_PARENT_FOLDER_ID** — The ID of the master folder where event subfolders will be created (the service account email must be shared as an Editor on this folder)
+### UI Changes
 
-### What Changes
+**Page 1 — Basic Information**
+- **Company Name field**: Change from `<Textarea>` to `<Input>` (single-line, same size as other fields). Place it on the same 2-column grid row as Email, or in its own full-width row matching the height of other inputs — keeping the layout symmetrical.
 
-**File: `supabase/functions/send-build-request/index.ts`**
+**Page 2 — Contact Information**
+- **Section label**: Change "Points of Contact" to "Planner Contact"
+- **Add Contact button**: Move it from the header (next to the label) to below the last contact card. Rename to "Add Additional Planner". It appears after the last rendered contact container and shifts down as new contacts are added.
+- **Cvent links section**: Remove the clickable `<a>` hyperlinks but keep all the text content visible. The product names (Event Management, Attendee Hub, etc.) will display as plain text instead of links.
+- **Previous button**: Add a visible border style (use `variant="outline"` styling with a stronger border, e.g. `border-2 border-primary`) so it stands out more.
 
-The existing logic (payload parsing, DB insert, Resend emails) remains 100% intact. The only additions are:
+**Page 3 — Event Details**
+- **Remove fields**: Planner First Name, Planner Last Name, and Planner Email Address — remove from the form UI, the Zod schema (make them optional/removed), and the default values.
 
-1. **New helper: `getGoogleAccessToken()`** — Parses the service account JSON, creates a JWT signed with the service account's private key (using Web Crypto API available in Deno), exchanges it for an OAuth2 access token via Google's token endpoint. No external JWT library needed.
+---
 
-2. **New helper: `createDriveFolder()`** — Called after DB insert but before emails are sent:
-   - Authenticates using the access token
-   - Creates a folder via `POST https://www.googleapis.com/drive/v3/files` with the parent folder ID and event title as the name
-   - Sets permissions via `POST https://www.googleapis.com/drive/v3/files/{folderId}/permissions` with `type: "anyone"`, `role: "writer"`
-   - Retrieves the folder's `webViewLink` via `GET https://www.googleapis.com/drive/v3/files/{folderId}?fields=webViewLink`
+### Abandoned EB Form Report (Backend)
 
-3. **Email template updates** — A new row is added to the internal email table and the confirmation email:
-   - Internal email: A new table row `["Google Drive Folder", "<a href='...'>Open Folder</a>"]`
-   - Confirmation email: A paragraph added saying "Please use this Google Drive folder link to upload any additional information and supply us with all necessary documents for building your event." with a clickable link/button
+**New database table: `abandoned_eb_forms`**
+| Column | Type | Notes |
+|--------|------|-------|
+| id | uuid | PK, auto-generated |
+| first_name | text | From page 1 |
+| last_name | text | From page 1 |
+| email | text | From page 1 |
+| company_name | text | From page 1 |
+| last_page_visited | integer | 1, 2, or 3 |
+| completed | boolean | Default false, set true on final submit |
+| created_at | timestamptz | Default now() |
+| updated_at | timestamptz | Default now() |
 
-4. **Graceful fallback** — If the Google Drive secrets are missing or the API call fails, the function logs the error but continues to send emails without the Drive link (so form submissions never break).
+- RLS: Allow public INSERT and UPDATE (no authentication required, matching the existing form pattern). No public SELECT/DELETE.
 
-### Flow After the Change
+**Frontend logic:**
+- When the user clicks "Next" on page 1 (after validation passes), insert a row into `abandoned_eb_forms` with page 1 data and `last_page_visited = 1`. Store the returned row ID in component state.
+- When the user navigates to page 3, update that same row with `last_page_visited = 2`.
+- On final successful submission, update the row with `last_page_visited = 3` and `completed = true`.
+- This gives you a report showing who started the form, how far they got, and whether they completed it.
 
-```
-Form Submitted
-    |
-    v
-Parse payload + DB insert (unchanged)
-    |
-    v
-[NEW] Create Google Drive folder
-[NEW] Set folder to "anyone with link can upload"
-[NEW] Get shareable link
-    |
-    v
-Inject Drive link into email HTML (internal + confirmation)
-    |
-    v
-Send 3 emails via Resend (unchanged routing)
-    |
-    v
-Update DB status (unchanged)
-```
+---
 
-### Config Update
-**File: `supabase/config.toml`** — Add `verify_jwt = false` for the `send-build-request` function (it's currently missing from the config).
+### Technical Details
 
-### No Other Files Changed
-The frontend form, database schema, and all other edge functions remain untouched.
+**Files modified:**
+- `src/pages/BuildRequest.tsx` — All UI changes + abandoned form tracking logic
+
+**Database migration:**
+- Create `abandoned_eb_forms` table with RLS policies for public insert/update
+
+**Edge function (`send-build-request`):**
+- The planner fields removal means the edge function payload will no longer include `plannerFirstName`, `plannerLastName`, `plannerEmail`. The edge function already handles these as optional fields, so no edge function changes are needed — they'll simply be absent from the payload.
+
