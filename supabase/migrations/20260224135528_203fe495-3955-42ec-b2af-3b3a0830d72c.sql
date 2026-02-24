@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX IF NOT EXISTS abandoned_eb_forms_email_unique ON abandoned_eb_forms (email);
