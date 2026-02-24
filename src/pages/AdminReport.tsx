@@ -57,10 +57,14 @@ const AdminReport = () => {
     const checkAuth = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        const { data } = await supabase.from("admin_users").select("id").eq("id", user.id).single();
+        const { data } = await supabase.from("admin_users").select("id, status").eq("id", user.id).single();
         if (data) {
           setCurrentUserId(user.id);
           setCurrentUserEmail(user.email ?? null);
+          // Auto-update status to active on login (marks invite as accepted)
+          if (data.status === "invited") {
+            await supabase.from("admin_users").update({ status: "active" }).eq("id", user.id);
+          }
           setAuthState("authenticated");
           return;
         }
