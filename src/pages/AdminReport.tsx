@@ -1,13 +1,10 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Loader2, Lock, RefreshCw, Download, ArrowLeft, FileText, Users, ClipboardList } from "lucide-react";
-
-const ADMIN_USER = "admin";
-const ADMIN_PASS = "launchhouse@123";
+import { Loader2, Lock, RefreshCw, Download, ArrowLeft, FileText, Users, ClipboardList, LogOut } from "lucide-react";
 
 type ReportType = "abandoned" | "build_requests" | "quote_requests" | null;
 
@@ -42,22 +39,54 @@ const downloadCSV = (rows: Record<string, unknown>[], filename: string) => {
 
 /* ── Main Component ───────────────────────────────────────────── */
 const AdminReport = () => {
-  const [authenticated, setAuthenticated] = useState(false);
-  const [username, setUsername] = useState("");
+  const [authState, setAuthState] = useState<"loading" | "login" | "authenticated">("loading");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loginError, setLoginError] = useState("");
   const [activeReport, setActiveReport] = useState<ReportType>(null);
   const [records, setRecords] = useState<Record<string, unknown>[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  /* ── Check existing session on mount ─────────────────────────── */
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data } = await supabase.from("admin_users").select("id").eq("id", user.id).single();
+        if (data) {
+          setAuthState("authenticated");
+          return;
+        }
+      }
+      setAuthState("login");
+    };
+    checkAuth();
+  }, []);
+
+  /* ── Login handler ───────────────────────────────────────────── */
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (username === ADMIN_USER && password === ADMIN_PASS) {
-      setAuthenticated(true);
-      setLoginError("");
-    } else {
-      setLoginError("Invalid username or password");
+    setLoginError("");
+    const { data: authData, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) {
+      setLoginError(error.message);
+      return;
     }
+    // Verify user is in admin_users table
+    const { data } = await supabase.from("admin_users").select("id").eq("id", authData.user.id).single();
+    if (!data) {
+      await supabase.auth.signOut();
+      setLoginError("You are not authorized to access this dashboard.");
+      return;
+    }
+    setAuthState("authenticated");
+  };
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setAuthState("login");
+    setActiveReport(null);
+    setRecords([]);
   };
 
   const fetchReport = useCallback(async (type: ReportType) => {
@@ -84,8 +113,17 @@ const AdminReport = () => {
 
   const handleRefresh = () => fetchReport(activeReport);
 
+  /* ── Loading Screen ──────────────────────────────────────────── */
+  if (authState === "loading") {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
   /* ── Login Screen ─────────────────────────────────────────────── */
-  if (!authenticated) {
+  if (authState === "login") {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <form onSubmit={handleLogin} className="w-full max-w-sm space-y-6 rounded-xl border border-border bg-card p-8 shadow-lg">
@@ -94,11 +132,11 @@ const AdminReport = () => {
               <Lock className="w-6 h-6 text-primary" />
             </div>
             <h1 className="text-xl font-bold font-display">Admin Dashboard</h1>
-            <p className="text-sm text-muted-foreground">Enter credentials to continue</p>
+            <p className="text-sm text-muted-foreground">Sign in to continue</p>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="username">Username</Label>
-            <Input id="username" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Username" />
+            <Label htmlFor="email">Email</Label>
+            <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" />
           </div>
           <div className="space-y-2">
             <Label htmlFor="password">Password</Label>
@@ -121,7 +159,7 @@ const AdminReport = () => {
               <h1 className="text-2xl font-bold font-display">Admin Dashboard</h1>
               <p className="text-sm text-muted-foreground">Select a report to view</p>
             </div>
-            <Button variant="outline" onClick={() => setAuthenticated(false)}>Logout</Button>
+            <Button variant="outline" onClick={handleLogout} className="gap-1.5"><LogOut className="w-4 h-4" /> Logout</Button>
           </div>
           <div className="grid sm:grid-cols-3 gap-6">
             {REPORT_CARDS.map((card) => (
@@ -150,7 +188,6 @@ const AdminReport = () => {
   return (
     <div className="min-h-screen bg-background p-6">
       <div className="max-w-7xl mx-auto space-y-6">
-        {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <Button variant="ghost" size="icon" onClick={() => setActiveReport(null)}>
@@ -170,11 +207,10 @@ const AdminReport = () => {
             <Button variant="outline" size="sm" onClick={() => downloadCSV(records, activeReport ?? "report")} disabled={records.length === 0} className="gap-1.5">
               <Download className="w-4 h-4" /> Download CSV
             </Button>
-            <Button variant="outline" size="sm" onClick={() => setAuthenticated(false)}>Logout</Button>
+            <Button variant="outline" size="sm" onClick={handleLogout} className="gap-1.5"><LogOut className="w-4 h-4" /> Logout</Button>
           </div>
         </div>
 
-        {/* Table */}
         {loading ? (
           <div className="flex items-center justify-center py-20">
             <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
