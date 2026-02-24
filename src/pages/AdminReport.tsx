@@ -39,6 +39,8 @@ const downloadCSV = (rows: Record<string, unknown>[], filename: string) => {
   URL.revokeObjectURL(url);
 };
 
+const MASTER_ADMIN_ID = "b426c88b-14a2-46ed-93f3-08cb00282b83";
+
 /* ── Main Component ───────────────────────────────────────────── */
 const AdminReport = () => {
   const [authState, setAuthState] = useState<"loading" | "login" | "authenticated">("loading");
@@ -180,6 +182,11 @@ const AdminReport = () => {
 
   /* ── Report Picker (Cards) ────────────────────────────────────── */
   if (!activeReport) {
+    const canManageAdmins = currentUserId === MASTER_ADMIN_ID;
+    const visibleCards = canManageAdmins
+      ? REPORT_CARDS
+      : REPORT_CARDS.filter((card) => card.key !== "manage_admins");
+
     return (
       <div className="min-h-screen bg-background p-6">
         <div className="max-w-4xl mx-auto space-y-8">
@@ -193,7 +200,7 @@ const AdminReport = () => {
             <Button variant="outline" onClick={handleLogout} className="gap-1.5"><LogOut className="w-4 h-4" /> Logout</Button>
           </div>
           <div className="grid sm:grid-cols-3 gap-6">
-            {REPORT_CARDS.map((card) => (
+            {visibleCards.map((card) => (
               <button
                 key={card.key}
                 onClick={() => openReport(card.key)}
