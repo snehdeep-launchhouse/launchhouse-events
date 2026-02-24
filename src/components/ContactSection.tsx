@@ -4,6 +4,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Mail, Send } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import EmailInput from "@/components/EmailInput";
+import { validateEmail } from "@/lib/email-validation";
 
 const ContactSection = () => {
   const { toast } = useToast();
@@ -11,6 +13,7 @@ const ContactSection = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!validateEmail(form.email).valid) return;
     const subject = encodeURIComponent(`Inquiry from ${form.name}`);
     const body = encodeURIComponent(
       `Name: ${form.name}\nEmail: ${form.email}\n\n${form.message}`
@@ -51,9 +54,8 @@ const ContactSection = () => {
             </div>
             <div>
               <label className="text-sm font-medium mb-1.5 block">Email</label>
-              <Input
+              <EmailInput
                 required
-                type="email"
                 placeholder="you@company.com"
                 value={form.email}
                 onChange={(e) => setForm({ ...form, email: e.target.value })}

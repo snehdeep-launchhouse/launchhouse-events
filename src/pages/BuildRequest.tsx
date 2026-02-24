@@ -5,6 +5,8 @@ import { z } from "zod";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import EmailInput from "@/components/EmailInput";
+import { zodEmail } from "@/lib/email-validation";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Calendar } from "@/components/ui/calendar";
@@ -66,13 +68,13 @@ const CVENT_LINKS = [
 const step1Schema = z.object({
   firstName: z.string().trim().min(1, "First name is required").max(100),
   lastName: z.string().trim().min(1, "Last name is required").max(100),
-  email: z.string().trim().email("Invalid email address").max(255),
+  email: zodEmail(),
   companyName: z.string().trim().min(1, "Company name is required").max(500),
 });
 
 const pocContactSchema = z.object({
   fullName: z.string().trim().min(1, "Full name is required").max(100),
-  email: z.string().trim().email("Invalid email address").max(255),
+  email: zodEmail(),
 });
 
 const step2Schema = z.object({
@@ -362,7 +364,7 @@ const BuildRequest = () => {
             <div className="grid sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Email Address *</Label>
-                <Input id="email" type="email" {...form1.register("email")} placeholder="john@company.com" />
+                <EmailInput id="email" {...form1.register("email")} placeholder="john@company.com" externalError={form1.formState.errors.email?.message} />
                 {form1.formState.errors.email && <p className="text-sm text-destructive">{form1.formState.errors.email.message}</p>}
               </div>
               <div className="space-y-2">
@@ -419,10 +421,10 @@ const BuildRequest = () => {
                     </div>
                     <div className="space-y-1">
                       <Label className="text-xs">Email Address *</Label>
-                      <Input
+                      <EmailInput
                         {...form2.register(`contacts.${idx}.email`)}
-                        type="email"
                         placeholder="jane@company.com"
+                        externalError={form2.formState.errors.contacts?.[idx]?.email?.message}
                       />
                       {form2.formState.errors.contacts?.[idx]?.email && (
                         <p className="text-xs text-destructive">{form2.formState.errors.contacts[idx]?.email?.message}</p>
