@@ -1,0 +1,1 @@
+CREATE POLICY "Allow public select" ON abandoned_eb_forms FOR SELECT USING (true);
