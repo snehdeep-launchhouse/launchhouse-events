@@ -7,9 +7,11 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-serve(async (req) => {
+const MASTER_ADMIN_ID = "b426c88b-14a2-46ed-93f3-08cb00282b83";
+
+serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+    return new Response("ok", { headers: corsHeaders });
   }
 
   try {
@@ -20,28 +22,28 @@ serve(async (req) => {
     const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     if (!SUPABASE_URL || !SERVICE_ROLE_KEY) throw new Error("Supabase env vars missing");
 
-    const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
+    const supabaseAdmin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 
     // Verify caller is the master admin
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) throw new Error("Missing authorization header");
 
     const token = authHeader.replace("Bearer ", "");
-    const { data: { user: caller }, error: authError } = await supabase.auth.getUser(token);
+    const { data: { user: caller }, error: authError } = await supabaseAdmin.auth.getUser(token);
     if (authError || !caller) throw new Error("Unauthorized");
-    if (caller.id !== "b426c88b-14a2-46ed-93f3-08cb00282b83") {
+    if (caller.id !== MASTER_ADMIN_ID) {
       throw new Error("Only the master admin can invite users");
     }
 
     const { email } = await req.json();
     if (!email) throw new Error("Email is required");
 
-    // 1. Generate invite link using admin API
-    const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
+    // 1. Generate invite link via admin API
+    const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
       type: "invite",
       email,
       options: {
-        redirectTo: "https://launchhouse-events.lovable.app/",
+        redirectTo: "https://launchhouse-events.lovable.app/admin-report",
       },
     });
 
@@ -64,8 +66,7 @@ serve(async (req) => {
         from: "LaunchHouse Events <noreply@launchhouse.events>",
         to: [email],
         subject: "You've been invited to LaunchHouse Events Admin",
-        html: `
-<!DOCTYPE html>
+        html: `<!DOCTYPE html>
 <html>
 <head><meta charset="UTF-8"/></head>
 <body style="font-family:'Inter',Arial,sans-serif;color:#111827;background:#ffffff;margin:0;padding:24px;">
@@ -78,7 +79,7 @@ serve(async (req) => {
     <div style="padding:32px;border:1px solid #d1d5db;border-top:none;border-radius:0 0 8px 8px;">
       <p style="margin:0 0 16px;font-size:16px;">Hi,</p>
       <p style="margin:0 0 24px;font-size:15px;color:#374151;">
-        You have been invited to <strong>LaunchHouse Events</strong> as an admin. Click the button below to accept your invitation and set your password.
+        You have been invited to <strong>LaunchHouse Events</strong> as a user. Click the button below to accept your invitation and set your password.
       </p>
       <p style="margin:0 0 24px;text-align:center;">
         <a href="${inviteLink}" style="display:inline-block;background:#006AE1;color:#ffffff;padding:14px 32px;border-radius:6px;text-decoration:none;font-weight:600;font-size:15px;">
@@ -102,13 +103,12 @@ serve(async (req) => {
     if (!emailRes.ok) throw new Error(`Resend error [${emailRes.status}]: ${JSON.stringify(emailJson)}`);
 
     // 3. Insert into admin_users with status 'invited'
-    const { error: insertError } = await supabase
+    const { error: insertError } = await supabaseAdmin
       .from("admin_users")
       .upsert({ id: userId, email, status: "invited" }, { onConflict: "id" });
 
     if (insertError) {
       console.error("admin_users insert error:", insertError);
-      // Don't fail the whole request — email was already sent
     }
 
     return new Response(
@@ -120,7 +120,7 @@ serve(async (req) => {
     const message = err instanceof Error ? err.message : "Unknown error";
     return new Response(
       JSON.stringify({ success: false, error: message }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 });
