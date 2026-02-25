@@ -1,101 +1,68 @@
 
 
-## Performance Optimization & Stability Fix
+## Mobile Optimization Plan
 
-### Root Cause of "Grey Screen"
+### Issues Identified
 
-The screenshot shows `DNS_PROBE_FINISHED_NXDOMAIN` for `launchhouse.events`. This is a **DNS configuration issue** — the custom domain is not resolving at the DNS level. No code change can fix this; the domain's DNS records need to be configured to point to the Lovable hosting infrastructure. However, we can add resilience so the app itself never crashes with a grey screen when it *does* load.
+After reviewing all components, here are the mobile-specific problems and optimizations needed:
 
-### Changes
+#### 1. DualListPicker is Unusable on Mobile
+The `DualListPicker` uses `grid-cols-[1fr_auto_1fr]` which squeezes three columns on small screens, making the "Available" and "Chosen" lists and control buttons too narrow to use. On mobile, this should stack vertically.
 
-#### 1. Fix App.css Breaking Layout
+#### 2. AdminReport Table Overflows on Mobile
+The report table view has `p-6` padding and no horizontal scroll container on small screens. Column headers and data cells use `whitespace-nowrap` which causes horizontal overflow issues.
 
-`src/App.css` contains default Vite boilerplate that sets `#root { max-width: 1280px; padding: 2rem; text-align: center }`. This constrains the entire app and should be removed — it's leftover scaffolding.
+#### 3. ManageAdmins Action Buttons Overflow on Mobile
+Each invited user row uses `flex items-center justify-between` with multiple buttons (Resend, Reset Password, Remove) that overflow on narrow screens. The user ID `font-mono` text also overflows.
 
-**File: `src/App.css`** — Clear all content (the file is imported but should be empty or removed).
+#### 4. AdminReport Card Grid Needs Mobile Optimization
+The report picker cards use `sm:grid-cols-2 lg:grid-cols-3` which means on phones they stack well, but the card padding `p-6` can be reduced for tighter mobile layouts.
 
-#### 2. Global Error Boundary
+#### 5. IgnitionHeader Email Hidden on Mobile
+Already has `hidden sm:inline` for email — this is fine. But the header padding could be tighter.
 
-Create a React Error Boundary that catches runtime crashes and shows a branded "Reload Dashboard" screen instead of a blank page.
+#### 6. BuildRequest Step Navigation Buttons
+The "Previous" / "Cancel" / "Next" button row in steps 2 and 3 uses `flex justify-between` which can wrap awkwardly on very small screens.
 
-**File: `src/components/ErrorBoundary.tsx`** — New component:
-- Class component with `componentDidCatch` logging
-- Renders an Ignition-branded error screen with a "Reload Dashboard" button that calls `window.location.reload()`
-- Wrapped around `<Routes>` in `App.tsx`
+#### 7. GetAQuote Registration Options Grid
+The radio group options use `flex-col sm:flex-row` which is already good. The checkbox grid `sm:grid-cols-2` also handles mobile. No changes needed here.
 
-**File: `src/App.tsx`** — Wrap the `<BrowserRouter>` contents with `<ErrorBoundary>`.
+---
 
-#### 3. Code Splitting with React.lazy
+### Files to Edit
 
-Convert heavy route components to lazy imports so the initial bundle only loads the landing page.
+| File | Changes |
+|------|---------|
+| `src/components/DualListPicker.tsx` | Stack vertically on mobile with horizontal controls becoming vertical tap buttons |
+| `src/pages/AdminReport.tsx` | Reduce padding on mobile (`p-4 md:p-6`), improve table scroll container |
+| `src/components/ManageAdmins.tsx` | Stack user rows vertically on mobile — info on top, action buttons below |
+| `src/pages/BuildRequest.tsx` | Improve step nav button wrapping on small screens |
+| `src/index.css` | Add touch-action utilities for smoother mobile scrolling |
 
-**File: `src/App.tsx`** — Change imports for `AdminReport`, `BuildRequest`, `GetAQuote`, `Pricing`, `About`, `Services`, `PrivacyPolicy`, `TermsOfService`, `ResetPassword` to use `React.lazy()` with a `<Suspense>` fallback showing the branded spinner already in `index.html`.
-
-#### 4. Image Lazy Loading
-
-Add `loading="lazy"` to banner images in `HeroSection`, `BuildRequest`, and `GetAQuote` pages. These are already using `<img>` tags — just add the attribute.
-
-**Files: `src/components/HeroSection.tsx`, `src/pages/BuildRequest.tsx`, `src/pages/GetAQuote.tsx`** — Add `loading="lazy"` to `<img>` tags.
-
-#### 5. Memoize Dashboard Cards
-
-**File: `src/pages/AdminReport.tsx`**:
-- Wrap the report picker card grid items with `React.memo` via a extracted `ReportCard` component
-- Memoize `visibleCards` with `useMemo`
-- Memoize `fetchReport` is already done with `useCallback` — no change needed
-
-#### 6. React Query for Admin Data Fetching (Stale-While-Revalidate)
-
-**File: `src/pages/AdminReport.tsx`**:
-- Replace the manual `fetchReport` + `setRecords` pattern with `useQuery` from `@tanstack/react-query` (already installed)
-- Configure `staleTime: 30_000` and `gcTime: 5 * 60_000` so refreshes show cached data instantly, then revalidate in background
-- Keep the realtime subscription to `invalidateQueries` instead of calling fetch directly
-- Replace `recordCounts` manual fetch with a separate `useQuery` for counts
-
-#### 7. Console Cleanup
-
-**File: `src/pages/AdminReport.tsx`** — The `console.error` in `NotFound.tsx` is intentional (404 logging). Remove any stray `console.log` calls if found. The `useEffect` dependency warning from the auth effect is silenced with the existing eslint-disable comment — no change needed.
-
-### Files Summary
-
-| File | Action |
-|------|--------|
-| `src/App.css` | Clear boilerplate content |
-| `src/components/ErrorBoundary.tsx` | Create — global error boundary with branded UI |
-| `src/App.tsx` | Edit — add ErrorBoundary wrapper, React.lazy imports, Suspense fallback |
-| `src/pages/AdminReport.tsx` | Edit — React Query for data fetching, memoized ReportCard component |
-| `src/pages/BuildRequest.tsx` | Edit — add `loading="lazy"` to banner image |
-| `src/pages/GetAQuote.tsx` | Edit — add `loading="lazy"` to banner image |
-| `src/components/HeroSection.tsx` | Edit — add `loading="lazy"` to hero image |
+---
 
 ### Technical Details
 
-**Error Boundary UI:**
-- Navy gradient background matching Ignition branding
-- Flame icon + "Something went wrong" heading
-- "Reload Dashboard" button calling `window.location.reload()`
-- Error details collapsed in a `<details>` tag for debugging
-
-**React.lazy setup:**
-```typescript
-const AdminReport = lazy(() => import("./pages/AdminReport"));
-// ... other lazy imports
-
-// In JSX:
-<Suspense fallback={<div className="min-h-screen flex items-center justify-center"><Loader2 className="w-6 h-6 animate-spin" /></div>}>
-  <Routes>...</Routes>
-</Suspense>
+**DualListPicker Mobile Layout:**
+```text
+Desktop (>=640px):     [Available] [◀ ▶] [Chosen]
+Mobile (<640px):       [Available]
+                       [▼ ▲ buttons]
+                       [Chosen]
 ```
+- Change `grid-cols-[1fr_auto_1fr]` to responsive: single column on mobile, 3-column on `sm:`
+- Rotate the control buttons to horizontal on mobile (move down/up instead of left/right)
 
-**React Query migration for AdminReport:**
-```typescript
-const { data: records = [], isLoading } = useQuery({
-  queryKey: ["report", activeReport],
-  queryFn: async () => { /* existing fetch logic */ },
-  enabled: !!activeReport && activeReport !== "manage_admins",
-  staleTime: 30_000,
-});
-```
+**ManageAdmins Mobile Layout:**
+- Wrap each user card content in `flex-col` on mobile, `flex-row` on `sm:`
+- Stack action buttons below user info
+- Truncate the UUID display on mobile
 
-Realtime subscription calls `queryClient.invalidateQueries({ queryKey: ["report", activeReport] })` instead of `fetchReport()` directly, giving instant cache-first display on tab switches.
+**AdminReport Table:**
+- Already has `overflow-auto` on the table container — this is actually fine
+- Reduce outer padding from `p-6` to `p-3 sm:p-6`
+- Make the report header flex column on mobile (title + buttons stack)
+
+**BuildRequest Step Navigation:**
+- Use `flex-col-reverse sm:flex-row` for the button group so "Previous" appears below "Next" on mobile, matching natural thumb reach
 
