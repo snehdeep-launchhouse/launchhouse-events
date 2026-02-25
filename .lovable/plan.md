@@ -1,80 +1,64 @@
 
 
-## Fix: Restore MX Record Validation
+## Diagnosis: Why Abandoned EB Forms Report Stopped Updating
 
-### Root Cause Analysis
+### Root Cause
 
-The edge function `verify-email-domain` works correctly server-side — I tested it and it properly returns `{ valid: false }` for bogus domains like `nonexistent12345.com`.
+The MX validation fix we just deployed introduced a **side effect** on abandoned form tracking. Here's the chain:
 
-The bug has **two causes**:
+1. The abandoned form upsert (`upsertAbandonedForm`) only runs inside `handleNext1` — the Step 1 form submit handler
+2. The "Next" button is now disabled when `emailVerification === "invalid"`
+3. Users who enter emails with invalid domains (or any email that fails MX lookup) **can never click Next**, so `upsertAbandonedForm` is **never called**
+4. Result: the Abandoned EB Forms report gets zero new entries from users who drop off at Step 1 with problematic emails — which is precisely the audience you want to track
 
-1. **Fail-open pattern in `email-validation.ts`**: Lines 64-68 and 76-79 catch any error from `supabase.functions.invoke` and return `{ valid: true }`. If the client-side call fails (network, CORS, auth header mismatch), the domain is silently accepted as valid.
+### Edge Function Audit
 
-2. **Forms don't block submission when domain is invalid**: All three forms (ContactSection, GetAQuote, BuildRequest) only disable the submit button when `emailVerification === "verifying"`. They never check for `emailVerification === "invalid"`, meaning a user can submit even after MX validation fails.
+All five edge functions are healthy and responding correctly:
+
+| Function | Status | Notes |
+|----------|--------|-------|
+| `verify-email-domain` | Working | Returns `valid: true` for gmail.com, `valid: false` for bogus domains |
+| `send-build-request` | Working | DB insert + Drive + emails all functional |
+| `send-quote-request` | Working | No errors in logs |
+| `invite-admin` | Working | No errors in logs |
+| `send-reset-password` | Working | No errors in logs |
+
+Database has 8 existing partial records — data integrity is intact. Realtime is enabled on the table. RLS policies are permissive and correctly configured.
+
+### Fix
+
+Decouple abandoned form tracking from form progression. Track the partial submission on **email blur** (after basic format validation passes) rather than waiting for the user to click "Next."
 
 ### Changes
 
-#### 1. `src/lib/email-validation.ts` — Fail closed instead of open
+#### `src/pages/BuildRequest.tsx`
 
-- Change both error catch blocks (lines 64-68 and 76-79) to return `{ valid: false, message: "..." }` instead of `{ valid: true }`
-- Update the error message constant to: `"This email domain is invalid or cannot receive mail"`
+1. **Add an `onBlur` callback to the email field** that saves partial data immediately after the user finishes typing their email — regardless of MX validation outcome
+2. The existing `upsertAbandonedForm(1)` call inside `handleNext1` stays as-is (updates the record when the user actually proceeds)
+3. Guard the blur-triggered upsert with basic format validation only (no MX check needed for tracking)
 
-#### 2. `src/components/EmailInput.tsx` — No changes needed
+### Technical Details
 
-The EmailInput component already correctly shows errors and reports status via `onVerificationChange`. It works as designed.
+Add a new handler in `BuildRequest.tsx`:
 
-#### 3. `src/components/ContactSection.tsx` — Block submit on invalid domain
+```typescript
+const handleEmailBlurTracking = useCallback(() => {
+  const data1 = form1.getValues();
+  // Only track if email has valid format (don't track garbage input)
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (data1.email && emailRegex.test(data1.email) && data1.firstName && data1.lastName) {
+    upsertAbandonedForm(1);
+  }
+}, []);
+```
 
-- Add `emailVerification === "invalid"` to the submit button's `disabled` condition
-- Add a guard in `handleSubmit` to return early if `emailVerification !== "valid"` and the email is non-trusted
-
-#### 4. `src/pages/GetAQuote.tsx` — Block submit on invalid domain
-
-- Add `emailVerification === "invalid"` to the submit button's `disabled` condition (line ~586)
-- The form already uses zod validation, but add a guard in the submit handler as a server-side backstop
-
-#### 5. `src/pages/BuildRequest.tsx` — Block submit on invalid domain
-
-- Add `emailVerification === "invalid"` to the Next button's `disabled` condition (line ~400)
-- Also audit the planner contact EmailInput fields on page 2 — they currently don't track verification status. Add verification tracking for those fields too so bogus planner emails are also rejected.
+Then pass an `onBlur` prop to the `EmailInput` on Step 1 that calls this handler. The `EmailInput` component already forwards standard input props, so this requires no changes to `EmailInput.tsx`.
 
 ### Files Summary
 
 | File | Change |
 |------|--------|
-| `src/lib/email-validation.ts` | Fail closed on errors; update error message |
-| `src/components/ContactSection.tsx` | Disable submit when `emailVerification === "invalid"` |
-| `src/pages/GetAQuote.tsx` | Disable submit when `emailVerification === "invalid"` |
-| `src/pages/BuildRequest.tsx` | Disable submit when `emailVerification === "invalid"`; track planner email verification |
+| `src/pages/BuildRequest.tsx` | Add blur-triggered abandoned form tracking on the email field |
 
-### Technical Details
-
-**email-validation.ts error handling change:**
-```typescript
-// BEFORE (fail open):
-if (error) {
-  console.error("Domain verification error:", error);
-  return { valid: true };  // ← BUG: accepts bogus domains on error
-}
-
-// AFTER (fail closed):
-if (error) {
-  console.error("Domain verification error:", error);
-  return { valid: false, message: DOMAIN_INVALID_MESSAGE };
-}
-```
-
-**Submit button pattern (all forms):**
-```typescript
-// BEFORE:
-disabled={emailVerification === "verifying"}
-
-// AFTER:
-disabled={emailVerification === "verifying" || emailVerification === "invalid"}
-```
-
-**Error message update:**
-```typescript
-export const DOMAIN_INVALID_MESSAGE = "This email domain is invalid or cannot receive mail.";
-```
+No edge function changes needed — all are functioning correctly.
 
