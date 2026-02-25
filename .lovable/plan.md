@@ -1,52 +1,72 @@
 
 
-## Fix: quote_requests (and build_requests) RLS Policies Blocking Ignition Reads
+## Ignition + LaunchHouse Branding for Password Reset Flow
 
-### Root Cause
+### Current State
 
-All RLS policies on `quote_requests` and `build_requests` are **RESTRICTIVE** (Permissive: No). In PostgreSQL, restrictive policies ALL must pass, and at least one **permissive** policy must also exist and pass. Since there are zero permissive policies and conflicting restrictive ones (`USING(true)` alongside `USING(false)`), all SELECT queries return empty results — data never reaches Ignition.
+- **ResetPassword page** (`src/pages/ResetPassword.tsx`): Generic styling — plain white background, blue Lock icon, no Ignition logo, no LaunchHouse branding. Inconsistent with the Ignition login screen which uses a navy gradient background, Flame icon, and orange accents.
+- **Invite email** (`supabase/functions/invite-admin/index.ts`): Uses LaunchHouse blue (#006AE1) header and "You're Invited!" title. No mention of "Ignition" platform. No Flame/logo imagery. Doesn't match the dashboard's navy + orange palette.
 
-**`quote_requests`** has:
-- "Allow public select" — restrictive, USING(true)
-- "No public read" — restrictive, USING(false) ← **blocks everything**
+### Changes
 
-**`build_requests`** has:
-- "Allow public select" — restrictive, USING(true)
-- "No public access" — restrictive, USING(false) ← **blocks everything**
+#### 1. ResetPassword Page — Match Ignition Login Screen
 
-### Fix: Database Migration
+**File: `src/pages/ResetPassword.tsx`**
 
-Drop the conflicting deny-all policies and replace them with proper **permissive** admin-only SELECT policies that check the `admin_users` table.
+Restyle to match the Ignition login screen in `AdminReport.tsx` (lines 266-297):
+- Background: navy gradient (`linear-gradient(135deg, hsl(220 50% 14%), hsl(220 40% 22%))`)
+- Card: `rounded-2xl bg-card shadow-2xl` (matching login)
+- Replace the Lock icon with the Flame icon in an orange gradient square (matching Ignition login)
+- Title: "Ignition" with subtitle text adjusted per link type
+- Add "© LaunchHouse Events" footer at bottom (matching login screen)
+- Import `IgnitionLogo` or replicate the Flame icon pattern
+- All functionality remains identical — only JSX/styles change
 
-```sql
--- quote_requests: drop conflicting policies
-DROP POLICY IF EXISTS "No public read on quote_requests" ON public.quote_requests;
-DROP POLICY IF EXISTS "Allow public select on quote_requests" ON public.quote_requests;
+#### 2. Invite Email — Ignition + LaunchHouse Dual Branding
 
--- quote_requests: add permissive admin-only SELECT
-CREATE POLICY "Admins can view quote_requests"
-  ON public.quote_requests FOR SELECT
-  USING (auth.uid() IN (SELECT id FROM public.admin_users WHERE status = 'active'));
+**File: `supabase/functions/invite-admin/index.ts`**
 
--- build_requests: drop conflicting policies
-DROP POLICY IF EXISTS "No public access to build_requests" ON public.build_requests;
-DROP POLICY IF EXISTS "Allow public select on build_requests" ON public.build_requests;
-
--- build_requests: add permissive admin-only SELECT
-CREATE POLICY "Admins can view build_requests"
-  ON public.build_requests FOR SELECT
-  USING (auth.uid() IN (SELECT id FROM public.admin_users WHERE status = 'active'));
-```
-
-The INSERT policy on `quote_requests` (`Allow public insert`) remains untouched — public form submissions still work.
-
-### No Code Changes Needed
-
-The Ignition dashboard code (`AdminReport.tsx`) already queries these tables correctly. Once the RLS policies stop blocking reads, data will flow through immediately.
+Restyle the HTML email template (lines 106-135):
+- Header: Change from blue (#006AE1) to Ignition navy (#1a2744) with an orange (#f17a28) accent bar at top
+- Title: Change "You're Invited!" to "You're Invited to Ignition"
+- Body: Add "by LaunchHouse Events" subtitle below the main heading
+- Button: Change from blue to Ignition orange (#f17a28) with white text
+- Footer: Add "Powered by LaunchHouse Events" in muted text
+- Subject line: Change to "You've been invited to Ignition — LaunchHouse Events"
+- No changes to link generation, auth logic, or Resend API calls
 
 ### Files Summary
 
 | File | Action |
 |------|--------|
-| Database migration | Drop 4 conflicting policies, create 2 permissive admin-only SELECT policies |
+| `src/pages/ResetPassword.tsx` | Restyle to match Ignition login (navy bg, Flame icon, card style) |
+| `supabase/functions/invite-admin/index.ts` | Restyle email template with Ignition navy/orange branding |
+
+### Technical Details
+
+**ResetPassword visual structure (matching Ignition login):**
+```text
+┌──────────────────────────────┐
+│  Navy gradient background    │
+│                              │
+│   ┌──────────────────────┐   │
+│   │  🔥 Flame icon       │   │
+│   │  "Ignition"          │   │
+│   │  subtitle text       │   │
+│   │                      │   │
+│   │  Email (readonly)    │   │
+│   │  New Password        │   │
+│   │  Confirm Password    │   │
+│   │                      │   │
+│   │  [Save Password]     │   │
+│   └──────────────────────┘   │
+│                              │
+│  © 2026 LaunchHouse Events   │
+└──────────────────────────────┘
+```
+
+**Email header color change:**
+- Old: `background:#006AE1` (LaunchHouse blue)
+- New: `background:#1a2744` (Ignition navy) with 4px orange top border
+- Button: `background:#f17a28` (Ignition orange)
 
