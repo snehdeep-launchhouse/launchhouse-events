@@ -8,7 +8,6 @@ const corsHeaders = {
 };
 
 const ADMIN_STATUS_ACTIVE = "active";
-const SUPER_ADMIN_EMAIL = "snehdeep@launchhouse.events";
 const REDIRECT_URL = "https://launchhouse-events.lovable.app/reset-password";
 
 serve(async (req: Request) => {
@@ -42,57 +41,26 @@ serve(async (req: Request) => {
       .maybeSingle();
 
     if (!adminAccess) {
-      throw new Error("Only active admins can invite users");
-    }
-
-    // Only the super admin (snehdeep@launchhouse.events) can invite new users
-    if (caller.email !== SUPER_ADMIN_EMAIL) {
-      throw new Error("Only the super admin can invite new users");
+      throw new Error("Only active admins can send reset password emails");
     }
 
     const { email } = await req.json();
     if (!email) throw new Error("Email is required");
 
-    let userId: string;
-    let inviteLink: string;
-
-    // Try to generate invite link (works for new users)
+    // Generate recovery link
     const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
-      type: "invite",
+      type: "recovery",
       email,
       options: { redirectTo: REDIRECT_URL },
     });
 
-    if (linkError) {
-      // User already exists in auth — look them up and generate a magic link instead
-      const { data: listData } = await supabaseAdmin.auth.admin.listUsers();
-      const existingUser = listData?.users?.find((u: { email?: string }) => u.email === email);
-
-      if (!existingUser) {
-        throw new Error(`Could not find or create user for ${email}: ${linkError.message}`);
-      }
-
-      userId = existingUser.id;
-
-      // Generate a recovery (password reset) link for existing user so they set a password
-      const { data: magicData, error: magicError } = await supabaseAdmin.auth.admin.generateLink({
-        type: "recovery",
-        email,
-        options: { redirectTo: REDIRECT_URL },
-      });
-
-      if (magicError || !magicData?.properties?.action_link) {
-        throw new Error(`Recovery link failed: ${magicError?.message ?? "No link returned"}`);
-      }
-
-      inviteLink = magicData.properties.action_link;
-    } else {
-      inviteLink = linkData?.properties?.action_link ?? "";
-      userId = linkData?.user?.id ?? "";
-      if (!inviteLink || !userId) throw new Error("No invite link or user ID returned");
+    if (linkError || !linkData?.properties?.action_link) {
+      throw new Error(`Recovery link failed: ${linkError?.message ?? "No link returned"}`);
     }
 
-    // Send invite email via Resend
+    const resetLink = linkData.properties.action_link;
+
+    // Send branded email via Resend
     const emailRes = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
@@ -102,7 +70,7 @@ serve(async (req: Request) => {
       body: JSON.stringify({
         from: "LaunchHouse Events <noreply@launchhouse.events>",
         to: [email],
-        subject: "Log Into Ignition",
+        subject: "Reset Your Password — Ignition",
         html: `<!DOCTYPE html>
 <html>
 <head><meta charset="UTF-8"/></head>
@@ -110,22 +78,25 @@ serve(async (req: Request) => {
   <div style="max-width:600px;margin:0 auto;">
     <div style="border-top:4px solid #f17a28;background:#1a2744;padding:24px 32px;border-radius:8px 8px 0 0;">
       <h1 style="margin:0 0 4px;color:#ffffff;font-size:22px;font-family:'Space Grotesk',Arial,sans-serif;">
-        You're Invited to Ignition
+        Reset Your Password
       </h1>
       <p style="margin:0;color:#9ca3af;font-size:13px;">by LaunchHouse Events</p>
     </div>
     <div style="padding:32px;background:#ffffff;border:1px solid #d1d5db;border-top:none;border-radius:0 0 8px 8px;">
       <p style="margin:0 0 16px;font-size:16px;">Hi,</p>
       <p style="margin:0 0 24px;font-size:15px;color:#374151;">
-        You have been invited to <strong>Ignition</strong>, the LaunchHouse Events command center. Click the button below to accept your invitation and set your password.
+        A password reset was requested for your <strong>Ignition</strong> account. Click the button below to set a new password.
       </p>
       <p style="margin:0 0 24px;text-align:center;">
-        <a href="${inviteLink}" style="display:inline-block;background:#f17a28;color:#ffffff;padding:14px 32px;border-radius:6px;text-decoration:none;font-weight:600;font-size:15px;">
-          Accept Invitation
+        <a href="${resetLink}" style="display:inline-block;background:#f17a28;color:#ffffff;padding:14px 32px;border-radius:6px;text-decoration:none;font-weight:600;font-size:15px;">
+          Reset Password
         </a>
       </p>
       <p style="margin:0 0 16px;font-size:13px;color:#6b7280;">
-        Or copy and paste this link: ${inviteLink}
+        Or copy and paste this link: ${resetLink}
+      </p>
+      <p style="margin:0 0 8px;font-size:13px;color:#6b7280;">
+        If you didn't request this, you can safely ignore this email.
       </p>
       <p style="margin:0 0 24px;font-size:15px;color:#374151;">
         — The LaunchHouse Events Team
@@ -143,21 +114,12 @@ serve(async (req: Request) => {
     const emailJson = await emailRes.json();
     if (!emailRes.ok) throw new Error(`Resend error [${emailRes.status}]: ${JSON.stringify(emailJson)}`);
 
-    // Upsert into admin_users with status 'invited'
-    const { error: insertError } = await supabaseAdmin
-      .from("admin_users")
-      .upsert({ id: userId, email, status: "invited" }, { onConflict: "id" });
-
-    if (insertError) {
-      console.error("admin_users insert error:", insertError);
-    }
-
     return new Response(
       JSON.stringify({ success: true, email }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err: unknown) {
-    console.error("invite-admin error:", err);
+    console.error("send-reset-password error:", err);
     const message = err instanceof Error ? err.message : "Unknown error";
     return new Response(
       JSON.stringify({ success: false, error: message }),

@@ -119,6 +119,19 @@ const AdminReport = () => {
   const [activeReport, setActiveReport] = useState<ReportType>(null);
 
   const isSuperAdmin = currentUserEmail === MASTER_ADMIN_EMAIL;
+
+  /* ── Set browser tab title & favicon for Ignition ── */
+  useEffect(() => {
+    const prevTitle = document.title;
+    document.title = "Ignition";
+    const link = document.querySelector('link[rel="icon"]') as HTMLLinkElement;
+    const prevHref = link?.getAttribute('href');
+    if (link) link.setAttribute('href', '/ignition-favicon.svg');
+    return () => {
+      document.title = prevTitle;
+      if (link && prevHref) link.setAttribute('href', prevHref);
+    };
+  }, []);
   const visibleCards = useMemo(() => BASE_REPORT_CARDS.filter((c) => !c.superOnly || isSuperAdmin), [isSuperAdmin]);
 
   /* ── React Query: record counts ── */

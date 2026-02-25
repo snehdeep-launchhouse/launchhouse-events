@@ -15,6 +15,19 @@ const ResetPassword = () => {
   const [success, setSuccess] = useState(false);
   const resolved = useRef(false);
 
+  /* ── Set browser tab title & favicon for Ignition ── */
+  useEffect(() => {
+    const prevTitle = document.title;
+    document.title = "Ignition";
+    const link = document.querySelector('link[rel="icon"]') as HTMLLinkElement;
+    const prevHref = link?.getAttribute('href');
+    if (link) link.setAttribute('href', '/ignition-favicon.svg');
+    return () => {
+      document.title = prevTitle;
+      if (link && prevHref) link.setAttribute('href', prevHref);
+    };
+  }, []);
+
   const linkType = useMemo(() => {
     const hash = window.location.hash.startsWith("#") ? window.location.hash.slice(1) : window.location.hash;
     const hashParams = new URLSearchParams(hash);
