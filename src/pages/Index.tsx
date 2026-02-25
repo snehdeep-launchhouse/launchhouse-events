@@ -1,19 +1,31 @@
+import { lazy, Suspense } from "react";
 import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
 import ServicesSection from "@/components/ServicesSection";
-import WhyUsSection from "@/components/WhyUsSection";
-import PricingSection from "@/components/PricingSection";
-import ContactSection from "@/components/ContactSection";
 import Footer from "@/components/Footer";
+
+const WhyUsSection = lazy(() => import("@/components/WhyUsSection"));
+const PricingSection = lazy(() => import("@/components/PricingSection"));
+const ContactSection = lazy(() => import("@/components/ContactSection"));
+
+const SectionFallback = () => (
+  <div className="py-24 md:py-32" aria-hidden="true" />
+);
 
 const Index = () => (
   <div className="min-h-screen bg-background">
     <Navbar />
     <HeroSection />
     <ServicesSection />
-    <WhyUsSection />
-    <PricingSection />
-    <ContactSection />
+    <Suspense fallback={<SectionFallback />}>
+      <WhyUsSection />
+    </Suspense>
+    <Suspense fallback={<SectionFallback />}>
+      <PricingSection />
+    </Suspense>
+    <Suspense fallback={<SectionFallback />}>
+      <ContactSection />
+    </Suspense>
     <Footer />
   </div>
 );
