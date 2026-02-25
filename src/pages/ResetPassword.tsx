@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Lock } from "lucide-react";
+import { Loader2, Flame } from "lucide-react";
 
 const ResetPassword = () => {
   const [email, setEmail] = useState<string | null>(null);
@@ -29,22 +29,18 @@ const ResetPassword = () => {
       setReady(true);
     };
 
-    // Listen for auth state changes — this fires when the client processes the
-    // hash fragment tokens (recovery / invite links).
     const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
       if (session?.user) {
         markReady(session.user.email);
       }
     });
 
-    // Also check if there's already a session (e.g. page refresh after token exchange).
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
         markReady(session.user.email);
       }
     });
 
-    // Generous fallback — if after 4s we still don't have a session, show error.
     const timeout = window.setTimeout(() => {
       if (!resolved.current) {
         resolved.current = true;
@@ -74,7 +70,6 @@ const ResetPassword = () => {
 
     setSaving(true);
 
-    // Verify we still have a session before attempting update
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
       setError("Your session has expired. Please use the invite link again.");
@@ -98,16 +93,29 @@ const ResetPassword = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-6 rounded-xl border border-border bg-card p-8 shadow-lg">
-        <div className="flex flex-col items-center gap-2">
-          <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-            <Lock className="w-6 h-6 text-primary" />
+    <div
+      className="min-h-screen flex flex-col items-center justify-center p-4"
+      style={{ background: "linear-gradient(135deg, hsl(220 50% 14%), hsl(220 40% 22%))" }}
+    >
+      <form
+        onSubmit={handleSubmit}
+        className="w-full max-w-sm space-y-6 rounded-2xl bg-card text-card-foreground p-8 shadow-2xl"
+      >
+        <div className="flex flex-col items-center gap-3">
+          <div
+            className="w-12 h-12 rounded-lg flex items-center justify-center"
+            style={{ background: "linear-gradient(135deg, hsl(24 95% 53%), hsl(16 90% 45%))" }}
+          >
+            <Flame className="w-7 h-7 text-white" strokeWidth={2.5} />
           </div>
-          <h1 className="text-xl font-bold font-display">Set your password</h1>
-          <p className="text-sm text-muted-foreground text-center">
-            {linkType === "invite" ? "Finish accepting your invite by setting a password." : "Set a new password to continue."}
-          </p>
+          <div className="text-center">
+            <h1 className="text-xl font-bold font-display tracking-tight">Ignition</h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              {linkType === "invite"
+                ? "Finish accepting your invite by setting a password."
+                : "Set a new password to continue."}
+            </p>
+          </div>
         </div>
 
         <div className="space-y-2">
@@ -126,12 +134,16 @@ const ResetPassword = () => {
         </div>
 
         {error && <p className="text-sm text-destructive">{error}</p>}
-        {success && <p className="text-sm text-primary">Password updated. Redirecting to dashboard…</p>}
+        {success && <p className="text-sm font-medium" style={{ color: "hsl(24 95% 53%)" }}>Password updated. Redirecting to dashboard…</p>}
 
         <Button type="submit" className="w-full" disabled={saving || !ready || success}>
           {saving ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Saving...</> : "Save Password"}
         </Button>
       </form>
+
+      <p className="mt-8 text-xs" style={{ color: "hsl(220 15% 55%)" }}>
+        © {new Date().getFullYear()} LaunchHouse Events
+      </p>
     </div>
   );
 };
