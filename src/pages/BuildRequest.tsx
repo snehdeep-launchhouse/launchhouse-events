@@ -329,7 +329,7 @@ const BuildRequest = () => {
     <div className="min-h-screen bg-background">
       {/* Banner */}
       <div className="relative h-48 md:h-64 overflow-hidden">
-        <img src={bannerImg} alt="Build Request" className="w-full h-full object-cover object-top" />
+        <img src={bannerImg} alt="Build Request" className="w-full h-full object-cover object-top" loading="lazy" />
         <div className="absolute inset-0 bg-[hsl(220,90%,10%)]/80" />
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-4">
           <Logo light />

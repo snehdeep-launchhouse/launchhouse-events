@@ -275,6 +275,7 @@ const GetAQuote = () => {
           src={bannerImg}
           alt=""
           className="w-full h-full object-cover object-center"
+          loading="lazy"
         />
         {/* Overlay to ensure logo/text always readable */}
         <div className="absolute inset-0 bg-[hsl(220,90%,10%)]/70" />
