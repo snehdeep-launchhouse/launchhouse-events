@@ -1,72 +1,80 @@
 
 
-## Ignition + LaunchHouse Branding for Password Reset Flow
+## Fix: Restore MX Record Validation
 
-### Current State
+### Root Cause Analysis
 
-- **ResetPassword page** (`src/pages/ResetPassword.tsx`): Generic styling — plain white background, blue Lock icon, no Ignition logo, no LaunchHouse branding. Inconsistent with the Ignition login screen which uses a navy gradient background, Flame icon, and orange accents.
-- **Invite email** (`supabase/functions/invite-admin/index.ts`): Uses LaunchHouse blue (#006AE1) header and "You're Invited!" title. No mention of "Ignition" platform. No Flame/logo imagery. Doesn't match the dashboard's navy + orange palette.
+The edge function `verify-email-domain` works correctly server-side — I tested it and it properly returns `{ valid: false }` for bogus domains like `nonexistent12345.com`.
+
+The bug has **two causes**:
+
+1. **Fail-open pattern in `email-validation.ts`**: Lines 64-68 and 76-79 catch any error from `supabase.functions.invoke` and return `{ valid: true }`. If the client-side call fails (network, CORS, auth header mismatch), the domain is silently accepted as valid.
+
+2. **Forms don't block submission when domain is invalid**: All three forms (ContactSection, GetAQuote, BuildRequest) only disable the submit button when `emailVerification === "verifying"`. They never check for `emailVerification === "invalid"`, meaning a user can submit even after MX validation fails.
 
 ### Changes
 
-#### 1. ResetPassword Page — Match Ignition Login Screen
+#### 1. `src/lib/email-validation.ts` — Fail closed instead of open
 
-**File: `src/pages/ResetPassword.tsx`**
+- Change both error catch blocks (lines 64-68 and 76-79) to return `{ valid: false, message: "..." }` instead of `{ valid: true }`
+- Update the error message constant to: `"This email domain is invalid or cannot receive mail"`
 
-Restyle to match the Ignition login screen in `AdminReport.tsx` (lines 266-297):
-- Background: navy gradient (`linear-gradient(135deg, hsl(220 50% 14%), hsl(220 40% 22%))`)
-- Card: `rounded-2xl bg-card shadow-2xl` (matching login)
-- Replace the Lock icon with the Flame icon in an orange gradient square (matching Ignition login)
-- Title: "Ignition" with subtitle text adjusted per link type
-- Add "© LaunchHouse Events" footer at bottom (matching login screen)
-- Import `IgnitionLogo` or replicate the Flame icon pattern
-- All functionality remains identical — only JSX/styles change
+#### 2. `src/components/EmailInput.tsx` — No changes needed
 
-#### 2. Invite Email — Ignition + LaunchHouse Dual Branding
+The EmailInput component already correctly shows errors and reports status via `onVerificationChange`. It works as designed.
 
-**File: `supabase/functions/invite-admin/index.ts`**
+#### 3. `src/components/ContactSection.tsx` — Block submit on invalid domain
 
-Restyle the HTML email template (lines 106-135):
-- Header: Change from blue (#006AE1) to Ignition navy (#1a2744) with an orange (#f17a28) accent bar at top
-- Title: Change "You're Invited!" to "You're Invited to Ignition"
-- Body: Add "by LaunchHouse Events" subtitle below the main heading
-- Button: Change from blue to Ignition orange (#f17a28) with white text
-- Footer: Add "Powered by LaunchHouse Events" in muted text
-- Subject line: Change to "You've been invited to Ignition — LaunchHouse Events"
-- No changes to link generation, auth logic, or Resend API calls
+- Add `emailVerification === "invalid"` to the submit button's `disabled` condition
+- Add a guard in `handleSubmit` to return early if `emailVerification !== "valid"` and the email is non-trusted
+
+#### 4. `src/pages/GetAQuote.tsx` — Block submit on invalid domain
+
+- Add `emailVerification === "invalid"` to the submit button's `disabled` condition (line ~586)
+- The form already uses zod validation, but add a guard in the submit handler as a server-side backstop
+
+#### 5. `src/pages/BuildRequest.tsx` — Block submit on invalid domain
+
+- Add `emailVerification === "invalid"` to the Next button's `disabled` condition (line ~400)
+- Also audit the planner contact EmailInput fields on page 2 — they currently don't track verification status. Add verification tracking for those fields too so bogus planner emails are also rejected.
 
 ### Files Summary
 
-| File | Action |
+| File | Change |
 |------|--------|
-| `src/pages/ResetPassword.tsx` | Restyle to match Ignition login (navy bg, Flame icon, card style) |
-| `supabase/functions/invite-admin/index.ts` | Restyle email template with Ignition navy/orange branding |
+| `src/lib/email-validation.ts` | Fail closed on errors; update error message |
+| `src/components/ContactSection.tsx` | Disable submit when `emailVerification === "invalid"` |
+| `src/pages/GetAQuote.tsx` | Disable submit when `emailVerification === "invalid"` |
+| `src/pages/BuildRequest.tsx` | Disable submit when `emailVerification === "invalid"`; track planner email verification |
 
 ### Technical Details
 
-**ResetPassword visual structure (matching Ignition login):**
-```text
-┌──────────────────────────────┐
-│  Navy gradient background    │
-│                              │
-│   ┌──────────────────────┐   │
-│   │  🔥 Flame icon       │   │
-│   │  "Ignition"          │   │
-│   │  subtitle text       │   │
-│   │                      │   │
-│   │  Email (readonly)    │   │
-│   │  New Password        │   │
-│   │  Confirm Password    │   │
-│   │                      │   │
-│   │  [Save Password]     │   │
-│   └──────────────────────┘   │
-│                              │
-│  © 2026 LaunchHouse Events   │
-└──────────────────────────────┘
+**email-validation.ts error handling change:**
+```typescript
+// BEFORE (fail open):
+if (error) {
+  console.error("Domain verification error:", error);
+  return { valid: true };  // ← BUG: accepts bogus domains on error
+}
+
+// AFTER (fail closed):
+if (error) {
+  console.error("Domain verification error:", error);
+  return { valid: false, message: DOMAIN_INVALID_MESSAGE };
+}
 ```
 
-**Email header color change:**
-- Old: `background:#006AE1` (LaunchHouse blue)
-- New: `background:#1a2744` (Ignition navy) with 4px orange top border
-- Button: `background:#f17a28` (Ignition orange)
+**Submit button pattern (all forms):**
+```typescript
+// BEFORE:
+disabled={emailVerification === "verifying"}
+
+// AFTER:
+disabled={emailVerification === "verifying" || emailVerification === "invalid"}
+```
+
+**Error message update:**
+```typescript
+export const DOMAIN_INVALID_MESSAGE = "This email domain is invalid or cannot receive mail.";
+```
 
