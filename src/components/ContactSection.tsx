@@ -74,7 +74,7 @@ const ContactSection = () => {
               onChange={(e) => setForm({ ...form, message: e.target.value })}
             />
           </div>
-          <Button type="submit" disabled={emailVerification === "verifying"} className="w-full shadow-btn">
+          <Button type="submit" disabled={emailVerification === "verifying" || emailVerification === "invalid"} className="w-full shadow-btn">
             <Send className="w-4 h-4 mr-2" /> Send Message
           </Button>
         </form>

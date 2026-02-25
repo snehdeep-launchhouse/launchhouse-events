@@ -583,7 +583,7 @@ const GetAQuote = () => {
             >
               Cancel
             </Button>
-            <Button type="submit" size="lg" disabled={submitting || emailVerification === "verifying"} className="shadow-btn">
+            <Button type="submit" size="lg" disabled={submitting || emailVerification === "verifying" || emailVerification === "invalid"} className="shadow-btn">
               {submitting ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
