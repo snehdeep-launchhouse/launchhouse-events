@@ -97,13 +97,22 @@ const ManageAdmins = ({ onBack, currentUserId }: ManageAdminsProps) => {
       return;
     }
     setActionLoading(admin.id);
-    const { error } = await supabase.auth.resetPasswordForEmail(admin.email, {
-      redirectTo: `${window.location.origin}/reset-password`,
-    });
-    if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-    } else {
-      toast({ title: "Reset link sent", description: `Reset link sent to ${admin.email}.` });
+    try {
+      const res = await supabase.functions.invoke("send-reset-password", {
+        body: { email: admin.email },
+      });
+      if (res.error) {
+        toast({ title: "Error", description: res.error.message, variant: "destructive" });
+      } else {
+        const result = res.data as { success: boolean; error?: string };
+        if (!result.success) {
+          toast({ title: "Error", description: result.error ?? "Unknown error", variant: "destructive" });
+        } else {
+          toast({ title: "Reset link sent", description: `Reset link sent to ${admin.email}.` });
+        }
+      }
+    } catch {
+      toast({ title: "Error", description: "Network error.", variant: "destructive" });
     }
     setActionLoading(null);
   };
