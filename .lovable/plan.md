@@ -1,37 +1,50 @@
 
 
-## Fix: Refresh Button Appears Unresponsive
+## Enhance Ignition Report Tables
 
-### Current State
+### Changes to `src/pages/AdminReport.tsx`
 
-The database contains exactly 11 partial records in `abandoned_eb_forms` — the frontend count is correct. No data is missing.
+#### 1. Hide internal columns (ID, submitted_at, created_at, updated_at, etc.)
 
-The "stuck" refresh button is a UX issue: `invalidateQueries` respects `staleTime` (30s), so rapid clicks do nothing. There's also no visual feedback when refresh completes instantly from cache.
+Define a set of hidden column keys per report type so they never render in the table or affect display, but remain available in CSV exports:
 
-### Changes
-
-#### `src/pages/AdminReport.tsx`
-
-1. **Force refetch on refresh click** — Replace `invalidateQueries` with `refetchQueries` which bypasses `staleTime` and always hits the server:
-
-```typescript
-// BEFORE:
-const handleRefresh = useCallback(() => {
-  queryClient.invalidateQueries({ queryKey: ["ignition", "report", activeReport] });
-}, [queryClient, activeReport]);
-
-// AFTER:
-const handleRefresh = useCallback(() => {
-  queryClient.refetchQueries({ queryKey: ["ignition", "report", activeReport] });
-  queryClient.refetchQueries({ queryKey: ["ignition", "counts"] });
-}, [queryClient, activeReport]);
+```text
+HIDDEN_COLUMNS = {
+  abandoned:      ["id", "created_at", "updated_at"],
+  build_requests: ["id", "submitted_at", "email_sent_at"],
+  quote_requests: ["id", "submitted_at", "email_sent_at"],
+}
 ```
 
-This ensures clicking Refresh always fetches fresh data and also updates the record count. The `loading` state from React Query will briefly show the spinner on the RefreshCw icon, giving immediate visual feedback.
+The `columns` array will be filtered to exclude these before rendering. Full data (including hidden columns) will still be included in bulk CSV downloads for completeness.
 
-### Files Summary
+#### 2. Add search bar
+
+Add a text `Input` with a search icon below the header toolbar. It filters rows client-side across all visible columns (case-insensitive substring match). The record count subtitle updates to reflect filtered results (e.g. "4 of 11 records").
+
+#### 3. Add per-row CSV download button
+
+Add a small download icon button as the last column in each table row. Clicking it downloads a single-row CSV file named `{report}-row-{index}-{date}.csv` containing all columns (including hidden ones like ID) for that record.
+
+#### 4. State additions
+
+Two new pieces of state:
+- `searchQuery: string` — bound to the search input, reset when switching reports.
+
+#### 5. Data flow
+
+```text
+records (from React Query)
+  → filter out hidden columns for display
+  → filter rows by searchQuery across visible fields
+  → render table
+  → per-row download uses full original row data (all columns)
+  → bulk CSV download uses filtered rows (respects search)
+```
+
+### Files changed
 
 | File | Change |
 |------|--------|
-| `src/pages/AdminReport.tsx` | Use `refetchQueries` instead of `invalidateQueries` for the refresh button; also refresh counts |
+| `src/pages/AdminReport.tsx` | Add hidden columns map, search input + filtering, per-row CSV download button, update record count to show filtered vs total |
 
