@@ -17,6 +17,7 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { Checkbox } from "@/components/ui/checkbox";
 import DualListPicker from "@/components/DualListPicker";
 import Logo from "@/components/Logo";
 import Footer from "@/components/Footer";
@@ -135,7 +136,7 @@ const BuildRequest = () => {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [emailVerification, setEmailVerification] = useState<VerificationStatus>("idle");
-  
+  const [isPlanner, setIsPlanner] = useState(false);
 
   // Step 1
   const form1 = useForm<Step1>({ resolver: zodResolver(step1Schema), defaultValues: { firstName: "", lastName: "", email: "", companyName: "" } });
@@ -183,7 +184,15 @@ const BuildRequest = () => {
     }
   };
 
-  const handleNext1 = form1.handleSubmit(async () => {
+  const handleNext1 = form1.handleSubmit(async (data) => {
+    if (isPlanner) {
+      const currentContacts = form2.getValues("contacts");
+      currentContacts[0] = {
+        fullName: `${data.firstName} ${data.lastName}`,
+        email: data.email,
+      };
+      form2.setValue("contacts", currentContacts);
+    }
     await upsertAbandonedForm(1);
     setStep(2);
   });
@@ -373,6 +382,17 @@ const BuildRequest = () => {
                 <Input id="companyName" {...form1.register("companyName")} placeholder="Your company name" />
                 {form1.formState.errors.companyName && <p className="text-sm text-destructive">{form1.formState.errors.companyName.message}</p>}
               </div>
+            </div>
+
+            <div className="flex items-center gap-2 pt-2">
+              <Checkbox
+                id="isPlanner"
+                checked={isPlanner}
+                onCheckedChange={(checked) => setIsPlanner(checked === true)}
+              />
+              <Label htmlFor="isPlanner" className="text-sm font-normal cursor-pointer">
+                I am the Event Planner
+              </Label>
             </div>
 
             <div className="flex justify-end gap-3 pt-4">
