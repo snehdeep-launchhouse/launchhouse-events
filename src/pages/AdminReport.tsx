@@ -1,5 +1,6 @@
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useRef, useMemo, memo } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -45,8 +46,69 @@ const downloadCSV = (rows: Record<string, unknown>[], filename: string) => {
   URL.revokeObjectURL(url);
 };
 
+/* ── Memoized Report Card ─────────────────────────────────────── */
+const ReportCard = memo(({ card, count, onClick }: {
+  card: (typeof BASE_REPORT_CARDS)[number];
+  count: number | null | undefined;
+  onClick: () => void;
+}) => (
+  <button
+    onClick={onClick}
+    className="group rounded-xl border bg-card p-6 text-left shadow-sm hover:shadow-md hover:border-primary/50 transition-all space-y-3"
+    style={{ borderColor: "hsl(220 15% 88%)" }}
+  >
+    <div className="w-12 h-12 rounded-lg flex items-center justify-center transition-colors"
+      style={{
+        background: card.superOnly
+          ? "linear-gradient(135deg, hsl(24 95% 53% / 0.12), hsl(16 90% 45% / 0.08))"
+          : "hsl(212 100% 44% / 0.08)",
+        color: card.superOnly ? "hsl(24 95% 53%)" : "hsl(212 100% 44%)",
+      }}
+    >
+      {card.icon}
+    </div>
+    <h2 className="text-base font-semibold font-display">{card.title}</h2>
+    <p className="text-sm text-muted-foreground leading-relaxed">{card.description}</p>
+    {count != null && (
+      <span className="inline-block text-xs font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+        {count} records
+      </span>
+    )}
+  </button>
+));
+ReportCard.displayName = "ReportCard";
+
+/* ── Fetch helpers for React Query ────────────────────────────── */
+const fetchReportData = async (type: ReportType): Promise<Record<string, unknown>[]> => {
+  if (!type || type === "manage_admins") return [];
+  let query;
+  if (type === "abandoned") {
+    query = supabase.from("abandoned_eb_forms").select("*").eq("status", "partial").order("created_at", { ascending: false });
+  } else if (type === "build_requests") {
+    query = supabase.from("build_requests").select("*").order("submitted_at", { ascending: false });
+  } else {
+    query = supabase.from("quote_requests").select("*").order("submitted_at", { ascending: false });
+  }
+  const { data } = await query;
+  return (data as Record<string, unknown>[]) ?? [];
+};
+
+const fetchRecordCounts = async (): Promise<Record<string, number | null>> => {
+  const [ab, br, qr] = await Promise.all([
+    supabase.from("abandoned_eb_forms").select("id", { count: "exact", head: true }).eq("status", "partial"),
+    supabase.from("build_requests").select("id", { count: "exact", head: true }),
+    supabase.from("quote_requests").select("id", { count: "exact", head: true }),
+  ]);
+  return {
+    abandoned: ab.count ?? null,
+    build_requests: br.count ?? null,
+    quote_requests: qr.count ?? null,
+  };
+};
+
 /* ── Main Component ───────────────────────────────────────────── */
 const AdminReport = () => {
+  const queryClient = useQueryClient();
   const [authState, setAuthState] = useState<"loading" | "login" | "authenticated">("loading");
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [currentUserEmail, setCurrentUserEmail] = useState<string | null>(null);
@@ -55,16 +117,29 @@ const AdminReport = () => {
   const [loginError, setLoginError] = useState("");
   const [loginLoading, setLoginLoading] = useState(false);
   const [activeReport, setActiveReport] = useState<ReportType>(null);
-  const [records, setRecords] = useState<Record<string, unknown>[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [recordCounts, setRecordCounts] = useState<Record<string, number | null>>({});
-  const realtimeChannel = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
   const isSuperAdmin = currentUserEmail === MASTER_ADMIN_EMAIL;
+  const visibleCards = useMemo(() => BASE_REPORT_CARDS.filter((c) => !c.superOnly || isSuperAdmin), [isSuperAdmin]);
 
-  const visibleCards = BASE_REPORT_CARDS.filter((c) => !c.superOnly || isSuperAdmin);
+  /* ── React Query: record counts ── */
+  const { data: recordCounts = {} } = useQuery({
+    queryKey: ["ignition", "counts"],
+    queryFn: fetchRecordCounts,
+    enabled: authState === "authenticated",
+    staleTime: 30_000,
+    gcTime: 5 * 60_000,
+  });
 
-  /* ── Check existing session on mount — uses onAuthStateChange to avoid race ── */
+  /* ── React Query: report data ── */
+  const { data: records = [], isLoading: loading } = useQuery({
+    queryKey: ["ignition", "report", activeReport],
+    queryFn: () => fetchReportData(activeReport),
+    enabled: authState === "authenticated" && !!activeReport && activeReport !== "manage_admins",
+    staleTime: 30_000,
+    gcTime: 5 * 60_000,
+  });
+
+  /* ── Check existing session on mount ── */
   useEffect(() => {
     let cancelled = false;
 
@@ -84,14 +159,12 @@ const AdminReport = () => {
       }
     };
 
-    // Listen first — catches token exchange events (invite/recovery links)
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user && authState === "loading") {
         resolveAuth(session.user.id, session.user.email);
       }
     });
 
-    // Then check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
         resolveAuth(session.user.id, session.user.email);
@@ -107,25 +180,29 @@ const AdminReport = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  /* ── Fetch record counts for cards ── */
+  /* ── Realtime subscription — invalidates React Query cache ── */
   useEffect(() => {
     if (authState !== "authenticated") return;
-    const fetchCounts = async () => {
-      const [ab, br, qr] = await Promise.all([
-        supabase.from("abandoned_eb_forms").select("id", { count: "exact", head: true }).eq("status", "partial"),
-        supabase.from("build_requests").select("id", { count: "exact", head: true }),
-        supabase.from("quote_requests").select("id", { count: "exact", head: true }),
-      ]);
-      setRecordCounts({
-        abandoned: ab.count ?? null,
-        build_requests: br.count ?? null,
-        quote_requests: qr.count ?? null,
-      });
-    };
-    fetchCounts();
-  }, [authState]);
 
-  /* ── Login handler ───────────────────────────────────────────── */
+    const channel = supabase
+      .channel("ignition-realtime")
+      .on("postgres_changes", { event: "*", schema: "public", table: "abandoned_eb_forms" }, () => {
+        queryClient.invalidateQueries({ queryKey: ["ignition"] });
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "build_requests" }, () => {
+        queryClient.invalidateQueries({ queryKey: ["ignition"] });
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "quote_requests" }, () => {
+        queryClient.invalidateQueries({ queryKey: ["ignition"] });
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [authState, queryClient]);
+
+  /* ── Login handler ── */
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoginError("");
@@ -154,64 +231,19 @@ const AdminReport = () => {
     await supabase.auth.signOut();
     setAuthState("login");
     setActiveReport(null);
-    setRecords([]);
     setCurrentUserId(null);
     setCurrentUserEmail(null);
+    queryClient.clear();
   };
-
-  /* ── Fetch report data ── */
-  const fetchReport = useCallback(async (type: ReportType) => {
-    if (!type || type === "manage_admins") return;
-    setLoading(true);
-    setRecords([]);
-    let query;
-    if (type === "abandoned") {
-      query = supabase.from("abandoned_eb_forms").select("*").eq("status", "partial").order("created_at", { ascending: false });
-    } else if (type === "build_requests") {
-      query = supabase.from("build_requests").select("*").order("submitted_at", { ascending: false });
-    } else {
-      query = supabase.from("quote_requests").select("*").order("submitted_at", { ascending: false });
-    }
-    const { data } = await query;
-    if (data) setRecords(data as Record<string, unknown>[]);
-    setLoading(false);
-  }, []);
-
-  /* ── Realtime subscription ── */
-  useEffect(() => {
-    if (authState !== "authenticated") return;
-
-    const tableMap: Record<string, string> = {
-      abandoned: "abandoned_eb_forms",
-      build_requests: "build_requests",
-      quote_requests: "quote_requests",
-    };
-
-    const channel = supabase
-      .channel("ignition-realtime")
-      .on("postgres_changes", { event: "*", schema: "public", table: "abandoned_eb_forms" }, () => {
-        if (activeReport === "abandoned") fetchReport("abandoned");
-      })
-      .on("postgres_changes", { event: "*", schema: "public", table: "build_requests" }, () => {
-        if (activeReport === "build_requests") fetchReport("build_requests");
-      })
-      .on("postgres_changes", { event: "*", schema: "public", table: "quote_requests" }, () => {
-        if (activeReport === "quote_requests") fetchReport("quote_requests");
-      })
-      .subscribe();
-
-    realtimeChannel.current = channel;
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [authState, activeReport, fetchReport]);
 
   const openReport = (type: ReportType) => {
     if (type === "manage_admins" && !isSuperAdmin) return;
     setActiveReport(type);
-    if (type && type !== "manage_admins") fetchReport(type);
   };
+
+  const handleRefresh = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ["ignition", "report", activeReport] });
+  }, [queryClient, activeReport]);
 
   /* ── Loading Screen ── */
   if (authState === "loading") {
@@ -295,30 +327,12 @@ const AdminReport = () => {
             </div>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
               {visibleCards.map((card) => (
-                <button
+                <ReportCard
                   key={card.key}
+                  card={card}
+                  count={recordCounts[card.key as string]}
                   onClick={() => openReport(card.key)}
-                  className="group rounded-xl border bg-card p-6 text-left shadow-sm hover:shadow-md hover:border-primary/50 transition-all space-y-3"
-                  style={{ borderColor: "hsl(220 15% 88%)" }}
-                >
-                  <div className="w-12 h-12 rounded-lg flex items-center justify-center transition-colors"
-                    style={{
-                      background: card.superOnly
-                        ? "linear-gradient(135deg, hsl(24 95% 53% / 0.12), hsl(16 90% 45% / 0.08))"
-                        : "hsl(212 100% 44% / 0.08)",
-                      color: card.superOnly ? "hsl(24 95% 53%)" : "hsl(212 100% 44%)",
-                    }}
-                  >
-                    {card.icon}
-                  </div>
-                  <h2 className="text-base font-semibold font-display">{card.title}</h2>
-                  <p className="text-sm text-muted-foreground leading-relaxed">{card.description}</p>
-                  {recordCounts[card.key as string] != null && (
-                    <span className="inline-block text-xs font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
-                      {recordCounts[card.key as string]} records
-                    </span>
-                  )}
-                </button>
+                />
               ))}
             </div>
           </div>
@@ -351,7 +365,7 @@ const AdminReport = () => {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={() => fetchReport(activeReport)} disabled={loading} className="gap-1.5">
+              <Button variant="outline" size="sm" onClick={handleRefresh} disabled={loading} className="gap-1.5">
                 <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} /> Refresh
               </Button>
               <Button variant="outline" size="sm" onClick={() => downloadCSV(records, activeReport ?? "report")} disabled={records.length === 0} className="gap-1.5">
