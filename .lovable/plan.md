@@ -1,109 +1,101 @@
 
 
-## Advanced Event Planner Logic & Email Trigger Refactor
+## Performance Optimization & Stability Fix
 
-### Current State
+### Root Cause of "Grey Screen"
 
-- **Page 1** collects: firstName, lastName, email, companyName
-- **Page 2** collects: dynamic planner contacts (fullName + email), primaryPocPhone, kickoff details, solutions
-- **Backend** sends 3 hardcoded emails: internal to sam@, internal to snehdeep@, confirmation to `payload.email` (the submitter only). No emails go to planner contacts.
+The screenshot shows `DNS_PROBE_FINISHED_NXDOMAIN` for `launchhouse.events`. This is a **DNS configuration issue** — the custom domain is not resolving at the DNS level. No code change can fix this; the domain's DNS records need to be configured to point to the Lovable hosting infrastructure. However, we can add resilience so the app itself never crashes with a grey screen when it *does* load.
 
-### Plan
+### Changes
 
-#### 1. Frontend: "I am the Event Planner" Checkbox (Page 1 → Page 2 prefill)
+#### 1. Fix App.css Breaking Layout
 
-**File: `src/pages/BuildRequest.tsx`**
+`src/App.css` contains default Vite boilerplate that sets `#root { max-width: 1280px; padding: 2rem; text-align: center }`. This constrains the entire app and should be removed — it's leftover scaffolding.
 
-- Add a new state: `const [isPlanner, setIsPlanner] = useState(false)`
-- On Page 1, below the Company Name field, add a checkbox row: `"I am the Event Planner"`
-- When the user navigates to Page 2 (`handleNext1`), if `isPlanner` is true, auto-populate `contacts[0]` (the Primary contact) with:
-  - `fullName` = `${firstName} ${lastName}` from form1
-  - `email` = `email` from form1
-- The fields remain fully editable so the user can overtype them
-- The prefill happens synchronously in the `handleNext1` callback before `setStep(2)` — no lag
+**File: `src/App.css`** — Clear all content (the file is imported but should be empty or removed).
 
-#### 2. Backend: Deduplicated Email Triggers to All Contacts
+#### 2. Global Error Boundary
 
-**File: `supabase/functions/send-build-request/index.ts`**
+Create a React Error Boundary that catches runtime crashes and shows a branded "Reload Dashboard" screen instead of a blank page.
 
-Current email flow sends to exactly 3 recipients. The refactored flow:
+**File: `src/components/ErrorBoundary.tsx`** — New component:
+- Class component with `componentDidCatch` logging
+- Renders an Ignition-branded error screen with a "Reload Dashboard" button that calls `window.location.reload()`
+- Wrapped around `<Routes>` in `App.tsx`
 
-```text
-Step 1: Build a "Recipient Master List"
-  - Internal team: sam@launchhouse.events, snehdeep@launchhouse.events → internal report email
-  - Submitter: payload.email → confirmation email
-  - All planner contacts: payload.contacts[*].email → planner notification email
+**File: `src/App.tsx`** — Wrap the `<BrowserRouter>` contents with `<ErrorBoundary>`.
 
-Step 2: Deduplicate
-  - Create a Set of all unique external emails (submitter + all planner contacts)
-  - For each unique email, determine which templates they qualify for
-  - If submitter email === a planner contact email → send ONE combined confirmation (not two separate emails)
+#### 3. Code Splitting with React.lazy
 
-Step 3: Send
-  - Internal emails: always 2 (sam@ and snehdeep@) with the full report table
-  - For each unique external recipient:
-    - If they are the submitter AND a planner → send the confirmation template (which already covers both roles)
-    - If they are only a planner (not the submitter) → send a new "planner notification" template informing them they've been listed as a contact
-    - If they are only the submitter → send the existing confirmation template
-  - Respect Resend's rate limit with 600ms delays between sends
-```
+Convert heavy route components to lazy imports so the initial bundle only loads the landing page.
 
-**New planner notification email template** — a lightweight email saying:
+**File: `src/App.tsx`** — Change imports for `AdminReport`, `BuildRequest`, `GetAQuote`, `Pricing`, `About`, `Services`, `PrivacyPolicy`, `TermsOfService`, `ResetPassword` to use `React.lazy()` with a `<Suspense>` fallback showing the branded spinner already in `index.html`.
 
-> "Hi [Name], you've been listed as a planner contact for [Event Title] by [Submitter Name]. The LaunchHouse Events team will be in touch regarding the kick-off call."
+#### 4. Image Lazy Loading
 
-Plus the Google Drive folder link if available.
+Add `loading="lazy"` to banner images in `HeroSection`, `BuildRequest`, and `GetAQuote` pages. These are already using `<img>` tags — just add the attribute.
 
-#### 3. Database: Contacts Already Stored Correctly
+**Files: `src/components/HeroSection.tsx`, `src/pages/BuildRequest.tsx`, `src/pages/GetAQuote.tsx`** — Add `loading="lazy"` to `<img>` tags.
 
-The `build_requests.contacts` column is JSONB and already stores the full contacts array. No schema changes needed — the planner contact emails are already persisted and visible in the Ignition dashboard.
+#### 5. Memoize Dashboard Cards
 
-### Files to Edit
+**File: `src/pages/AdminReport.tsx`**:
+- Wrap the report picker card grid items with `React.memo` via a extracted `ReportCard` component
+- Memoize `visibleCards` with `useMemo`
+- Memoize `fetchReport` is already done with `useCallback` — no change needed
+
+#### 6. React Query for Admin Data Fetching (Stale-While-Revalidate)
+
+**File: `src/pages/AdminReport.tsx`**:
+- Replace the manual `fetchReport` + `setRecords` pattern with `useQuery` from `@tanstack/react-query` (already installed)
+- Configure `staleTime: 30_000` and `gcTime: 5 * 60_000` so refreshes show cached data instantly, then revalidate in background
+- Keep the realtime subscription to `invalidateQueries` instead of calling fetch directly
+- Replace `recordCounts` manual fetch with a separate `useQuery` for counts
+
+#### 7. Console Cleanup
+
+**File: `src/pages/AdminReport.tsx`** — The `console.error` in `NotFound.tsx` is intentional (404 logging). Remove any stray `console.log` calls if found. The `useEffect` dependency warning from the auth effect is silenced with the existing eslint-disable comment — no change needed.
+
+### Files Summary
 
 | File | Action |
 |------|--------|
-| `src/pages/BuildRequest.tsx` | Add `isPlanner` checkbox on Page 1; prefill contacts[0] on step transition |
-| `supabase/functions/send-build-request/index.ts` | Refactor email sending: build recipient master list, deduplicate, send planner notifications to all contacts, add planner notification template |
+| `src/App.css` | Clear boilerplate content |
+| `src/components/ErrorBoundary.tsx` | Create — global error boundary with branded UI |
+| `src/App.tsx` | Edit — add ErrorBoundary wrapper, React.lazy imports, Suspense fallback |
+| `src/pages/AdminReport.tsx` | Edit — React Query for data fetching, memoized ReportCard component |
+| `src/pages/BuildRequest.tsx` | Edit — add `loading="lazy"` to banner image |
+| `src/pages/GetAQuote.tsx` | Edit — add `loading="lazy"` to banner image |
+| `src/components/HeroSection.tsx` | Edit — add `loading="lazy"` to hero image |
 
 ### Technical Details
 
-**Checkbox implementation:**
-- Uses the existing `@radix-ui/react-checkbox` + `Checkbox` component from `src/components/ui/checkbox.tsx`
-- Styled consistently with the form: placed in a `flex items-center gap-2` row with a label
+**Error Boundary UI:**
+- Navy gradient background matching Ignition branding
+- Flame icon + "Something went wrong" heading
+- "Reload Dashboard" button calling `window.location.reload()`
+- Error details collapsed in a `<details>` tag for debugging
 
-**Prefill logic (no lag):**
+**React.lazy setup:**
 ```typescript
-const handleNext1 = form1.handleSubmit(async (data) => {
-  if (isPlanner) {
-    const currentContacts = form2.getValues("contacts");
-    currentContacts[0] = {
-      fullName: `${data.firstName} ${data.lastName}`,
-      email: data.email,
-    };
-    form2.setValue("contacts", currentContacts);
-  }
-  await upsertAbandonedForm(1);
-  setStep(2);
+const AdminReport = lazy(() => import("./pages/AdminReport"));
+// ... other lazy imports
+
+// In JSX:
+<Suspense fallback={<div className="min-h-screen flex items-center justify-center"><Loader2 className="w-6 h-6 animate-spin" /></div>}>
+  <Routes>...</Routes>
+</Suspense>
+```
+
+**React Query migration for AdminReport:**
+```typescript
+const { data: records = [], isLoading } = useQuery({
+  queryKey: ["report", activeReport],
+  queryFn: async () => { /* existing fetch logic */ },
+  enabled: !!activeReport && activeReport !== "manage_admins",
+  staleTime: 30_000,
 });
 ```
 
-**Deduplication algorithm (edge function):**
-```typescript
-// Build unique recipient map: email → { isSubmitter, plannerName? }
-const recipientMap = new Map<string, { isSubmitter: boolean; plannerName: string }>();
-recipientMap.set(payload.email.toLowerCase(), { isSubmitter: true, plannerName: "" });
-for (const contact of payload.contacts) {
-  const key = contact.email.toLowerCase();
-  const existing = recipientMap.get(key);
-  if (existing) {
-    // Already in map (submitter) — mark but don't duplicate
-    existing.plannerName = contact.fullName;
-  } else {
-    recipientMap.set(key, { isSubmitter: false, plannerName: contact.fullName });
-  }
-}
-// Then iterate recipientMap to send appropriate template per recipient
-```
-
-**Rate limiting:** Each email send is followed by a 600ms sleep. With 2 internal + N external recipients, the function handles up to ~10 contacts comfortably within edge function timeout limits.
+Realtime subscription calls `queryClient.invalidateQueries({ queryKey: ["report", activeReport] })` instead of `fetchReport()` directly, giving instant cache-first display on tab switches.
 
