@@ -1,68 +1,109 @@
 
 
-## Mobile Optimization Plan
+## Universal Speed Optimization (Home Page Priority)
 
-### Issues Identified
+### Current State
 
-After reviewing all components, here are the mobile-specific problems and optimizations needed:
+- Home page (`Index.tsx`) eagerly imports all 6 section components (Navbar, Hero, Services, WhyUs, Pricing, Contact, Footer)
+- Hero banner image is a JPG loaded via Vite import with `loading="lazy"` -- but the hero is above the fold, so lazy-loading actually *delays* it
+- Google Fonts loaded via blocking `<link rel="stylesheet">` without `font-display: swap`
+- No critical CSS inlined for the navbar/hero -- relies entirely on Tailwind CSS bundle
+- No `<link rel="preload">` for the hero image
+- Mobile touch targets lack `touch-action: manipulation` for zero-delay taps
+- Below-the-fold sections (WhyUs, Pricing, Contact) are eagerly loaded even though they are not visible on initial render
 
-#### 1. DualListPicker is Unusable on Mobile
-The `DualListPicker` uses `grid-cols-[1fr_auto_1fr]` which squeezes three columns on small screens, making the "Available" and "Chosen" lists and control buttons too narrow to use. On mobile, this should stack vertically.
+### Changes
 
-#### 2. AdminReport Table Overflows on Mobile
-The report table view has `p-6` padding and no horizontal scroll container on small screens. Column headers and data cells use `whitespace-nowrap` which causes horizontal overflow issues.
+#### 1. Hero Image: Priority Loading (Not Lazy)
 
-#### 3. ManageAdmins Action Buttons Overflow on Mobile
-Each invited user row uses `flex items-center justify-between` with multiple buttons (Resend, Reset Password, Remove) that overflow on narrow screens. The user ID `font-mono` text also overflows.
+**File: `src/components/HeroSection.tsx`**
+- Change `loading="lazy"` to `loading="eager"` and add `fetchPriority="high"` -- the hero is above the fold and must load immediately
+- Add `decoding="async"` to avoid blocking the main thread during decode
 
-#### 4. AdminReport Card Grid Needs Mobile Optimization
-The report picker cards use `sm:grid-cols-2 lg:grid-cols-3` which means on phones they stack well, but the card padding `p-6` can be reduced for tighter mobile layouts.
+#### 2. Font Loading: Add `font-display: swap`
 
-#### 5. IgnitionHeader Email Hidden on Mobile
-Already has `hidden sm:inline` for email — this is fine. But the header padding could be tighter.
+**File: `index.html`**
+- Change the Google Fonts URL to include `&display=swap` parameter so text renders immediately with fallback fonts
+- Add `<link rel="preload">` for the primary font (Inter 400/600) as critical resources
+- This eliminates the invisible text flash (FOIT) on slow connections
 
-#### 6. BuildRequest Step Navigation Buttons
-The "Previous" / "Cancel" / "Next" button row in steps 2 and 3 uses `flex justify-between` which can wrap awkwardly on very small screens.
+#### 3. Below-the-Fold Lazy Loading on Home Page
 
-#### 7. GetAQuote Registration Options Grid
-The radio group options use `flex-col sm:flex-row` which is already good. The checkbox grid `sm:grid-cols-2` also handles mobile. No changes needed here.
+**File: `src/pages/Index.tsx`**
+- Use `React.lazy` for below-the-fold sections: `WhyUsSection`, `PricingSection`, `ContactSection`
+- Keep `Navbar`, `HeroSection`, `ServicesSection` eagerly loaded (visible on first viewport)
+- Wrap lazy sections in `Suspense` with a minimal skeleton fallback
+
+#### 4. Touch Optimization: Zero-Delay Taps
+
+**File: `src/index.css`**
+- Add a global rule: `a, button, [role="button"] { touch-action: manipulation; }` -- this removes the 300ms tap delay on all interactive elements across mobile browsers
+
+#### 5. Critical CSS: Inline Navbar + Hero Styles
+
+**File: `index.html`**
+- Add a minimal `<style>` block with the navbar fixed positioning and hero background color so the first paint shows the correct layout before the Tailwind bundle loads
+- This prevents any FOUC on the nav bar area
+
+#### 6. Preload Hero Image
+
+**File: `index.html`**
+- Add `<link rel="preload" as="image" href="/src/assets/hero-banner.jpg">` so the browser starts fetching the hero image before it encounters it in the JS bundle
+- Note: Vite will hash this in production, but the preload hint still helps during dev and the browser will deduplicate
+
+#### 7. Auth/Session Non-Blocking on Public Pages
+
+The current architecture already handles this correctly: `Index.tsx` does not import or initialize any auth/Supabase logic. The `AdminReport` is lazy-loaded and only runs auth checks when that route is visited. No changes needed here -- just confirming retention.
+
+#### 8. Ignition Branding & Security Retention
+
+No changes to the Ignition platform logic. The super admin restriction (`snehdeep@launchhouse.events`), de-duplicated email triggers, branded header/footer/logo, and React Query caching from the previous optimization round are all preserved.
 
 ---
 
-### Files to Edit
+### Files Summary
 
-| File | Changes |
-|------|---------|
-| `src/components/DualListPicker.tsx` | Stack vertically on mobile with horizontal controls becoming vertical tap buttons |
-| `src/pages/AdminReport.tsx` | Reduce padding on mobile (`p-4 md:p-6`), improve table scroll container |
-| `src/components/ManageAdmins.tsx` | Stack user rows vertically on mobile — info on top, action buttons below |
-| `src/pages/BuildRequest.tsx` | Improve step nav button wrapping on small screens |
-| `src/index.css` | Add touch-action utilities for smoother mobile scrolling |
+| File | Action |
+|------|--------|
+| `index.html` | Add `&display=swap` to font URL, preload hero image, inline critical nav CSS |
+| `src/components/HeroSection.tsx` | Change `loading="lazy"` to `loading="eager"`, add `fetchPriority="high"` |
+| `src/pages/Index.tsx` | Lazy-load below-the-fold sections (WhyUs, Pricing, Contact) |
+| `src/index.css` | Add global `touch-action: manipulation` for interactive elements |
 
 ---
 
 ### Technical Details
 
-**DualListPicker Mobile Layout:**
-```text
-Desktop (>=640px):     [Available] [◀ ▶] [Chosen]
-Mobile (<640px):       [Available]
-                       [▼ ▲ buttons]
-                       [Chosen]
+**Google Fonts with swap:**
+```html
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" />
 ```
-- Change `grid-cols-[1fr_auto_1fr]` to responsive: single column on mobile, 3-column on `sm:`
-- Rotate the control buttons to horizontal on mobile (move down/up instead of left/right)
+The URL already has `display=swap` -- confirmed. No change needed for this parameter specifically. However, the font stylesheet is render-blocking. We will change it to use `rel="preload"` with an `onload` swap pattern to make it non-blocking.
 
-**ManageAdmins Mobile Layout:**
-- Wrap each user card content in `flex-col` on mobile, `flex-row` on `sm:`
-- Stack action buttons below user info
-- Truncate the UUID display on mobile
+**Non-blocking font loading pattern:**
+```html
+<link rel="preload" href="https://fonts.googleapis.com/css2?..." as="style" onload="this.onload=null;this.rel='stylesheet'" />
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?..." /></noscript>
+```
 
-**AdminReport Table:**
-- Already has `overflow-auto` on the table container — this is actually fine
-- Reduce outer padding from `p-6` to `p-3 sm:p-6`
-- Make the report header flex column on mobile (title + buttons stack)
+**Hero image preload (Vite-aware):**
+Since Vite processes the image import and hashes the filename, we cannot preload the exact production URL from `index.html`. Instead, we will use `fetchPriority="high"` on the `<img>` tag itself, which achieves the same browser prioritization without needing to know the hashed URL.
 
-**BuildRequest Step Navigation:**
-- Use `flex-col-reverse sm:flex-row` for the button group so "Previous" appears below "Next" on mobile, matching natural thumb reach
+**Touch-action rule:**
+```css
+@layer base {
+  a, button, [role="button"], input, select, textarea {
+    touch-action: manipulation;
+  }
+}
+```
+This removes the 300ms delay browsers add on touch devices to distinguish taps from double-taps.
+
+**Lazy below-the-fold sections:**
+```tsx
+const WhyUsSection = lazy(() => import("@/components/WhyUsSection"));
+const PricingSection = lazy(() => import("@/components/PricingSection"));
+const ContactSection = lazy(() => import("@/components/ContactSection"));
+```
+These load as soon as React is idle, well before the user scrolls down. The `Suspense` fallback is a simple height placeholder to prevent layout shift.
 
