@@ -132,16 +132,16 @@ const ManageAdmins = ({ onBack, currentUserId }: ManageAdminsProps) => {
   };
 
   return (
-    <div className="min-h-screen bg-background p-6">
-      <div className="max-w-4xl mx-auto space-y-8">
+    <div className="min-h-screen bg-background p-3 sm:p-6">
+      <div className="max-w-4xl mx-auto space-y-6 sm:space-y-8">
         {/* Header */}
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="icon" onClick={onBack}>
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div>
-            <h1 className="text-2xl font-bold font-display">Manage System Admins</h1>
-            <p className="text-sm text-muted-foreground">Invite, remove, or reset passwords for admin users</p>
+            <h1 className="text-xl sm:text-2xl font-bold font-display">Manage System Admins</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground">Invite, remove, or reset passwords for admin users</p>
           </div>
         </div>
 
@@ -198,20 +198,20 @@ const ManageAdmins = ({ onBack, currentUserId }: ManageAdminsProps) => {
           ) : (
             <div className="space-y-3">
               {invitedUsers.map((user) => (
-                <div key={user.id} className="flex items-center justify-between rounded-lg border border-border p-4">
-                  <div className="flex items-center gap-3">
-                    <div>
-                      <p className="font-medium">{user.email ?? "—"}</p>
-                      <p className="text-xs text-muted-foreground font-mono">{user.id}</p>
+                <div key={user.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between rounded-lg border border-border p-3 sm:p-4 gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="min-w-0">
+                      <p className="font-medium truncate">{user.email ?? "—"}</p>
+                      <p className="text-xs text-muted-foreground font-mono truncate max-w-[180px] sm:max-w-none">{user.id}</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3">
                     {user.status === "invited" ? (
                       <Badge variant="outline" className="border-orange-400 text-orange-600 bg-orange-50">Not Accepted</Badge>
                     ) : (
                       <Badge variant="outline" className="border-green-500 text-green-700 bg-green-50">Accepted</Badge>
                     )}
-                    <div className="flex gap-1.5">
+                    <div className="flex flex-wrap gap-1.5">
                       {user.status === "invited" && (
                         <Button
                           variant="outline"
@@ -220,7 +220,7 @@ const ManageAdmins = ({ onBack, currentUserId }: ManageAdminsProps) => {
                           disabled={actionLoading === user.id}
                           className="gap-1"
                         >
-                          <Send className="w-3.5 h-3.5" /> Resend Invite
+                          <Send className="w-3.5 h-3.5" /> <span className="hidden xs:inline">Resend</span> <span className="xs:hidden">↻</span>
                         </Button>
                       )}
                       {isMasterAdmin && (
@@ -231,7 +231,7 @@ const ManageAdmins = ({ onBack, currentUserId }: ManageAdminsProps) => {
                           disabled={actionLoading === user.id}
                           className="gap-1"
                         >
-                          <Mail className="w-3.5 h-3.5" /> Reset Password
+                          <Mail className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Reset Password</span> <span className="sm:hidden">Reset</span>
                         </Button>
                       )}
                       <Button

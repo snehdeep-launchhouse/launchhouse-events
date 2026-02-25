@@ -125,4 +125,10 @@
   .shadow-btn {
     box-shadow: var(--shadow-btn);
   }
+  .touch-pan-y {
+    touch-action: pan-y;
+  }
+  .touch-pan-x {
+    touch-action: pan-x;
+  }
 }
