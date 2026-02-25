@@ -255,7 +255,8 @@ const AdminReport = () => {
   };
 
   const handleRefresh = useCallback(() => {
-    queryClient.invalidateQueries({ queryKey: ["ignition", "report", activeReport] });
+    queryClient.refetchQueries({ queryKey: ["ignition", "report", activeReport] });
+    queryClient.refetchQueries({ queryKey: ["ignition", "counts"] });
   }, [queryClient, activeReport]);
 
   /* ── Loading Screen ── */
