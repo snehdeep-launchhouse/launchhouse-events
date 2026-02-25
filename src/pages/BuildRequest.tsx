@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -184,6 +184,15 @@ const BuildRequest = () => {
       console.error("Abandoned form tracking error:", e);
     }
   };
+
+  // Track abandoned form on email blur (decoupled from MX validation)
+  const handleEmailBlurTracking = useCallback(() => {
+    const data1 = form1.getValues();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (data1.email && emailRegex.test(data1.email) && data1.firstName && data1.lastName) {
+      upsertAbandonedForm(1);
+    }
+  }, []);
 
   const handleNext1 = form1.handleSubmit(async (data) => {
     if (isPlanner) {
@@ -375,7 +384,7 @@ const BuildRequest = () => {
             <div className="grid sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Email Address *</Label>
-                <EmailInput id="email" {...form1.register("email")} placeholder="john@company.com" externalError={form1.formState.errors.email?.message} onVerificationChange={setEmailVerification} />
+                <EmailInput id="email" {...form1.register("email")} placeholder="john@company.com" externalError={form1.formState.errors.email?.message} onVerificationChange={setEmailVerification} onBlur={handleEmailBlurTracking} />
                 {form1.formState.errors.email && <p className="text-sm text-destructive">{form1.formState.errors.email.message}</p>}
               </div>
               <div className="space-y-2">
