@@ -1,64 +1,109 @@
 
 
-## Real-Time DNS & MX Record Email Validation
+## Advanced Event Planner Logic & Email Trigger Refactor
 
-### Approach
+### Current State
 
-Create a backend function that performs DNS/MX lookups, then integrate it into the existing `EmailInput` component. The check fires `onBlur` after the existing regex passes, with a client-side cache for trusted domains.
+- **Page 1** collects: firstName, lastName, email, companyName
+- **Page 2** collects: dynamic planner contacts (fullName + email), primaryPocPhone, kickoff details, solutions
+- **Backend** sends 3 hardcoded emails: internal to sam@, internal to snehdeep@, confirmation to `payload.email` (the submitter only). No emails go to planner contacts.
 
-### Architecture
+### Plan
+
+#### 1. Frontend: "I am the Event Planner" Checkbox (Page 1 → Page 2 prefill)
+
+**File: `src/pages/BuildRequest.tsx`**
+
+- Add a new state: `const [isPlanner, setIsPlanner] = useState(false)`
+- On Page 1, below the Company Name field, add a checkbox row: `"I am the Event Planner"`
+- When the user navigates to Page 2 (`handleNext1`), if `isPlanner` is true, auto-populate `contacts[0]` (the Primary contact) with:
+  - `fullName` = `${firstName} ${lastName}` from form1
+  - `email` = `email` from form1
+- The fields remain fully editable so the user can overtype them
+- The prefill happens synchronously in the `handleNext1` callback before `setStep(2)` — no lag
+
+#### 2. Backend: Deduplicated Email Triggers to All Contacts
+
+**File: `supabase/functions/send-build-request/index.ts`**
+
+Current email flow sends to exactly 3 recipients. The refactored flow:
 
 ```text
-User types email → onBlur → regex check (client)
-                              ↓ pass
-                     domain in cache? → yes → use cached result
-                              ↓ no
-                     call verify-email edge function
-                              ↓
-                     DNS MX lookup via Deno.resolveDns()
-                              ↓
-                     return { valid, hasMx }
-                              ↓
-                     cache result + show UI feedback
+Step 1: Build a "Recipient Master List"
+  - Internal team: sam@launchhouse.events, snehdeep@launchhouse.events → internal report email
+  - Submitter: payload.email → confirmation email
+  - All planner contacts: payload.contacts[*].email → planner notification email
+
+Step 2: Deduplicate
+  - Create a Set of all unique external emails (submitter + all planner contacts)
+  - For each unique email, determine which templates they qualify for
+  - If submitter email === a planner contact email → send ONE combined confirmation (not two separate emails)
+
+Step 3: Send
+  - Internal emails: always 2 (sam@ and snehdeep@) with the full report table
+  - For each unique external recipient:
+    - If they are the submitter AND a planner → send the confirmation template (which already covers both roles)
+    - If they are only a planner (not the submitter) → send a new "planner notification" template informing them they've been listed as a contact
+    - If they are only the submitter → send the existing confirmation template
+  - Respect Resend's rate limit with 600ms delays between sends
 ```
 
-No external API needed — Deno's built-in `Deno.resolveDns("domain", "MX")` performs MX lookups natively, so this is completely free with zero API keys.
+**New planner notification email template** — a lightweight email saying:
 
-### Files to Create/Edit
+> "Hi [Name], you've been listed as a planner contact for [Event Title] by [Submitter Name]. The LaunchHouse Events team will be in touch regarding the kick-off call."
+
+Plus the Google Drive folder link if available.
+
+#### 3. Database: Contacts Already Stored Correctly
+
+The `build_requests.contacts` column is JSONB and already stores the full contacts array. No schema changes needed — the planner contact emails are already persisted and visible in the Ignition dashboard.
+
+### Files to Edit
 
 | File | Action |
 |------|--------|
-| `supabase/functions/verify-email-domain/index.ts` | **Create** — Edge function that extracts domain from email, runs `Deno.resolveDns(domain, "MX")`, returns `{ valid: boolean }` |
-| `supabase/config.toml` | **Auto-updated** — adds `[functions.verify-email-domain]` with `verify_jwt = false` |
-| `src/lib/email-validation.ts` | **Edit** — add `TRUSTED_DOMAINS` set (gmail.com, outlook.com, yahoo.com, hotmail.com, etc.), add `verifyEmailDomain(email)` async function that checks cache first then calls the edge function |
-| `src/components/EmailInput.tsx` | **Edit** — add async MX verification on blur after regex passes; show spinner during check; show domain error if invalid; expose `domainValid` state to disable submit buttons |
-| `src/pages/BuildRequest.tsx` | **Edit** — minor: disable submit while domain verification is pending |
-| `src/pages/GetAQuote.tsx` | **Edit** — minor: disable submit while domain verification is pending |
-| `src/components/ContactSection.tsx` | **Edit** — minor: disable submit while domain verification is pending |
+| `src/pages/BuildRequest.tsx` | Add `isPlanner` checkbox on Page 1; prefill contacts[0] on step transition |
+| `supabase/functions/send-build-request/index.ts` | Refactor email sending: build recipient master list, deduplicate, send planner notifications to all contacts, add planner notification template |
 
 ### Technical Details
 
-**Edge Function** (`verify-email-domain/index.ts`):
-- Accepts `{ domain: string }` in the request body
-- Validates the domain string format server-side
-- Calls `Deno.resolveDns(domain, "MX")` — returns MX records or throws if none exist
-- Returns `{ valid: true }` if MX records found, `{ valid: false, message: "..." }` otherwise
-- Includes CORS headers for browser calls
-- No JWT required (public forms)
+**Checkbox implementation:**
+- Uses the existing `@radix-ui/react-checkbox` + `Checkbox` component from `src/components/ui/checkbox.tsx`
+- Styled consistently with the form: placed in a `flex items-center gap-2` row with a label
 
-**Trusted Domain Cache** (client-side):
-- Hardcoded set: `gmail.com`, `outlook.com`, `yahoo.com`, `hotmail.com`, `icloud.com`, `aol.com`, `protonmail.com`, `live.com`, `msn.com`
-- These skip the API call entirely and return valid immediately
-- A runtime `Map<string, boolean>` caches results for domains already checked in the session
+**Prefill logic (no lag):**
+```typescript
+const handleNext1 = form1.handleSubmit(async (data) => {
+  if (isPlanner) {
+    const currentContacts = form2.getValues("contacts");
+    currentContacts[0] = {
+      fullName: `${data.firstName} ${data.lastName}`,
+      email: data.email,
+    };
+    form2.setValue("contacts", currentContacts);
+  }
+  await upsertAbandonedForm(1);
+  setStep(2);
+});
+```
 
-**EmailInput Component Changes**:
-- New states: `verifying` (boolean), `domainError` (string | null)
-- On blur: if regex valid → extract domain → check trusted set → if not trusted, call `verifyEmailDomain()` → update state
-- UI during verification: replace the checkmark icon with a small `Loader2` spinner
-- UI on domain failure: red border + message "This email domain appears to be invalid or inactive."
-- Expose verification state via a callback prop `onVerificationChange?: (status: 'idle' | 'verifying' | 'valid' | 'invalid') => void` so parent forms can disable their submit buttons
+**Deduplication algorithm (edge function):**
+```typescript
+// Build unique recipient map: email → { isSubmitter, plannerName? }
+const recipientMap = new Map<string, { isSubmitter: boolean; plannerName: string }>();
+recipientMap.set(payload.email.toLowerCase(), { isSubmitter: true, plannerName: "" });
+for (const contact of payload.contacts) {
+  const key = contact.email.toLowerCase();
+  const existing = recipientMap.get(key);
+  if (existing) {
+    // Already in map (submitter) — mark but don't duplicate
+    existing.plannerName = contact.fullName;
+  } else {
+    recipientMap.set(key, { isSubmitter: false, plannerName: contact.fullName });
+  }
+}
+// Then iterate recipientMap to send appropriate template per recipient
+```
 
-**Form Integration**:
-- Each form passes `onVerificationChange` to `EmailInput` and tracks verification status in local state
-- Submit button gets `disabled={submitting || emailVerification !== 'valid'}` (only when the field has been touched)
+**Rate limiting:** Each email send is followed by a 600ms sleep. With 2 internal + N external recipients, the function handles up to ~10 contacts comfortably within edge function timeout limits.
 
