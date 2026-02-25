@@ -33,8 +33,6 @@ async function getGoogleAccessToken(serviceAccountJson: string): Promise<string>
   );
 
   const signingInput = `${header}.${claimSet}`;
-
-  // Import the private key
   const pemBody = sa.private_key
     .replace(/-----BEGIN PRIVATE KEY-----/, "")
     .replace(/-----END PRIVATE KEY-----/, "")
@@ -42,11 +40,8 @@ async function getGoogleAccessToken(serviceAccountJson: string): Promise<string>
   const keyData = Uint8Array.from(atob(pemBody), (c) => c.charCodeAt(0));
 
   const cryptoKey = await crypto.subtle.importKey(
-    "pkcs8",
-    keyData,
-    { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
-    false,
-    ["sign"]
+    "pkcs8", keyData,
+    { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" }, false, ["sign"]
   );
 
   const signature = base64url(
@@ -54,7 +49,6 @@ async function getGoogleAccessToken(serviceAccountJson: string): Promise<string>
   );
 
   const jwt = `${signingInput}.${signature}`;
-
   const tokenRes = await fetch("https://oauth2.googleapis.com/token", {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -67,44 +61,126 @@ async function getGoogleAccessToken(serviceAccountJson: string): Promise<string>
 }
 
 async function createDriveFolder(
-  accessToken: string,
-  parentFolderId: string,
-  folderName: string
+  accessToken: string, parentFolderId: string, folderName: string
 ): Promise<string | null> {
-  const headers = {
-    Authorization: `Bearer ${accessToken}`,
-    "Content-Type": "application/json",
-  };
+  const headers = { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" };
 
-  // 1. Create folder
   const createRes = await fetch("https://www.googleapis.com/drive/v3/files?supportsAllDrives=true", {
-    method: "POST",
-    headers,
-    body: JSON.stringify({
-      name: folderName,
-      mimeType: "application/vnd.google-apps.folder",
-      parents: [parentFolderId],
-    }),
+    method: "POST", headers,
+    body: JSON.stringify({ name: folderName, mimeType: "application/vnd.google-apps.folder", parents: [parentFolderId] }),
   });
   const folder = await createRes.json();
   if (!createRes.ok) throw new Error(`Drive create error: ${JSON.stringify(folder)}`);
 
   const folderId = folder.id;
-
-  // 2. Set anyone-can-upload permission
   await fetch(`https://www.googleapis.com/drive/v3/files/${folderId}/permissions?supportsAllDrives=true`, {
-    method: "POST",
-    headers,
+    method: "POST", headers,
     body: JSON.stringify({ type: "anyone", role: "writer" }),
   });
 
-  // 3. Get shareable link
   const metaRes = await fetch(
     `https://www.googleapis.com/drive/v3/files/${folderId}?fields=webViewLink&supportsAllDrives=true`,
     { headers }
   );
   const meta = await metaRes.json();
   return meta.webViewLink ?? `https://drive.google.com/drive/folders/${folderId}`;
+}
+
+// ── Email helpers ───────────────────────────────────────────────────
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+async function sendEmail(apiKey: string, body: object) {
+  const res = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  const json = await res.json();
+  if (!res.ok) throw new Error(`Resend API error [${res.status}]: ${JSON.stringify(json)}`);
+  return json;
+}
+
+function buildInternalHtml(rows: [string, string][]) {
+  const tableRows = rows
+    .map(([field, value]) => `
+      <tr>
+        <td style="padding:8px 12px;border:1px solid #d1d5db;background:#f9fafb;font-weight:600;white-space:nowrap;vertical-align:top;width:35%;">${field}</td>
+        <td style="padding:8px 12px;border:1px solid #d1d5db;vertical-align:top;">${String(value).replace(/\n/g, "<br/>")}</td>
+      </tr>`)
+    .join("");
+
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8"/></head>
+<body style="font-family:'Inter',Arial,sans-serif;color:#111827;background:#ffffff;margin:0;padding:24px;">
+  <div style="max-width:700px;margin:0 auto;">
+    <div style="background:#006AE1;padding:24px 32px;border-radius:8px 8px 0 0;">
+      <h1 style="margin:0;color:#ffffff;font-size:22px;font-family:'Space Grotesk',Arial,sans-serif;">New Event Build Request</h1>
+    </div>
+    <table style="width:100%;border-collapse:collapse;border:1px solid #d1d5db;border-top:none;">${tableRows}</table>
+    <p style="margin-top:24px;font-size:12px;color:#6b7280;">This email was sent automatically from the LaunchHouse Events Build Request form.</p>
+  </div>
+</body></html>`;
+}
+
+function buildConfirmationHtml(payload: any, driveFolderLink: string | null) {
+  const driveBlock = driveFolderLink
+    ? `<p style="margin:0 0 16px;font-size:15px;color:#374151;">
+         Please use this Google Drive folder link to upload any additional information and supply us with all necessary documents for building your event:
+       </p>
+       <p style="margin:0 0 24px;">
+         <a href="${driveFolderLink}" style="display:inline-block;background:#006AE1;color:#ffffff;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:600;font-size:15px;">Upload Documents to Google Drive</a>
+       </p>` : "";
+
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8"/></head>
+<body style="font-family:'Inter',Arial,sans-serif;color:#111827;background:#ffffff;margin:0;padding:24px;">
+  <div style="max-width:600px;margin:0 auto;">
+    <div style="background:#006AE1;padding:24px 32px;border-radius:8px 8px 0 0;">
+      <h1 style="margin:0;color:#ffffff;font-size:22px;font-family:'Space Grotesk',Arial,sans-serif;">Thank You for Your Build Request!</h1>
+    </div>
+    <div style="padding:32px;border:1px solid #d1d5db;border-top:none;border-radius:0 0 8px 8px;">
+      <p style="margin:0 0 16px;font-size:16px;">Hi ${payload.firstName ?? ""},</p>
+      <p style="margin:0 0 16px;font-size:15px;color:#374151;">Thank you for submitting your event build request for <strong>${payload.eventTitle ?? "your event"}</strong>. We've received everything and our team will be in touch shortly to confirm your kick-off call.</p>
+      <p style="margin:0 0 16px;font-size:15px;color:#374151;">Here's a quick summary of what you submitted:</p>
+      <table style="width:100%;border-collapse:collapse;margin-bottom:24px;">
+        <tr><td style="padding:8px 12px;border:1px solid #d1d5db;background:#f9fafb;font-weight:600;width:40%;vertical-align:top;">Event</td><td style="padding:8px 12px;border:1px solid #d1d5db;vertical-align:top;">${payload.eventTitle ?? ""}</td></tr>
+        <tr><td style="padding:8px 12px;border:1px solid #d1d5db;background:#f9fafb;font-weight:600;vertical-align:top;">Company</td><td style="padding:8px 12px;border:1px solid #d1d5db;vertical-align:top;">${payload.companyName ?? ""}</td></tr>
+        <tr><td style="padding:8px 12px;border:1px solid #d1d5db;background:#f9fafb;font-weight:600;vertical-align:top;">Kick-off Preference 1</td><td style="padding:8px 12px;border:1px solid #d1d5db;vertical-align:top;">${payload.kickoffDate1 ?? ""} at ${payload.kickoffTime1 ?? ""} (${payload.kickoffTimezone ?? ""})</td></tr>
+        <tr><td style="padding:8px 12px;border:1px solid #d1d5db;background:#f9fafb;font-weight:600;vertical-align:top;">Solutions Requested</td><td style="padding:8px 12px;border:1px solid #d1d5db;vertical-align:top;">${Array.isArray(payload.chosenSolutions) ? payload.chosenSolutions.join(", ") : (payload.chosenSolutions ?? "")}</td></tr>
+      </table>
+      ${driveBlock}
+      <p style="margin:0 0 16px;font-size:15px;color:#374151;">If you have any questions in the meantime, feel free to reply to this email.</p>
+      <p style="margin:0;font-size:15px;color:#374151;">Warm regards,<br/><strong>The LaunchHouse Events Team</strong></p>
+    </div>
+    <p style="margin-top:24px;font-size:12px;color:#6b7280;text-align:center;">LaunchHouse Events · This is an automated confirmation email.</p>
+  </div>
+</body></html>`;
+}
+
+function buildPlannerNotificationHtml(plannerName: string, eventTitle: string, submitterName: string, driveFolderLink: string | null) {
+  const driveBlock = driveFolderLink
+    ? `<p style="margin:0 0 16px;font-size:15px;color:#374151;">
+         A shared Google Drive folder has been created for this event. Please use it to upload any relevant documents:
+       </p>
+       <p style="margin:0 0 24px;">
+         <a href="${driveFolderLink}" style="display:inline-block;background:#006AE1;color:#ffffff;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:600;font-size:15px;">Open Google Drive Folder</a>
+       </p>` : "";
+
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8"/></head>
+<body style="font-family:'Inter',Arial,sans-serif;color:#111827;background:#ffffff;margin:0;padding:24px;">
+  <div style="max-width:600px;margin:0 auto;">
+    <div style="background:#006AE1;padding:24px 32px;border-radius:8px 8px 0 0;">
+      <h1 style="margin:0;color:#ffffff;font-size:22px;font-family:'Space Grotesk',Arial,sans-serif;">You've Been Added as a Planner Contact</h1>
+    </div>
+    <div style="padding:32px;border:1px solid #d1d5db;border-top:none;border-radius:0 0 8px 8px;">
+      <p style="margin:0 0 16px;font-size:16px;">Hi ${plannerName},</p>
+      <p style="margin:0 0 16px;font-size:15px;color:#374151;">You've been listed as a planner contact for <strong>${eventTitle}</strong> by ${submitterName}. The LaunchHouse Events team will be in touch regarding the kick-off call.</p>
+      ${driveBlock}
+      <p style="margin:0 0 16px;font-size:15px;color:#374151;">If you have any questions, feel free to reply to this email.</p>
+      <p style="margin:0;font-size:15px;color:#374151;">Warm regards,<br/><strong>The LaunchHouse Events Team</strong></p>
+    </div>
+    <p style="margin-top:24px;font-size:12px;color:#6b7280;text-align:center;">LaunchHouse Events · This is an automated notification email.</p>
+  </div>
+</body></html>`;
 }
 
 // ── Main handler ────────────────────────────────────────────────────
@@ -116,9 +192,7 @@ serve(async (req) => {
 
   try {
     const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
-    if (!RESEND_API_KEY) {
-      throw new Error("RESEND_API_KEY is not configured");
-    }
+    if (!RESEND_API_KEY) throw new Error("RESEND_API_KEY is not configured");
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
@@ -127,14 +201,12 @@ serve(async (req) => {
 
     const payload = await req.json();
 
-    // Build plain-text table of all fields
+    // ── Build data rows for internal email ────────────────────────
     const rows: [string, string][] = [
-      // Page 1
       ["First Name", payload.firstName ?? ""],
       ["Last Name", payload.lastName ?? ""],
       ["Email Address", payload.email ?? ""],
       ["Company Name", payload.companyName ?? ""],
-      // Page 2 - contacts
       ...(Array.isArray(payload.contacts)
         ? payload.contacts.map((c: { fullName: string; email: string }, i: number) => [
             `Point of Contact ${i + 1}${i === 0 ? " (Primary)" : ""}`,
@@ -148,11 +220,7 @@ serve(async (req) => {
       ["Kick Off Preference 2 – Date", payload.kickoffDate2 ?? "N/A"],
       ["Kick Off Preference 2 – Time", payload.kickoffTime2 ?? "N/A"],
       ["Solutions to Include", Array.isArray(payload.chosenSolutions) ? payload.chosenSolutions.join(", ") : (payload.chosenSolutions ?? "")],
-      // Page 3
       ["Account Number", payload.accountNumber ?? ""],
-      ["Planner First Name", payload.plannerFirstName ?? ""],
-      ["Planner Last Name", payload.plannerLastName ?? ""],
-      ["Planner Email Address", payload.plannerEmail ?? ""],
       ["Event Title", payload.eventTitle ?? ""],
       ["Event Start Date", payload.eventStartDate ?? ""],
       ["Event Start Time", payload.eventStartTime ?? ""],
@@ -163,7 +231,7 @@ serve(async (req) => {
       ["Additional Information", payload.additionalInfo ?? "N/A"],
     ];
 
-    // Log submission to database
+    // ── Log to database ──────────────────────────────────────────
     const { error: dbError } = await supabase.from("build_requests").insert({
       first_name: payload.firstName ?? "",
       last_name: payload.lastName ?? "",
@@ -193,16 +261,14 @@ serve(async (req) => {
     });
     if (dbError) console.error("DB insert error:", dbError);
 
-    // ── Google Drive folder creation (graceful fallback) ──────────
+    // ── Google Drive folder creation ─────────────────────────────
     let driveFolderLink: string | null = null;
     try {
       const serviceAccountKey = Deno.env.get("GOOGLE_SERVICE_ACCOUNT_KEY");
       const parentFolderId = Deno.env.get("GOOGLE_DRIVE_PARENT_FOLDER_ID");
-
       if (serviceAccountKey && parentFolderId) {
         const accessToken = await getGoogleAccessToken(serviceAccountKey);
-        const eventTitle = payload.eventTitle || "Untitled Event";
-        driveFolderLink = await createDriveFolder(accessToken, parentFolderId, eventTitle);
+        driveFolderLink = await createDriveFolder(accessToken, parentFolderId, payload.eventTitle || "Untitled Event");
         console.log("Google Drive folder created:", driveFolderLink);
       } else {
         console.log("Google Drive secrets not configured — skipping folder creation.");
@@ -211,138 +277,72 @@ serve(async (req) => {
       console.error("Google Drive folder creation failed (continuing without link):", driveErr);
     }
 
-    // ── Build internal email HTML ─────────────────────────────────
-    // Inject Drive link row if available
+    // ── Build internal email with optional Drive link row ─────────
     const allRows = driveFolderLink
       ? [...rows, ["Google Drive Folder", `<a href="${driveFolderLink}" style="color:#006AE1;text-decoration:underline;">Open Folder</a>`] as [string, string]]
       : rows;
 
-    const tableRows = allRows
-      .map(
-        ([field, value]) => `
-        <tr>
-          <td style="padding:8px 12px;border:1px solid #d1d5db;background:#f9fafb;font-weight:600;white-space:nowrap;vertical-align:top;width:35%;">${field}</td>
-          <td style="padding:8px 12px;border:1px solid #d1d5db;vertical-align:top;">${value.replace(/\n/g, "<br/>")}</td>
-        </tr>`
-      )
-      .join("");
-
-    const htmlBody = `
-<!DOCTYPE html>
-<html>
-<head><meta charset="UTF-8"/></head>
-<body style="font-family:'Inter',Arial,sans-serif;color:#111827;background:#ffffff;margin:0;padding:24px;">
-  <div style="max-width:700px;margin:0 auto;">
-    <div style="background:#006AE1;padding:24px 32px;border-radius:8px 8px 0 0;">
-      <h1 style="margin:0;color:#ffffff;font-size:22px;font-family:'Space Grotesk',Arial,sans-serif;">
-        New Event Build Request
-      </h1>
-      <p style="margin:6px 0 0;color:rgba(255,255,255,0.85);font-size:14px;">
-        Submitted by ${payload.firstName ?? ""} ${payload.lastName ?? ""} · ${payload.email ?? ""}
-      </p>
-    </div>
-    <table style="width:100%;border-collapse:collapse;border:1px solid #d1d5db;border-top:none;">
-      ${tableRows}
-    </table>
-    <p style="margin-top:24px;font-size:12px;color:#6b7280;">
-      This email was sent automatically from the LaunchHouse Events Build Request form.
-    </p>
-  </div>
-</body>
-</html>`;
-
+    const internalHtml = buildInternalHtml(allRows);
     const subject = `New Build Request – ${payload.eventTitle ?? "Untitled Event"} (${payload.companyName ?? ""})`;
 
-    // ── Build confirmation email HTML ─────────────────────────────
-    const driveBlock = driveFolderLink
-      ? `<p style="margin:0 0 16px;font-size:15px;color:#374151;">
-           Please use this Google Drive folder link to upload any additional information and supply us with all necessary documents for building your event:
-         </p>
-         <p style="margin:0 0 24px;">
-           <a href="${driveFolderLink}" style="display:inline-block;background:#006AE1;color:#ffffff;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:600;font-size:15px;">
-             Upload Documents to Google Drive
-           </a>
-         </p>`
-      : "";
+    // ── Build recipient master list with deduplication ────────────
+    const recipientMap = new Map<string, { isSubmitter: boolean; plannerName: string }>();
+    const submitterEmail = (payload.email ?? "").toLowerCase().trim();
+    const submitterName = `${payload.firstName ?? ""} ${payload.lastName ?? ""}`.trim();
 
-    const confirmationHtml = `
-<!DOCTYPE html>
-<html>
-<head><meta charset="UTF-8"/></head>
-<body style="font-family:'Inter',Arial,sans-serif;color:#111827;background:#ffffff;margin:0;padding:24px;">
-  <div style="max-width:600px;margin:0 auto;">
-    <div style="background:#006AE1;padding:24px 32px;border-radius:8px 8px 0 0;">
-      <h1 style="margin:0;color:#ffffff;font-size:22px;font-family:'Space Grotesk',Arial,sans-serif;">
-        Thank You for Your Build Request!
-      </h1>
-    </div>
-    <div style="padding:32px;border:1px solid #d1d5db;border-top:none;border-radius:0 0 8px 8px;">
-      <p style="margin:0 0 16px;font-size:16px;">Hi ${payload.firstName ?? ""},</p>
-      <p style="margin:0 0 16px;font-size:15px;color:#374151;">
-        Thank you for submitting your event build request for <strong>${payload.eventTitle ?? "your event"}</strong>. We've received everything and our team will be in touch shortly to confirm your kick-off call.
-      </p>
-      <p style="margin:0 0 16px;font-size:15px;color:#374151;">
-        Here's a quick summary of what you submitted:
-      </p>
-      <table style="width:100%;border-collapse:collapse;margin-bottom:24px;">
-        <tr>
-          <td style="padding:8px 12px;border:1px solid #d1d5db;background:#f9fafb;font-weight:600;width:40%;vertical-align:top;">Event</td>
-          <td style="padding:8px 12px;border:1px solid #d1d5db;vertical-align:top;">${payload.eventTitle ?? ""}</td>
-        </tr>
-        <tr>
-          <td style="padding:8px 12px;border:1px solid #d1d5db;background:#f9fafb;font-weight:600;vertical-align:top;">Company</td>
-          <td style="padding:8px 12px;border:1px solid #d1d5db;vertical-align:top;">${payload.companyName ?? ""}</td>
-        </tr>
-        <tr>
-          <td style="padding:8px 12px;border:1px solid #d1d5db;background:#f9fafb;font-weight:600;vertical-align:top;">Kick-off Preference 1</td>
-          <td style="padding:8px 12px;border:1px solid #d1d5db;vertical-align:top;">${payload.kickoffDate1 ?? ""} at ${payload.kickoffTime1 ?? ""} (${payload.kickoffTimezone ?? ""})</td>
-        </tr>
-        <tr>
-          <td style="padding:8px 12px;border:1px solid #d1d5db;background:#f9fafb;font-weight:600;vertical-align:top;">Solutions Requested</td>
-          <td style="padding:8px 12px;border:1px solid #d1d5db;vertical-align:top;">${Array.isArray(payload.chosenSolutions) ? payload.chosenSolutions.join(", ") : (payload.chosenSolutions ?? "")}</td>
-        </tr>
-      </table>
-      ${driveBlock}
-      <p style="margin:0 0 16px;font-size:15px;color:#374151;">
-        If you have any questions in the meantime, feel free to reply to this email.
-      </p>
-      <p style="margin:0;font-size:15px;color:#374151;">
-        Warm regards,<br/>
-        <strong>The LaunchHouse Events Team</strong>
-      </p>
-    </div>
-    <p style="margin-top:24px;font-size:12px;color:#6b7280;text-align:center;">
-      LaunchHouse Events · This is an automated confirmation email.
-    </p>
-  </div>
-</body>
-</html>`;
+    if (submitterEmail) {
+      recipientMap.set(submitterEmail, { isSubmitter: true, plannerName: "" });
+    }
 
-    // Send sequentially to respect Resend's 2 req/sec rate limit
-    const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+    if (Array.isArray(payload.contacts)) {
+      for (const contact of payload.contacts) {
+        const key = (contact.email ?? "").toLowerCase().trim();
+        if (!key) continue;
+        const existing = recipientMap.get(key);
+        if (existing) {
+          // Already in map (submitter) — just tag the planner name
+          existing.plannerName = contact.fullName ?? "";
+        } else {
+          recipientMap.set(key, { isSubmitter: false, plannerName: contact.fullName ?? "" });
+        }
+      }
+    }
 
-    const sendEmail = async (body: object) => {
-      const res = await fetch("https://api.resend.com/emails", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${RESEND_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(body),
-      });
-      const json = await res.json();
-      if (!res.ok) throw new Error(`Resend API error [${res.status}]: ${JSON.stringify(json)}`);
-      return json;
-    };
-
+    // ── Send emails with rate limiting ───────────────────────────
     const results = [];
-    results.push(await sendEmail({ from: "LaunchHouse Events <noreply@launchhouse.events>", to: ["sam@launchhouse.events"], subject, html: htmlBody }));
-    await sleep(600);
-    results.push(await sendEmail({ from: "LaunchHouse Events <noreply@launchhouse.events>", to: ["snehdeep@launchhouse.events"], subject, html: htmlBody }));
-    await sleep(600);
-    results.push(await sendEmail({ from: "LaunchHouse Events <noreply@launchhouse.events>", to: [payload.email], subject: `We've received your build request – ${payload.eventTitle ?? "Your Event"}`, html: confirmationHtml }));
+    const from = "LaunchHouse Events <noreply@launchhouse.events>";
 
-    // Update email_status and email_sent_at after successful delivery
+    // 1. Internal emails (always 2)
+    results.push(await sendEmail(RESEND_API_KEY, { from, to: ["sam@launchhouse.events"], subject, html: internalHtml }));
+    await sleep(600);
+    results.push(await sendEmail(RESEND_API_KEY, { from, to: ["snehdeep@launchhouse.events"], subject, html: internalHtml }));
+    await sleep(600);
+
+    // 2. External emails — deduplicated
+    for (const [email, info] of recipientMap) {
+      if (info.isSubmitter) {
+        // Submitter gets confirmation email (covers both roles if also a planner)
+        const confirmHtml = buildConfirmationHtml(payload, driveFolderLink);
+        results.push(await sendEmail(RESEND_API_KEY, {
+          from, to: [email],
+          subject: `We've received your build request – ${payload.eventTitle ?? "Your Event"}`,
+          html: confirmHtml,
+        }));
+      } else {
+        // Planner-only contact gets notification email
+        const plannerHtml = buildPlannerNotificationHtml(
+          info.plannerName, payload.eventTitle ?? "an event", submitterName, driveFolderLink
+        );
+        results.push(await sendEmail(RESEND_API_KEY, {
+          from, to: [email],
+          subject: `You've been added as a planner contact – ${payload.eventTitle ?? "Event"}`,
+          html: plannerHtml,
+        }));
+      }
+      await sleep(600);
+    }
+
+    // ── Update email status ──────────────────────────────────────
     if (!dbError) {
       await supabase
         .from("build_requests")
