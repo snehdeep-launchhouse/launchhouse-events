@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { ChevronRight, ChevronLeft, ChevronsRight, ChevronsLeft } from "lucide-react";
+import { ChevronRight, ChevronLeft, ChevronsRight, ChevronsLeft, ChevronDown, ChevronUp, ChevronsDown, ChevronsUp } from "lucide-react";
 
 interface DualListPickerProps {
   available: string[];
@@ -51,71 +51,58 @@ const DualListPicker = ({ available, chosen, onChangeAvailable, onChangeChosen }
     }
   };
 
-  return (
-    <div className="grid grid-cols-[1fr_auto_1fr] gap-3 items-start">
-      {/* Available */}
-      <div>
-        <p className="text-sm font-medium mb-2">Available</p>
-        <div className="border border-input rounded-md min-h-[180px] max-h-[240px] overflow-y-auto bg-background">
-          {available.length === 0 && (
-            <p className="text-xs text-muted-foreground p-3 italic">No items available</p>
-          )}
-          {available.map((item) => (
-            <button
-              key={item}
-              type="button"
-              onClick={() => toggleSelect(item, "available")}
-              className={`w-full text-left px-3 py-2 text-sm border-b border-border/30 last:border-0 transition-colors ${
-                selectedAvailable.includes(item)
-                  ? "bg-primary/10 text-primary font-medium"
-                  : "hover:bg-muted/50"
-              }`}
-            >
-              {item}
-            </button>
-          ))}
-        </div>
+  const ListBox = ({ items, selected, list, label }: { items: string[]; selected: string[]; list: "available" | "chosen"; label: string }) => (
+    <div>
+      <p className="text-sm font-medium mb-2">{label}</p>
+      <div className="border border-input rounded-md min-h-[160px] max-h-[240px] overflow-y-auto bg-background touch-pan-y">
+        {items.length === 0 && (
+          <p className="text-xs text-muted-foreground p-3 italic">No items {list === "available" ? "available" : "chosen"}</p>
+        )}
+        {items.map((item) => (
+          <button
+            key={item}
+            type="button"
+            onClick={() => toggleSelect(item, list)}
+            className={`w-full text-left px-3 py-2.5 sm:py-2 text-sm border-b border-border/30 last:border-0 transition-colors ${
+              selected.includes(item)
+                ? "bg-primary/10 text-primary font-medium"
+                : "hover:bg-muted/50"
+            }`}
+          >
+            {item}
+          </button>
+        ))}
       </div>
+    </div>
+  );
 
-      {/* Controls */}
-      <div className="flex flex-col gap-2 pt-8">
-        <Button type="button" variant="outline" size="icon" onClick={moveAllToChosen} title="Move all right">
-          <ChevronsRight className="w-4 h-4" />
+  return (
+    <div className="space-y-3 sm:space-y-0 sm:grid sm:grid-cols-[1fr_auto_1fr] sm:gap-3 sm:items-start">
+      {/* Available */}
+      <ListBox items={available} selected={selectedAvailable} list="available" label="Available" />
+
+      {/* Controls — horizontal on mobile, vertical on desktop */}
+      <div className="flex flex-row sm:flex-col justify-center gap-2 sm:pt-8">
+        <Button type="button" variant="outline" size="icon" onClick={moveAllToChosen} title="Move all" className="min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0">
+          <ChevronsDown className="w-4 h-4 sm:hidden" />
+          <ChevronsRight className="w-4 h-4 hidden sm:block" />
         </Button>
-        <Button type="button" variant="outline" size="icon" onClick={moveToChosen} disabled={selectedAvailable.length === 0} title="Move selected right">
-          <ChevronRight className="w-4 h-4" />
+        <Button type="button" variant="outline" size="icon" onClick={moveToChosen} disabled={selectedAvailable.length === 0} title="Move selected" className="min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0">
+          <ChevronDown className="w-4 h-4 sm:hidden" />
+          <ChevronRight className="w-4 h-4 hidden sm:block" />
         </Button>
-        <Button type="button" variant="outline" size="icon" onClick={moveToAvailable} disabled={selectedChosen.length === 0} title="Move selected left">
-          <ChevronLeft className="w-4 h-4" />
+        <Button type="button" variant="outline" size="icon" onClick={moveToAvailable} disabled={selectedChosen.length === 0} title="Move selected back" className="min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0">
+          <ChevronUp className="w-4 h-4 sm:hidden" />
+          <ChevronLeft className="w-4 h-4 hidden sm:block" />
         </Button>
-        <Button type="button" variant="outline" size="icon" onClick={moveAllToAvailable} title="Move all left">
-          <ChevronsLeft className="w-4 h-4" />
+        <Button type="button" variant="outline" size="icon" onClick={moveAllToAvailable} title="Move all back" className="min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0">
+          <ChevronsUp className="w-4 h-4 sm:hidden" />
+          <ChevronsLeft className="w-4 h-4 hidden sm:block" />
         </Button>
       </div>
 
       {/* Chosen */}
-      <div>
-        <p className="text-sm font-medium mb-2">Chosen</p>
-        <div className="border border-input rounded-md min-h-[180px] max-h-[240px] overflow-y-auto bg-background">
-          {chosen.length === 0 && (
-            <p className="text-xs text-muted-foreground p-3 italic">No items chosen</p>
-          )}
-          {chosen.map((item) => (
-            <button
-              key={item}
-              type="button"
-              onClick={() => toggleSelect(item, "chosen")}
-              className={`w-full text-left px-3 py-2 text-sm border-b border-border/30 last:border-0 transition-colors ${
-                selectedChosen.includes(item)
-                  ? "bg-primary/10 text-primary font-medium"
-                  : "hover:bg-muted/50"
-              }`}
-            >
-              {item}
-            </button>
-          ))}
-        </div>
-      </div>
+      <ListBox items={chosen} selected={selectedChosen} list="chosen" label="Chosen" />
     </div>
   );
 };

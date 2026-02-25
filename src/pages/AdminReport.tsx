@@ -54,7 +54,7 @@ const ReportCard = memo(({ card, count, onClick }: {
 }) => (
   <button
     onClick={onClick}
-    className="group rounded-xl border bg-card p-6 text-left shadow-sm hover:shadow-md hover:border-primary/50 transition-all space-y-3"
+    className="group rounded-xl border bg-card p-4 sm:p-6 text-left shadow-sm hover:shadow-md hover:border-primary/50 transition-all space-y-3"
     style={{ borderColor: "hsl(220 15% 88%)" }}
   >
     <div className="w-12 h-12 rounded-lg flex items-center justify-center transition-colors"
@@ -319,10 +319,10 @@ const AdminReport = () => {
     return (
       <div className="min-h-screen flex flex-col bg-background">
         <IgnitionHeader userEmail={currentUserEmail} onLogout={handleLogout} />
-        <div className="flex-1 p-6">
-          <div className="max-w-5xl mx-auto space-y-8">
+        <div className="flex-1 p-4 sm:p-6">
+          <div className="max-w-5xl mx-auto space-y-6 sm:space-y-8">
             <div>
-              <h1 className="text-2xl font-bold font-display">Welcome back</h1>
+              <h1 className="text-xl sm:text-2xl font-bold font-display">Welcome back</h1>
               <p className="text-sm text-muted-foreground mt-1">Select a report to view live data.</p>
             </div>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -349,15 +349,15 @@ const AdminReport = () => {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <IgnitionHeader userEmail={currentUserEmail} onLogout={handleLogout} />
-      <div className="flex-1 p-6">
-        <div className="max-w-7xl mx-auto space-y-6">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
+      <div className="flex-1 p-3 sm:p-6">
+        <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+            <div className="flex items-center gap-2 sm:gap-3">
               <Button variant="ghost" size="icon" onClick={() => setActiveReport(null)}>
                 <ArrowLeft className="w-5 h-5" />
               </Button>
               <div>
-                <h1 className="text-2xl font-bold font-display">{reportTitle}</h1>
+                <h1 className="text-lg sm:text-2xl font-bold font-display">{reportTitle}</h1>
                 <p className="text-sm text-muted-foreground">
                   {loading ? "Loading..." : `${records.length} record${records.length !== 1 ? "s" : ""}`}
                   <span className="ml-2 text-xs text-primary/60">● Live</span>

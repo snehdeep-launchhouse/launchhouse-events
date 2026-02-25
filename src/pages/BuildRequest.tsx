@@ -550,11 +550,11 @@ const BuildRequest = () => {
               {form2.formState.errors.chosenSolutions && <p className="text-sm text-destructive">{form2.formState.errors.chosenSolutions.message}</p>}
             </div>
 
-            <div className="flex justify-between gap-3 pt-4">
-              <Button type="button" variant="outline" className="border-2 border-primary" onClick={() => setStep(1)}><ArrowLeft className="w-4 h-4 mr-1" /> Previous</Button>
+            <div className="flex flex-col-reverse sm:flex-row sm:justify-between gap-3 pt-4">
+              <Button type="button" variant="outline" className="border-2 border-primary w-full sm:w-auto" onClick={() => setStep(1)}><ArrowLeft className="w-4 h-4 mr-1" /> Previous</Button>
               <div className="flex gap-3">
-                <Button type="button" variant="outline" onClick={handleCancel}>Cancel</Button>
-                <Button type="submit">Next <ArrowRight className="w-4 h-4 ml-1" /></Button>
+                <Button type="button" variant="outline" onClick={handleCancel} className="flex-1 sm:flex-initial">Cancel</Button>
+                <Button type="submit" className="flex-1 sm:flex-initial">Next <ArrowRight className="w-4 h-4 ml-1" /></Button>
               </div>
             </div>
           </form>
@@ -636,11 +636,11 @@ const BuildRequest = () => {
               <Textarea {...form3.register("additionalInfo")} placeholder="Any other details you'd like to share..." rows={4} />
             </div>
 
-            <div className="flex justify-between gap-3 pt-4">
-              <Button type="button" variant="outline" className="border-2 border-primary" onClick={() => setStep(2)}><ArrowLeft className="w-4 h-4 mr-1" /> Previous</Button>
+            <div className="flex flex-col-reverse sm:flex-row sm:justify-between gap-3 pt-4">
+              <Button type="button" variant="outline" className="border-2 border-primary w-full sm:w-auto" onClick={() => setStep(2)}><ArrowLeft className="w-4 h-4 mr-1" /> Previous</Button>
               <div className="flex gap-3">
-                <Button type="button" variant="outline" onClick={handleCancel}>Cancel</Button>
-                <Button type="submit" disabled={submitting}>
+                <Button type="button" variant="outline" onClick={handleCancel} className="flex-1 sm:flex-initial">Cancel</Button>
+                <Button type="submit" disabled={submitting} className="flex-1 sm:flex-initial">
                   {submitting ? <><Loader2 className="w-4 h-4 mr-1 animate-spin" /> Submitting...</> : "Submit"}
                 </Button>
               </div>
