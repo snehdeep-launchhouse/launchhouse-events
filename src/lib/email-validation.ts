@@ -5,7 +5,7 @@ export const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
 export const EMAIL_ERROR_MESSAGE = "Please enter a valid email address.";
 
-export const DOMAIN_INVALID_MESSAGE = "This email domain appears to be invalid or inactive.";
+export const DOMAIN_INVALID_MESSAGE = "This email domain is invalid or cannot receive mail.";
 
 export function validateEmail(value: string): { valid: boolean; message?: string } {
   if (!value) return { valid: false };
@@ -62,9 +62,8 @@ export async function verifyEmailDomain(email: string): Promise<{ valid: boolean
     });
 
     if (error) {
-      // On network error, don't block — assume valid
       console.error("Domain verification error:", error);
-      return { valid: true };
+      return { valid: false, message: DOMAIN_INVALID_MESSAGE };
     }
 
     const isValid = data?.valid === true;
@@ -75,7 +74,6 @@ export async function verifyEmailDomain(email: string): Promise<{ valid: boolean
       : { valid: false, message: data?.message || DOMAIN_INVALID_MESSAGE };
   } catch (err) {
     console.error("Domain verification error:", err);
-    // Fail open — don't block submission on network issues
-    return { valid: true };
+    return { valid: false, message: DOMAIN_INVALID_MESSAGE };
   }
 }

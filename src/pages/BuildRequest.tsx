@@ -137,6 +137,7 @@ const BuildRequest = () => {
   const [submitted, setSubmitted] = useState(false);
   const [emailVerification, setEmailVerification] = useState<VerificationStatus>("idle");
   const [isPlanner, setIsPlanner] = useState(false);
+  const [plannerVerifications, setPlannerVerifications] = useState<Record<number, VerificationStatus>>({});
 
   // Step 1
   const form1 = useForm<Step1>({ resolver: zodResolver(step1Schema), defaultValues: { firstName: "", lastName: "", email: "", companyName: "" } });
@@ -397,7 +398,7 @@ const BuildRequest = () => {
 
             <div className="flex justify-end gap-3 pt-4">
               <Button type="button" variant="outline" onClick={handleCancel}>Cancel</Button>
-              <Button type="submit" disabled={emailVerification === "verifying"}>Next <ArrowRight className="w-4 h-4 ml-1" /></Button>
+              <Button type="submit" disabled={emailVerification === "verifying" || emailVerification === "invalid"}>Next <ArrowRight className="w-4 h-4 ml-1" /></Button>
             </div>
           </form>
         )}
@@ -446,6 +447,9 @@ const BuildRequest = () => {
                         {...form2.register(`contacts.${idx}.email`)}
                         placeholder="jane@company.com"
                         externalError={form2.formState.errors.contacts?.[idx]?.email?.message}
+                        onVerificationChange={(status) => {
+                          setPlannerVerifications(prev => ({ ...prev, [idx]: status }));
+                        }}
                       />
                       {form2.formState.errors.contacts?.[idx]?.email && (
                         <p className="text-xs text-destructive">{form2.formState.errors.contacts[idx]?.email?.message}</p>
@@ -554,7 +558,7 @@ const BuildRequest = () => {
               <Button type="button" variant="outline" className="border-2 border-primary w-full sm:w-auto" onClick={() => setStep(1)}><ArrowLeft className="w-4 h-4 mr-1" /> Previous</Button>
               <div className="flex gap-3">
                 <Button type="button" variant="outline" onClick={handleCancel} className="flex-1 sm:flex-initial">Cancel</Button>
-                <Button type="submit" className="flex-1 sm:flex-initial">Next <ArrowRight className="w-4 h-4 ml-1" /></Button>
+                <Button type="submit" disabled={Object.values(plannerVerifications).some(s => s === "verifying" || s === "invalid")} className="flex-1 sm:flex-initial">Next <ArrowRight className="w-4 h-4 ml-1" /></Button>
               </div>
             </div>
           </form>
