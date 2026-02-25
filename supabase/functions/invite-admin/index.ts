@@ -102,32 +102,36 @@ serve(async (req: Request) => {
       body: JSON.stringify({
         from: "LaunchHouse Events <noreply@launchhouse.events>",
         to: [email],
-        subject: "You've been invited to LaunchHouse Events",
+        subject: "You've been invited to Ignition — LaunchHouse Events",
         html: `<!DOCTYPE html>
 <html>
 <head><meta charset="UTF-8"/></head>
-<body style="font-family:'Inter',Arial,sans-serif;color:#111827;background:#ffffff;margin:0;padding:24px;">
+<body style="font-family:'Inter',Arial,sans-serif;color:#111827;background:#f3f4f6;margin:0;padding:24px;">
   <div style="max-width:600px;margin:0 auto;">
-    <div style="background:#006AE1;padding:24px 32px;border-radius:8px 8px 0 0;">
-      <h1 style="margin:0;color:#ffffff;font-size:22px;font-family:'Space Grotesk',Arial,sans-serif;">
-        You're Invited!
+    <div style="border-top:4px solid #f17a28;background:#1a2744;padding:24px 32px;border-radius:8px 8px 0 0;">
+      <h1 style="margin:0 0 4px;color:#ffffff;font-size:22px;font-family:'Space Grotesk',Arial,sans-serif;">
+        You're Invited to Ignition
       </h1>
+      <p style="margin:0;color:#9ca3af;font-size:13px;">by LaunchHouse Events</p>
     </div>
-    <div style="padding:32px;border:1px solid #d1d5db;border-top:none;border-radius:0 0 8px 8px;">
+    <div style="padding:32px;background:#ffffff;border:1px solid #d1d5db;border-top:none;border-radius:0 0 8px 8px;">
       <p style="margin:0 0 16px;font-size:16px;">Hi,</p>
       <p style="margin:0 0 24px;font-size:15px;color:#374151;">
-        You have been invited to <strong>LaunchHouse Events</strong>. Click the button below to accept your invitation.
+        You have been invited to <strong>Ignition</strong>, the LaunchHouse Events command center. Click the button below to accept your invitation and set your password.
       </p>
       <p style="margin:0 0 24px;text-align:center;">
-        <a href="${inviteLink}" style="display:inline-block;background:#006AE1;color:#ffffff;padding:14px 32px;border-radius:6px;text-decoration:none;font-weight:600;font-size:15px;">
+        <a href="${inviteLink}" style="display:inline-block;background:#f17a28;color:#ffffff;padding:14px 32px;border-radius:6px;text-decoration:none;font-weight:600;font-size:15px;">
           Accept Invitation
         </a>
       </p>
       <p style="margin:0 0 16px;font-size:13px;color:#6b7280;">
         Or copy and paste this link: ${inviteLink}
       </p>
-      <p style="margin:0;font-size:15px;color:#374151;">
+      <p style="margin:0 0 24px;font-size:15px;color:#374151;">
         — The LaunchHouse Events Team
+      </p>
+      <p style="margin:0;font-size:11px;color:#9ca3af;text-align:center;border-top:1px solid #e5e7eb;padding-top:16px;">
+        Powered by LaunchHouse Events
       </p>
     </div>
   </div>
