@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Loader2, Lock, RefreshCw, Download, ArrowLeft, FileText, Users, ClipboardList, ShieldCheck, Flame } from "lucide-react";
+import { Loader2, Lock, RefreshCw, Download, ArrowLeft, FileText, Users, ClipboardList, ShieldCheck, Flame, Search } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import ManageAdmins from "@/components/ManageAdmins";
 import IgnitionHeader from "@/components/IgnitionHeader";
@@ -15,6 +15,12 @@ import IgnitionLogo from "@/components/IgnitionLogo";
 type ReportType = "abandoned" | "build_requests" | "quote_requests" | "manage_admins" | null;
 
 const MASTER_ADMIN_EMAIL = "snehdeep@launchhouse.events";
+
+const HIDDEN_COLUMNS: Record<string, string[]> = {
+  abandoned: ["id", "created_at", "updated_at"],
+  build_requests: ["id", "submitted_at", "email_sent_at"],
+  quote_requests: ["id", "submitted_at", "email_sent_at"],
+};
 
 const BASE_REPORT_CARDS: { key: ReportType; title: string; description: string; icon: React.ReactNode; superOnly?: boolean }[] = [
   { key: "abandoned", title: "Abandoned EB Forms", description: "Partial form submissions that were not completed", icon: <ClipboardList className="w-7 h-7" /> },
@@ -117,6 +123,7 @@ const AdminReport = () => {
   const [loginError, setLoginError] = useState("");
   const [loginLoading, setLoginLoading] = useState(false);
   const [activeReport, setActiveReport] = useState<ReportType>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const isSuperAdmin = currentUserEmail === MASTER_ADMIN_EMAIL;
 
@@ -133,6 +140,7 @@ const AdminReport = () => {
     };
   }, []);
   const visibleCards = useMemo(() => BASE_REPORT_CARDS.filter((c) => !c.superOnly || isSuperAdmin), [isSuperAdmin]);
+
 
   /* ── React Query: record counts ── */
   const { data: recordCounts = {} } = useQuery({
@@ -152,7 +160,24 @@ const AdminReport = () => {
     gcTime: 5 * 60_000,
   });
 
-  /* ── Check existing session on mount ── */
+  /* ── Derived: display columns & filtered records ── */
+  const allColumns = records.length > 0 ? Object.keys(records[0]) : [];
+  const hidden = HIDDEN_COLUMNS[activeReport ?? ""] ?? [];
+  const displayColumns = useMemo(() => allColumns.filter((col) => !hidden.includes(col)), [allColumns.join(","), hidden.join(",")]);
+
+  const filteredRecords = useMemo(() => {
+    if (!activeReport || activeReport === "manage_admins") return records;
+    if (!searchQuery.trim()) return records;
+    const q = searchQuery.toLowerCase();
+    return records.filter((row) =>
+      displayColumns.some((col) => {
+        const val = row[col];
+        if (val === null || val === undefined) return false;
+        return String(val).toLowerCase().includes(q);
+      })
+    );
+  }, [records, searchQuery, displayColumns, activeReport]);
+
   useEffect(() => {
     let cancelled = false;
 
@@ -252,6 +277,7 @@ const AdminReport = () => {
   const openReport = (type: ReportType) => {
     if (type === "manage_admins" && !isSuperAdmin) return;
     setActiveReport(type);
+    setSearchQuery("");
   };
 
   const handleRefresh = useCallback(() => {
@@ -358,7 +384,6 @@ const AdminReport = () => {
 
   /* ── Report Table View ── */
   const reportTitle = BASE_REPORT_CARDS.find((c) => c.key === activeReport)?.title ?? "";
-  const columns = records.length > 0 ? Object.keys(records[0]) : [];
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -373,7 +398,9 @@ const AdminReport = () => {
               <div>
                 <h1 className="text-lg sm:text-2xl font-bold font-display">{reportTitle}</h1>
                 <p className="text-sm text-muted-foreground">
-                  {loading ? "Loading..." : `${records.length} record${records.length !== 1 ? "s" : ""}`}
+                  {loading ? "Loading..." : searchQuery.trim()
+                    ? `${filteredRecords.length} of ${records.length} record${records.length !== 1 ? "s" : ""}`
+                    : `${records.length} record${records.length !== 1 ? "s" : ""}`}
                   <span className="ml-2 text-xs text-primary/60">● Live</span>
                 </p>
               </div>
@@ -382,32 +409,43 @@ const AdminReport = () => {
               <Button variant="outline" size="sm" onClick={handleRefresh} disabled={loading} className="gap-1.5">
                 <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} /> Refresh
               </Button>
-              <Button variant="outline" size="sm" onClick={() => downloadCSV(records, activeReport ?? "report")} disabled={records.length === 0} className="gap-1.5">
+              <Button variant="outline" size="sm" onClick={() => downloadCSV(filteredRecords, activeReport ?? "report")} disabled={filteredRecords.length === 0} className="gap-1.5">
                 <Download className="w-4 h-4" /> CSV
               </Button>
             </div>
+          </div>
+
+          <div className="relative max-w-sm">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="Search records…"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9"
+            />
           </div>
 
           {loading ? (
             <div className="flex items-center justify-center py-20">
               <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
             </div>
-          ) : records.length === 0 ? (
+          ) : filteredRecords.length === 0 ? (
             <div className="text-center py-20 text-muted-foreground">No records found.</div>
           ) : (
             <div className="rounded-lg border overflow-auto" style={{ borderColor: "hsl(220 15% 88%)" }}>
               <Table>
                 <TableHeader>
                   <TableRow>
-                    {columns.map((col) => (
+                    {displayColumns.map((col) => (
                       <TableHead key={col} className="whitespace-nowrap capitalize">{col.replace(/_/g, " ")}</TableHead>
                     ))}
+                    <TableHead className="w-10" />
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {records.map((row, i) => (
+                  {filteredRecords.map((row, i) => (
                     <TableRow key={i}>
-                      {columns.map((col) => {
+                      {displayColumns.map((col) => {
                         const val = row[col];
                         let display: string;
                         if (val === null || val === undefined) display = "—";
@@ -415,6 +453,17 @@ const AdminReport = () => {
                         else display = String(val);
                         return <TableCell key={col} className="whitespace-nowrap max-w-[300px] truncate">{display}</TableCell>;
                       })}
+                      <TableCell className="w-10">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => downloadCSV([row], `${activeReport}-row-${i + 1}`)}
+                          title="Download this row as CSV"
+                        >
+                          <Download className="w-3.5 h-3.5" />
+                        </Button>
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
