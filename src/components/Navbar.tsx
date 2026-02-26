@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import Logo from "./Logo";
 import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
+import ContactUsPanel from "./ContactUsPanel";
 
 const navLinks = [
   { label: "Home", href: "/", type: "route" as const },
@@ -15,6 +16,7 @@ const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [contactOpen, setContactOpen] = useState(false);
 
   const handleNav = (e: React.MouseEvent<HTMLAnchorElement>, link: typeof navLinks[0]) => {
     e.preventDefault();
@@ -31,65 +33,68 @@ const Navbar = () => {
 
   const handleCta = () => {
     setMobileOpen(false);
-    navigate("/get-a-quote");
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    setContactOpen(true);
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border/50">
-      <div className="container flex items-center justify-between h-[var(--nav-height)]">
-        <Logo />
-        {/* Desktop nav */}
-        <div className="hidden md:flex items-center gap-8">
-          {navLinks.map((l) => (
-            <a
-              key={l.href}
-              href={l.type === "route" ? l.href : `/${l.href}`}
-              onClick={(e) => handleNav(e, l)}
-              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-            >
-              {l.label}
-            </a>
-          ))}
-        </div>
-        <div className="flex items-center gap-2">
-          <Button onClick={handleCta} size="sm" className="hidden md:inline-flex">
-            Contact Us
-          </Button>
-          <Button onClick={handleCta} size="sm" className="md:hidden">
-            Contact Us
-          </Button>
-          <button
-            onClick={() => setMobileOpen(!mobileOpen)}
-            className="md:hidden p-2 text-foreground"
-            aria-label="Toggle menu"
-          >
-            {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-          </button>
-        </div>
-      </div>
-
-      {/* Mobile menu */}
-      {mobileOpen && (
-        <div className="md:hidden border-t border-border/50 bg-background/95 backdrop-blur-lg">
-          <div className="container py-4 flex flex-col gap-3">
+    <>
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border/50">
+        <div className="container flex items-center justify-between h-[var(--nav-height)]">
+          <Logo />
+          {/* Desktop nav */}
+          <div className="hidden md:flex items-center gap-8">
             {navLinks.map((l) => (
               <a
                 key={l.href}
                 href={l.type === "route" ? l.href : `/${l.href}`}
                 onClick={(e) => handleNav(e, l)}
-                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors text-left py-2"
+                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
               >
                 {l.label}
               </a>
             ))}
-            <Button onClick={handleCta} size="sm" className="w-full mt-2">
+          </div>
+          <div className="flex items-center gap-2">
+            <Button onClick={handleCta} size="sm" className="hidden md:inline-flex">
               Contact Us
             </Button>
+            <Button onClick={handleCta} size="sm" className="md:hidden">
+              Contact Us
+            </Button>
+            <button
+              onClick={() => setMobileOpen(!mobileOpen)}
+              className="md:hidden p-2 text-foreground"
+              aria-label="Toggle menu"
+            >
+              {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
           </div>
         </div>
-      )}
-    </nav>
+
+        {/* Mobile menu */}
+        {mobileOpen && (
+          <div className="md:hidden border-t border-border/50 bg-background/95 backdrop-blur-lg">
+            <div className="container py-4 flex flex-col gap-3">
+              {navLinks.map((l) => (
+                <a
+                  key={l.href}
+                  href={l.type === "route" ? l.href : `/${l.href}`}
+                  onClick={(e) => handleNav(e, l)}
+                  className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors text-left py-2"
+                >
+                  {l.label}
+                </a>
+              ))}
+              <Button onClick={handleCta} size="sm" className="w-full mt-2">
+                Contact Us
+              </Button>
+            </div>
+          </div>
+        )}
+      </nav>
+
+      <ContactUsPanel open={contactOpen} onOpenChange={setContactOpen} />
+    </>
   );
 };
 
