@@ -1,47 +1,45 @@
 
 
-## Convert Contact Us Form to a Sliding Panel
+## Mobile Consistency Fixes
 
-Instead of navigating to a separate `/get-a-quote` page, the Contact Us button will open a right-side sliding panel (Sheet) overlay on any page. The form content, logic, abandoned tracking, and submission all remain identical — only the container changes.
+After reviewing the codebase, I found these issues where mobile doesn't match the updated desktop experience:
+
+### Issues Found
+
+1. **HeroSection "Talk to Us" button** — Still calls `scrollTo("#contact")`, but `ContactSection` was removed from the homepage. This button does nothing on mobile or desktop. It needs to open the Contact Us panel instead.
+
+2. **Navbar mobile layout** — The "Contact Us" button and hamburger icon sit side-by-side in the top bar, which can feel cramped on narrow screens (< 375px). The mobile menu already has a full-width "Contact Us" button inside it, so the top-bar button is redundant on mobile.
+
+3. **Footer "Contact" link** — Points to `mailto:snehdeep@launchhouse.events`. This is fine functionally but could be updated to be consistent with the new contact flow (minor).
 
 ### Changes
 
-#### 1. New component: `src/components/ContactUsPanel.tsx`
+#### 1. `src/components/HeroSection.tsx`
+- Remove the `scrollTo` function and `#contact` reference.
+- Accept an `onContactClick` prop (callback) to open the contact panel.
+- The "Talk to Us" button calls `onContactClick()` instead of scrolling.
 
-- Extract all form logic from `src/pages/GetAQuote.tsx` into this new component.
-- Wrap in a `Sheet` (from `@/components/ui/sheet`) with `side="right"`.
-- Accept `open` and `onOpenChange` props to control visibility.
-- **Responsive sizing**: Use `sm:max-w-md md:max-w-lg` on the SheetContent so it's compact on desktop and full-width on mobile (the existing sheet component already does `w-3/4` on mobile with `sm:max-w-sm` — we'll override to allow slightly wider for the form).
-- Remove the banner image, Logo header, and Footer — the panel is an overlay, so it only needs the step indicator, form fields, and confirmation content.
-- Use `ScrollArea` inside the panel so the services list + textarea are scrollable without the panel overflowing.
-- On the confirmation screen, include a "Close" button that calls `onOpenChange(false)` instead of "Back to Home".
-- All abandoned tracking, email validation, and submission logic stays identical.
+#### 2. `src/pages/Index.tsx`
+- Lift `contactOpen` state up to `Index` (or pass it through).
+- Actually, since `Navbar` already owns the `ContactUsPanel`, the simplest approach: make `HeroSection` also trigger the panel via a shared mechanism.
+- **Approach:** Move `contactOpen` state and `<ContactUsPanel />` rendering from `Navbar` into a shared context, OR simply have `HeroSection` dispatch a custom event that `Navbar` listens to. The cleanest option: move the panel state to `Index` and pass callbacks down to both `Navbar` and `HeroSection`.
 
-#### 2. `src/components/Navbar.tsx`
+**Revised approach (simpler):** Create a tiny context `ContactPanelContext` that provides `openContactPanel()`. Wrap the app (or just the layout) with it. Both `Navbar` and `HeroSection` consume it. This avoids prop-drilling across pages.
 
-- Import `ContactUsPanel`.
-- Add `const [contactOpen, setContactOpen] = useState(false)` state.
-- Change `handleCta` to `setContactOpen(true)` instead of `navigate("/get-a-quote")`.
-- Render `<ContactUsPanel open={contactOpen} onOpenChange={setContactOpen} />` inside the navbar.
-- The mobile menu "Contact Us" button also sets `contactOpen(true)` and closes the mobile menu.
+#### 3. `src/components/Navbar.tsx`
+- Hide the top-bar "Contact Us" button on mobile (`hidden md:inline-flex` — it's already partially there but line 61 shows a second button for mobile). Remove the duplicate mobile button from the top bar since it's already in the mobile dropdown menu.
 
-#### 3. `src/pages/GetAQuote.tsx`
-
-- Keep the file as-is (the `/get-a-quote` and `/contact-us` routes still work as a standalone page for direct URL access / bookmarks).
-- No changes needed.
-
-#### 4. `src/App.tsx`
-
-- No changes needed — routes remain for direct access.
-
-#### 5. `src/components/ui/sheet.tsx`
-
-- No structural changes. The `SheetContent` already supports custom `className` overrides for width, so the panel component will pass `className="w-full sm:max-w-md md:max-w-lg"` to override the default `sm:max-w-sm`.
+#### 4. `src/components/ContactPanelProvider.tsx` (new)
+- Creates a React context with `openContactPanel` function and `contactOpen` state.
+- Renders `<ContactUsPanel />` once at the provider level.
+- Consumed by `Navbar` and `HeroSection`.
 
 ### Files
 
 | File | Change |
 |------|--------|
-| `src/components/ContactUsPanel.tsx` | New — Sheet-based sliding panel with full form logic extracted from GetAQuote |
-| `src/components/Navbar.tsx` | Open panel on "Contact Us" click instead of navigating |
+| `src/components/ContactPanelProvider.tsx` | New — context provider for contact panel state |
+| `src/components/HeroSection.tsx` | Use context to open panel instead of scrolling to removed section |
+| `src/components/Navbar.tsx` | Use context instead of local state; remove duplicate mobile button from top bar |
+| `src/App.tsx` | Wrap routes with `ContactPanelProvider` |
 
