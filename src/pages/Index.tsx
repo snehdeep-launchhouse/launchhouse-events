@@ -6,7 +6,6 @@ import Footer from "@/components/Footer";
 
 const WhyUsSection = lazy(() => import("@/components/WhyUsSection"));
 const PricingSection = lazy(() => import("@/components/PricingSection"));
-const ContactSection = lazy(() => import("@/components/ContactSection"));
 
 const SectionFallback = () => (
   <div className="py-24 md:py-32" aria-hidden="true" />
@@ -22,9 +21,6 @@ const Index = () => (
     </Suspense>
     <Suspense fallback={<SectionFallback />}>
       <PricingSection />
-    </Suspense>
-    <Suspense fallback={<SectionFallback />}>
-      <ContactSection />
     </Suspense>
     <Footer />
   </div>

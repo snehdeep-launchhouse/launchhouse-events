@@ -5,27 +5,30 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Loader2, Lock, RefreshCw, Download, ArrowLeft, FileText, Users, ClipboardList, ShieldCheck, Flame, Search } from "lucide-react";
+import { Loader2, Lock, RefreshCw, Download, ArrowLeft, FileText, Users, ClipboardList, ShieldCheck, Flame, Search, UserX, Trash2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import ManageAdmins from "@/components/ManageAdmins";
 import IgnitionHeader from "@/components/IgnitionHeader";
 import IgnitionFooter from "@/components/IgnitionFooter";
 import IgnitionLogo from "@/components/IgnitionLogo";
+import { toast } from "sonner";
 
-type ReportType = "abandoned" | "build_requests" | "quote_requests" | "manage_admins" | null;
+type ReportType = "abandoned" | "abandoned_contact" | "build_requests" | "quote_requests" | "manage_admins" | null;
 
 const MASTER_ADMIN_EMAIL = "snehdeep@launchhouse.events";
 
 const HIDDEN_COLUMNS: Record<string, string[]> = {
   abandoned: ["id", "created_at", "updated_at"],
+  abandoned_contact: ["id", "created_at", "updated_at", "captured_data"],
   build_requests: ["id", "submitted_at", "email_sent_at"],
   quote_requests: ["id", "submitted_at", "email_sent_at"],
 };
 
 const BASE_REPORT_CARDS: { key: ReportType; title: string; description: string; icon: React.ReactNode; superOnly?: boolean }[] = [
   { key: "abandoned", title: "Abandoned EB Forms", description: "Partial form submissions that were not completed", icon: <ClipboardList className="w-7 h-7" /> },
+  { key: "abandoned_contact", title: "Abandoned Contact Requests", description: "Contact form submissions that were not completed", icon: <UserX className="w-7 h-7" /> },
   { key: "build_requests", title: "Build Requests", description: "All submitted event build requests", icon: <FileText className="w-7 h-7" /> },
-  { key: "quote_requests", title: "Quote Requests", description: "All submitted quote requests", icon: <Users className="w-7 h-7" /> },
+  { key: "quote_requests", title: "Contact Requests", description: "All submitted contact requests", icon: <Users className="w-7 h-7" /> },
   { key: "manage_admins", title: "Manage System Admins", description: "Add, remove, or reset passwords for admin users", icon: <ShieldCheck className="w-7 h-7" />, superOnly: true },
 ];
 
@@ -90,6 +93,8 @@ const fetchReportData = async (type: ReportType): Promise<Record<string, unknown
   let query;
   if (type === "abandoned") {
     query = supabase.from("abandoned_eb_forms").select("*").eq("status", "partial").order("created_at", { ascending: false });
+  } else if (type === "abandoned_contact") {
+    query = supabase.from("abandoned_contact_requests").select("*").eq("status", "partial").order("updated_at", { ascending: false });
   } else if (type === "build_requests") {
     query = supabase.from("build_requests").select("*").order("submitted_at", { ascending: false });
   } else {
@@ -100,13 +105,15 @@ const fetchReportData = async (type: ReportType): Promise<Record<string, unknown
 };
 
 const fetchRecordCounts = async (): Promise<Record<string, number | null>> => {
-  const [ab, br, qr] = await Promise.all([
+  const [ab, ac, br, qr] = await Promise.all([
     supabase.from("abandoned_eb_forms").select("id", { count: "exact", head: true }).eq("status", "partial"),
+    supabase.from("abandoned_contact_requests").select("id", { count: "exact", head: true }).eq("status", "partial"),
     supabase.from("build_requests").select("id", { count: "exact", head: true }),
     supabase.from("quote_requests").select("id", { count: "exact", head: true }),
   ]);
   return {
     abandoned: ab.count ?? null,
+    abandoned_contact: ac.count ?? null,
     build_requests: br.count ?? null,
     quote_requests: qr.count ?? null,
   };
@@ -140,7 +147,6 @@ const AdminReport = () => {
     };
   }, []);
   const visibleCards = useMemo(() => BASE_REPORT_CARDS.filter((c) => !c.superOnly || isSuperAdmin), [isSuperAdmin]);
-
 
   /* ── React Query: record counts ── */
   const { data: recordCounts = {} } = useQuery({
@@ -227,6 +233,9 @@ const AdminReport = () => {
       .on("postgres_changes", { event: "*", schema: "public", table: "abandoned_eb_forms" }, () => {
         queryClient.invalidateQueries({ queryKey: ["ignition"] });
       })
+      .on("postgres_changes", { event: "*", schema: "public", table: "abandoned_contact_requests" }, () => {
+        queryClient.invalidateQueries({ queryKey: ["ignition"] });
+      })
       .on("postgres_changes", { event: "*", schema: "public", table: "build_requests" }, () => {
         queryClient.invalidateQueries({ queryKey: ["ignition"] });
       })
@@ -284,6 +293,16 @@ const AdminReport = () => {
     queryClient.refetchQueries({ queryKey: ["ignition", "report", activeReport] });
     queryClient.refetchQueries({ queryKey: ["ignition", "counts"] });
   }, [queryClient, activeReport]);
+
+  const handleDeleteAbandonedContact = async (id: string) => {
+    const { error } = await supabase.from("abandoned_contact_requests").delete().eq("id", id);
+    if (error) {
+      toast.error("Failed to delete record.");
+    } else {
+      toast.success("Record deleted.");
+      queryClient.invalidateQueries({ queryKey: ["ignition"] });
+    }
+  };
 
   /* ── Loading Screen ── */
   if (authState === "loading") {
@@ -384,6 +403,7 @@ const AdminReport = () => {
 
   /* ── Report Table View ── */
   const reportTitle = BASE_REPORT_CARDS.find((c) => c.key === activeReport)?.title ?? "";
+  const showDeleteAction = activeReport === "abandoned_contact";
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -440,6 +460,7 @@ const AdminReport = () => {
                       <TableHead key={col} className="whitespace-nowrap capitalize">{col.replace(/_/g, " ")}</TableHead>
                     ))}
                     <TableHead className="w-10" />
+                    {showDeleteAction && <TableHead className="w-10" />}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -464,6 +485,19 @@ const AdminReport = () => {
                           <Download className="w-3.5 h-3.5" />
                         </Button>
                       </TableCell>
+                      {showDeleteAction && (
+                        <TableCell className="w-10">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-destructive hover:text-destructive"
+                            onClick={() => handleDeleteAbandonedContact(row.id as string)}
+                            title="Delete this abandoned record"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </Button>
+                        </TableCell>
+                      )}
                     </TableRow>
                   ))}
                 </TableBody>

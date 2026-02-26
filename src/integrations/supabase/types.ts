@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      abandoned_contact_requests: {
+        Row: {
+          business_email: string
+          captured_data: Json | null
+          created_at: string
+          first_name: string
+          id: string
+          last_active_step: number
+          last_name: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          business_email: string
+          captured_data?: Json | null
+          created_at?: string
+          first_name?: string
+          id?: string
+          last_active_step?: number
+          last_name?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          business_email?: string
+          captured_data?: Json | null
+          created_at?: string
+          first_name?: string
+          id?: string
+          last_active_step?: number
+          last_name?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       abandoned_eb_forms: {
         Row: {
           company: string | null
@@ -180,15 +216,15 @@ export type Database = {
           email: string
           email_sent_at: string | null
           email_status: string
-          event_launch_date: string
-          event_type: string
-          event_type_new_or_clone: string
+          event_launch_date: string | null
+          event_type: string | null
+          event_type_new_or_clone: string | null
           full_name: string
           id: string
           quote_number: number
           registration_options: string[]
-          registration_types_count: string
-          sessions_count: string
+          registration_types_count: string | null
+          sessions_count: string | null
           submitted_at: string
         }
         Insert: {
@@ -197,15 +233,15 @@ export type Database = {
           email: string
           email_sent_at?: string | null
           email_status?: string
-          event_launch_date: string
-          event_type: string
-          event_type_new_or_clone: string
+          event_launch_date?: string | null
+          event_type?: string | null
+          event_type_new_or_clone?: string | null
           full_name: string
           id?: string
           quote_number?: number
           registration_options?: string[]
-          registration_types_count: string
-          sessions_count: string
+          registration_types_count?: string | null
+          sessions_count?: string | null
           submitted_at?: string
         }
         Update: {
@@ -214,15 +250,15 @@ export type Database = {
           email?: string
           email_sent_at?: string | null
           email_status?: string
-          event_launch_date?: string
-          event_type?: string
-          event_type_new_or_clone?: string
+          event_launch_date?: string | null
+          event_type?: string | null
+          event_type_new_or_clone?: string | null
           full_name?: string
           id?: string
           quote_number?: number
           registration_options?: string[]
-          registration_types_count?: string
-          sessions_count?: string
+          registration_types_count?: string | null
+          sessions_count?: string | null
           submitted_at?: string
         }
         Relationships: []

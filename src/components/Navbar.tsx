@@ -8,9 +8,7 @@ const navLinks = [
   { label: "Home", href: "/", type: "route" as const },
   { label: "About Us", href: "/about", type: "route" as const },
   { label: "Our Services", href: "/services", type: "route" as const },
-  
   { label: "Pricing", href: "/pricing", type: "route" as const },
-  { label: "Contact", href: "#contact", type: "scroll" as const },
 ];
 
 const Navbar = () => {
@@ -33,7 +31,8 @@ const Navbar = () => {
 
   const handleCta = () => {
     setMobileOpen(false);
-    window.open("/build-request", "_blank");
+    navigate("/get-a-quote");
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   return (
@@ -55,10 +54,10 @@ const Navbar = () => {
         </div>
         <div className="flex items-center gap-2">
           <Button onClick={handleCta} size="sm" className="hidden md:inline-flex">
-            Get Started
+            Contact Us
           </Button>
           <Button onClick={handleCta} size="sm" className="md:hidden">
-            Get Started
+            Contact Us
           </Button>
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
@@ -85,7 +84,7 @@ const Navbar = () => {
               </a>
             ))}
             <Button onClick={handleCta} size="sm" className="w-full mt-2">
-              Get Started
+              Contact Us
             </Button>
           </div>
         </div>
