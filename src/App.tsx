@@ -9,6 +9,7 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import CookieBanner from "./components/CookieBanner";
 import ErrorBoundary from "./components/ErrorBoundary";
+import ContactPanelProvider from "./components/ContactPanelProvider";
 
 // Lazy-loaded routes
 const Services = lazy(() => import("./pages/Services"));
@@ -37,23 +38,25 @@ const App = () => (
       <CookieBanner />
       <BrowserRouter>
         <ErrorBoundary>
-          <Suspense fallback={<SuspenseFallback />}>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/services" element={<Services />} />
-              <Route path="/pricing" element={<Pricing />} />
-              <Route path="/build-request" element={<BuildRequest />} />
-              <Route path="/get-a-quote" element={<GetAQuote />} />
-              <Route path="/contact-us" element={<GetAQuote />} />
-              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-              <Route path="/terms-of-service" element={<TermsOfService />} />
-              <Route path="/admin-report" element={<AdminReport />} />
-              <Route path="/reset-password" element={<ResetPassword />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </Suspense>
+          <ContactPanelProvider>
+            <Suspense fallback={<SuspenseFallback />}>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/about" element={<About />} />
+                <Route path="/services" element={<Services />} />
+                <Route path="/pricing" element={<Pricing />} />
+                <Route path="/build-request" element={<BuildRequest />} />
+                <Route path="/get-a-quote" element={<GetAQuote />} />
+                <Route path="/contact-us" element={<GetAQuote />} />
+                <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                <Route path="/terms-of-service" element={<TermsOfService />} />
+                <Route path="/admin-report" element={<AdminReport />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
+                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </Suspense>
+          </ContactPanelProvider>
         </ErrorBoundary>
       </BrowserRouter>
     </TooltipProvider>

@@ -2,8 +2,11 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, Zap } from "lucide-react";
 import heroBanner from "@/assets/hero-banner.jpg";
 import TnCTooltip from "@/components/TnCTooltip";
+import { useContactPanel } from "@/components/ContactPanelProvider";
 
 const HeroSection = () => {
+  const { openContactPanel } = useContactPanel();
+
   const scrollTo = (id: string) => {
     document.querySelector(id)?.scrollIntoView({ behavior: "smooth" });
   };
@@ -35,7 +38,7 @@ const HeroSection = () => {
           <Button size="lg" className="shadow-btn" onClick={() => scrollTo("#pricing")}>
             View Packages <ArrowRight className="w-4 h-4 ml-2" />
           </Button>
-          <Button size="lg" variant="outline" className="border-white text-white bg-white/10 hover:bg-white/20" onClick={() => scrollTo("#contact")}>
+          <Button size="lg" variant="outline" className="border-white text-white bg-white/10 hover:bg-white/20" onClick={openContactPanel}>
             Talk to Us
           </Button>
         </div>

@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import Logo from "./Logo";
 import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
-import ContactUsPanel from "./ContactUsPanel";
+import { useContactPanel } from "./ContactPanelProvider";
 
 const navLinks = [
   { label: "Home", href: "/", type: "route" as const },
@@ -16,7 +16,7 @@ const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [contactOpen, setContactOpen] = useState(false);
+  const { openContactPanel } = useContactPanel();
 
   const handleNav = (e: React.MouseEvent<HTMLAnchorElement>, link: typeof navLinks[0]) => {
     e.preventDefault();
@@ -33,7 +33,7 @@ const Navbar = () => {
 
   const handleCta = () => {
     setMobileOpen(false);
-    setContactOpen(true);
+    openContactPanel();
   };
 
   return (
@@ -56,9 +56,6 @@ const Navbar = () => {
           </div>
           <div className="flex items-center gap-2">
             <Button onClick={handleCta} size="sm" className="hidden md:inline-flex">
-              Contact Us
-            </Button>
-            <Button onClick={handleCta} size="sm" className="md:hidden">
               Contact Us
             </Button>
             <button
@@ -92,8 +89,6 @@ const Navbar = () => {
           </div>
         )}
       </nav>
-
-      <ContactUsPanel open={contactOpen} onOpenChange={setContactOpen} />
     </>
   );
 };
