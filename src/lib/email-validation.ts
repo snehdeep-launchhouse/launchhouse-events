@@ -23,11 +23,29 @@ export const zodEmail = () =>
 
 /* ── Domain verification ─────────────────────────────────────────── */
 
-const TRUSTED_DOMAINS = new Set([
-  "gmail.com", "outlook.com", "yahoo.com", "hotmail.com",
-  "icloud.com", "aol.com", "protonmail.com", "live.com",
-  "msn.com", "me.com", "mac.com", "googlemail.com",
-  "yahoo.co.uk", "outlook.co.uk", "ymail.com",
+export const GENERIC_DOMAIN_MESSAGE =
+  "Please use your company email address. Generic email providers (Gmail, Yahoo, etc.) are not accepted.";
+
+const BLOCKED_DOMAINS = new Set([
+  "gmail.com", "googlemail.com",
+  "outlook.com", "outlook.co.uk", "hotmail.com", "live.com", "msn.com",
+  "yahoo.com", "yahoo.co.uk", "ymail.com",
+  "icloud.com", "me.com", "mac.com",
+  "aol.com",
+  "protonmail.com", "proton.me", "pm.me",
+  "zoho.com", "zohomail.com",
+  "tutanota.com", "tuta.com",
+  "fastmail.com",
+  "gmx.com", "gmx.net",
+  "mail.com",
+  "inbox.com",
+  "hey.com",
+  "yandex.com", "yandex.ru",
+  "mail.ru",
+  "qq.com",
+  "163.com",
+  "126.com",
+  "sina.com",
 ]);
 
 // Session-level cache for domains already checked
@@ -44,8 +62,10 @@ export async function verifyEmailDomain(email: string): Promise<{ valid: boolean
   const domain = email.split("@")[1]?.toLowerCase();
   if (!domain) return { valid: false, message: EMAIL_ERROR_MESSAGE };
 
-  // Trusted domains — skip API call
-  if (TRUSTED_DOMAINS.has(domain)) return { valid: true };
+  // Block generic email providers
+  if (BLOCKED_DOMAINS.has(domain)) {
+    return { valid: false, message: GENERIC_DOMAIN_MESSAGE };
+  }
 
   // Session cache
   const cached = domainCache.get(domain);
