@@ -57,23 +57,14 @@ serve(async (req) => {
       ? payload.cventTechnologies.join(", ")
       : (payload.cventTechnologies ?? "");
     const otherTech = payload.cventTechnologiesOther
-      ? ` (Other: ${payload.cventTechnologiesOther})`
+      ? ` (Additional Info: ${payload.cventTechnologiesOther})`
       : "";
-    const regOptions = Array.isArray(payload.registrationOptions)
-      ? payload.registrationOptions.join(", ")
-      : (payload.registrationOptions ?? "");
 
     const rows: [string, string][] = [
-      ["Quote Number", `#${quotePadded}`],
+      ["Reference", `#${quotePadded}`],
       ["Full Name", payload.fullName ?? ""],
       ["Email", payload.email ?? ""],
-      ["New or Existing Event?", payload.eventTypeNewOrClone ?? ""],
-      ["Event Type", payload.eventType ?? ""],
-      ["Cvent Technologies", `${techList}${otherTech}`],
-      ["Registration Types Count", payload.registrationTypesCount ?? ""],
-      ["Tentative Sessions Count", payload.sessionsCount ?? ""],
-      ["Registration Options", regOptions],
-      ["Event Launch Date", payload.eventLaunchDate ?? ""],
+      ["Services Interested In", `${techList}${otherTech}`],
     ];
 
     const tableRows = rows
@@ -94,7 +85,7 @@ serve(async (req) => {
   <div style="max-width:700px;margin:0 auto;">
     <div style="background:#006AE1;padding:24px 32px;border-radius:8px 8px 0 0;">
       <h1 style="margin:0;color:#ffffff;font-size:22px;font-family:'Space Grotesk',Arial,sans-serif;">
-        New Quote Request — #${quotePadded}
+        New Contact Request — #${quotePadded}
       </h1>
       <p style="margin:6px 0 0;color:rgba(255,255,255,0.85);font-size:14px;">
         Submitted by ${payload.fullName ?? ""} · ${payload.email ?? ""}
@@ -104,7 +95,7 @@ serve(async (req) => {
       ${tableRows}
     </table>
     <p style="margin-top:24px;font-size:12px;color:#6b7280;">
-      This email was sent automatically from the LaunchHouse Events Get a Quote form.
+      This email was sent automatically from the LaunchHouse Events Contact Us form.
     </p>
   </div>
 </body>
@@ -119,21 +110,29 @@ serve(async (req) => {
   <div style="max-width:600px;margin:0 auto;">
     <div style="background:#006AE1;padding:24px 32px;border-radius:8px 8px 0 0;">
       <h1 style="margin:0;color:#ffffff;font-size:22px;font-family:'Space Grotesk',Arial,sans-serif;">
-        We've Received Your Quote Request!
+        Thank You for Reaching Out!
       </h1>
     </div>
     <div style="padding:32px;border:1px solid #d1d5db;border-top:none;border-radius:0 0 8px 8px;">
       <p style="margin:0 0 16px;font-size:16px;">Hi ${payload.fullName ?? ""},</p>
       <p style="margin:0 0 16px;font-size:15px;color:#374151;">
-        Thank you for reaching out to LaunchHouse Events. We've received your quote request and our team will review it shortly.
+        Thank you for contacting LaunchHouse Events. We've received your request and our team will review it shortly.
       </p>
-      <div style="background:#f0f7ff;border:1px solid #bfdbfe;border-radius:8px;padding:16px 20px;margin-bottom:24px;text-align:center;">
-        <p style="margin:0 0 4px;font-size:13px;color:#1e40af;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Your Quote Reference</p>
-        <p style="margin:0;font-size:32px;font-weight:700;color:#1d4ed8;font-family:'Space Grotesk',Arial,sans-serif;">Quote #${quotePadded}</p>
-      </div>
       <p style="margin:0 0 16px;font-size:15px;color:#374151;">
-        Please keep this reference number handy. Our team will be in touch soon with pricing details tailored to your event requirements.
+        We'll get back to you within <strong>3–4 business hours</strong>.
       </p>
+      <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:16px 20px;margin-bottom:24px;">
+        <p style="margin:0 0 8px;font-size:14px;font-weight:600;color:#374151;">Need urgent assistance?</p>
+        <p style="margin:0 0 4px;font-size:14px;color:#374151;">
+          📧 <a href="mailto:sam@launchhouse.events" style="color:#1d4ed8;text-decoration:underline;">sam@launchhouse.events</a>
+        </p>
+        <p style="margin:0 0 4px;font-size:14px;color:#374151;">
+          📞 <a href="tel:+919999063734" style="color:#1d4ed8;text-decoration:underline;">+91 9999 063 734</a>
+        </p>
+        <p style="margin:0;font-size:14px;color:#374151;">
+          💬 <a href="https://wa.me/919999063734" style="color:#1d4ed8;text-decoration:underline;">WhatsApp</a>
+        </p>
+      </div>
       <p style="margin:0;font-size:15px;color:#374151;">
         Warm regards,<br/>
         <strong>The LaunchHouse Events Team</strong>
@@ -162,7 +161,7 @@ serve(async (req) => {
       return json;
     };
 
-    const internalSubject = `New Quote Request #${quotePadded} – ${payload.fullName ?? ""}`;
+    const internalSubject = `New Contact Request #${quotePadded} – ${payload.fullName ?? ""}`;
 
     const results = [];
     results.push(await sendEmail({ from: "LaunchHouse Events <noreply@launchhouse.events>", to: ["sam@launchhouse.events"], subject: internalSubject, html: internalHtml }));
@@ -172,7 +171,7 @@ serve(async (req) => {
     results.push(await sendEmail({
       from: "LaunchHouse Events <noreply@launchhouse.events>",
       to: [payload.email],
-      subject: `We've received your quote request – Quote #${quotePadded}`,
+      subject: `We've received your contact request — LaunchHouse Events`,
       html: confirmationHtml,
     }));
 

@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { useForm, Controller } from "react-hook-form";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
@@ -8,11 +8,8 @@ import EmailInput from "@/components/EmailInput";
 import { zodEmail, type VerificationStatus } from "@/lib/email-validation";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon, Loader2, CheckCircle2 } from "lucide-react";
-import { format } from "date-fns";
+import { Textarea } from "@/components/ui/textarea";
+import { Loader2, CheckCircle2, ArrowLeft, MessageCircle, Phone, Mail } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -21,88 +18,32 @@ import Footer from "@/components/Footer";
 import bannerImg from "@/assets/get-a-quote-banner.jpg";
 
 /* ── Constants ───────────────────────────────────────────────────── */
-const CVENT_TECHNOLOGIES = [
-  "Abstract",
+const SERVICE_OFFERINGS = [
+  "Event Registration And Website",
+  "Attendee Hub (Website and/or Event App)",
   "Appointments",
-  "Registration",
-  "Event Website",
-  "Speaker Resource Center",
-  "Exhibitor Management",
-  "Attendee Hub",
-  "Event App",
-  "Other",
+  "Abstract Management",
+  "Survey",
+  "On Arrival (Onsite/Badge Creation)",
+  "Creative Services",
+  "Post Launch Services",
+  "Trainings",
 ];
 
-const REGISTRATION_OPTIONS = ["Single Days Only", "Multiple Days", "Both"];
+/* ── Schemas ─────────────────────────────────────────────────────── */
+const step1Schema = z.object({
+  firstName: z.string().trim().min(1, "First name is required").max(100),
+  lastName: z.string().trim().min(1, "Last name is required").max(100),
+  email: zodEmail(),
+});
 
-/* ── Schema ──────────────────────────────────────────────────────── */
-const quoteSchema = z
-  .object({
-    fullName: z.string().trim().min(1, "Full name is required").max(200),
-    email: zodEmail(),
-    eventTypeNewOrClone: z.enum(["New Event", "Existing Event"], {
-      required_error: "Please select an option",
-    }),
-    eventType: z.enum(["In-Person", "Virtual", "Hybrid"], {
-      required_error: "Please select an event type",
-    }),
-    cventTechnologies: z
-      .array(z.string())
-      .min(1, "Select at least one Cvent technology"),
-    cventTechnologiesOther: z.string().max(500).optional(),
-    registrationTypesCount: z.enum(["0–3", "4–8", "More than 8"], {
-      required_error: "Please select a range",
-    }),
-    sessionsCount: z.enum(["0–10", "11–20", "More than 21"], {
-      required_error: "Please select a range",
-    }),
-    registrationOptions: z.string().min(1, "Please select a registration option"),
-    eventLaunchDate: z.date({ required_error: "Event launch date is required" }),
-  })
-  .refine(
-    (d) =>
-      !d.cventTechnologies.includes("Other") ||
-      (d.cventTechnologiesOther && d.cventTechnologiesOther.trim().length > 0),
-    {
-      message: "Please specify the other technology",
-      path: ["cventTechnologiesOther"],
-    }
-  );
+const step2Schema = z.object({
+  selectedServices: z.array(z.string()).min(1, "Please select at least one service"),
+  additionalInfo: z.string().max(2000).optional(),
+});
 
-type QuoteForm = z.infer<typeof quoteSchema>;
-
-/* ── Date Picker helper ──────────────────────────────────────────── */
-const DatePicker = ({
-  value,
-  onChange,
-}: {
-  value?: Date | null;
-  onChange: (d: Date | undefined) => void;
-}) => (
-  <Popover>
-    <PopoverTrigger asChild>
-      <Button
-        variant="outline"
-        className={cn(
-          "w-full justify-start text-left font-normal",
-          !value && "text-muted-foreground"
-        )}
-      >
-        <CalendarIcon className="mr-2 h-4 w-4" />
-        {value ? format(value, "PPP") : "Pick a date"}
-      </Button>
-    </PopoverTrigger>
-    <PopoverContent className="w-auto p-0" align="start">
-      <Calendar
-        mode="single"
-        selected={value ?? undefined}
-        onSelect={onChange}
-        initialFocus
-        disabled={(d) => d < new Date()}
-      />
-    </PopoverContent>
-  </Popover>
-);
+type Step1Data = z.infer<typeof step1Schema>;
+type Step2Data = z.infer<typeof step2Schema>;
 
 /* ── Field wrapper ───────────────────────────────────────────────── */
 const Field = ({
@@ -128,13 +69,23 @@ const Field = ({
 
 /* ── Page ────────────────────────────────────────────────────────── */
 const GetAQuote = () => {
+  const [step, setStep] = useState<1 | 2>(1);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const [quoteNumber, setQuoteNumber] = useState<string>("");
   const [emailVerification, setEmailVerification] = useState<VerificationStatus>("idle");
+  const [step1Data, setStep1Data] = useState<Step1Data | null>(null);
+
+  // Step 2 local state
+  const [selectedServices, setSelectedServices] = useState<string[]>([]);
+  const [additionalInfo, setAdditionalInfo] = useState("");
+  const [step2Error, setStep2Error] = useState("");
+
+  // Abandoned tracking ref
+  const abandonedIdRef = useRef<string | null>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    document.title = "Get a Quote — LaunchHouse Events";
+    document.title = "Contact Us — LaunchHouse Events";
     return () => {
       document.title = "LaunchHouse Events";
     };
@@ -142,58 +93,176 @@ const GetAQuote = () => {
 
   const {
     register,
-    control,
     handleSubmit,
-    watch,
-    setValue,
     formState: { errors },
-  } = useForm<QuoteForm>({
-    resolver: zodResolver(quoteSchema),
-    defaultValues: {
-      fullName: "",
-      email: "",
-      cventTechnologies: [],
-      registrationOptions: "",
-      cventTechnologiesOther: "",
-    },
+  } = useForm<Step1Data>({
+    resolver: zodResolver(step1Schema),
+    defaultValues: { firstName: "", lastName: "", email: "" },
   });
 
-  const watchedTech = watch("cventTechnologies") ?? [];
-  const watchedRegOption = watch("registrationOptions") ?? "";
+  /* ── Abandoned tracking helpers ──────────────────────────────── */
+  const upsertAbandoned = useCallback(
+    async (data: {
+      first_name: string;
+      last_name: string;
+      business_email: string;
+      last_active_step: number;
+      captured_data?: Record<string, unknown>;
+    }) => {
+      try {
+        const payload = {
+          first_name: data.first_name,
+          last_name: data.last_name,
+          business_email: data.business_email,
+          last_active_step: data.last_active_step,
+          updated_at: new Date().toISOString(),
+          ...(data.captured_data ? { captured_data: data.captured_data as unknown as import("@/integrations/supabase/types").Json } : {}),
+        };
 
-  const onSubmit = async (data: QuoteForm) => {
+        if (abandonedIdRef.current) {
+          await supabase
+            .from("abandoned_contact_requests")
+            .update(payload)
+            .eq("id", abandonedIdRef.current);
+        } else {
+          // Try to find existing by email first, then insert or update
+          const { data: existing } = await supabase
+            .from("abandoned_contact_requests")
+            .select("id")
+            .eq("business_email", data.business_email)
+            .eq("status", "partial")
+            .maybeSingle();
+
+          if (existing) {
+            abandonedIdRef.current = existing.id;
+            await supabase
+              .from("abandoned_contact_requests")
+              .update(payload)
+              .eq("id", existing.id);
+          } else {
+            const { data: row } = await supabase
+              .from("abandoned_contact_requests")
+              .insert({
+                ...payload,
+                status: "partial",
+              })
+              .select("id")
+              .single();
+            if (row) abandonedIdRef.current = row.id;
+          }
+        }
+      } catch {
+        // silent — tracking should not block the user
+      }
+    },
+    []
+  );
+
+  const deleteAbandoned = useCallback(async (email: string) => {
+    try {
+      await supabase
+        .from("abandoned_contact_requests")
+        .delete()
+        .eq("business_email", email);
+    } catch {
+      // silent
+    }
+  }, []);
+
+  /* ── Step 1 → Step 2 ────────────────────────────────────────── */
+  const onStep1Submit = async (data: Step1Data) => {
+    setStep1Data(data);
+    setStep(2);
+
+    // Upsert abandoned record
+    await upsertAbandoned({
+      first_name: data.firstName,
+      last_name: data.lastName,
+      business_email: data.email,
+      last_active_step: 1,
+    });
+  };
+
+  /* ── Debounced step 2 tracking ──────────────────────────────── */
+  const trackStep2 = useCallback(
+    (services: string[], info: string) => {
+      if (!step1Data) return;
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      debounceRef.current = setTimeout(() => {
+        upsertAbandoned({
+          first_name: step1Data.firstName,
+          last_name: step1Data.lastName,
+          business_email: step1Data.email,
+          last_active_step: 2,
+          captured_data: { selectedServices: services, additionalInfo: info },
+        });
+      }, 1500);
+    },
+    [step1Data, upsertAbandoned]
+  );
+
+  const toggleService = (service: string) => {
+    const updated = selectedServices.includes(service)
+      ? selectedServices.filter((s) => s !== service)
+      : [...selectedServices, service];
+    setSelectedServices(updated);
+    setStep2Error("");
+    trackStep2(updated, additionalInfo);
+  };
+
+  const handleInfoChange = (val: string) => {
+    setAdditionalInfo(val);
+    trackStep2(selectedServices, val);
+  };
+
+  /* ── Final submission ────────────────────────────────────────── */
+  const onFinalSubmit = async () => {
+    if (!step1Data) return;
+
+    const result = step2Schema.safeParse({ selectedServices, additionalInfo });
+    if (!result.success) {
+      setStep2Error(result.error.errors[0]?.message ?? "Please fix errors");
+      return;
+    }
+
     setSubmitting(true);
     try {
-      const { data: result, error } = await supabase.functions.invoke(
+      const { data: fnResult, error } = await supabase.functions.invoke(
         "send-quote-request",
         {
           body: {
-            fullName: data.fullName,
-            email: data.email,
-            eventTypeNewOrClone: data.eventTypeNewOrClone,
-            eventType: data.eventType,
-            cventTechnologies: data.cventTechnologies,
-            cventTechnologiesOther: data.cventTechnologiesOther ?? null,
-            registrationTypesCount: data.registrationTypesCount,
-            sessionsCount: data.sessionsCount,
-            registrationOptions: [data.registrationOptions],
-            eventLaunchDate: format(data.eventLaunchDate, "PPP"),
+            fullName: `${step1Data.firstName} ${step1Data.lastName}`,
+            email: step1Data.email,
+            eventTypeNewOrClone: "",
+            eventType: "",
+            cventTechnologies: selectedServices,
+            cventTechnologiesOther: additionalInfo || null,
+            registrationTypesCount: "",
+            sessionsCount: "",
+            registrationOptions: [],
+            eventLaunchDate: "",
           },
         }
       );
       if (error) throw error;
-      setQuoteNumber(result?.quoteNumber ?? "0001");
+
+      // Delete abandoned record on success
+      await deleteAbandoned(step1Data.email);
+
       setSubmitted(true);
     } catch (err: unknown) {
-      console.error("Quote submission error:", err);
+      console.error("Contact submission error:", err);
       toast.error("Failed to submit. Please try again.");
     } finally {
       setSubmitting(false);
     }
   };
 
-  /* ── Thank-you screen ──────────────────────────────────────────── */
-  if (submitted) {
+  /* ── Confirmation screen ───────────────────────────────────── */
+  if (submitted && step1Data) {
+    const whatsappText = encodeURIComponent(
+      `Hi, I just submitted a contact request on LaunchHouse Events. My name is ${step1Data.firstName} ${step1Data.lastName}.`
+    );
     return (
       <div className="min-h-screen bg-background flex flex-col">
         <div className="bg-primary py-5 px-6 flex items-center justify-center">
@@ -206,24 +275,13 @@ const GetAQuote = () => {
                 <CheckCircle2 className="w-10 h-10 text-primary" />
               </div>
               <div>
-                <h1 className="text-3xl font-bold font-display">Quote Request Received!</h1>
+                <h1 className="text-3xl font-bold font-display">
+                  Thank You for Reaching Out!
+                </h1>
                 <p className="text-muted-foreground mt-2 text-base">
-                  We'll review your requirements and be in touch shortly.
+                  We'll get back to you within 3–4 business hours.
                 </p>
               </div>
-            </div>
-
-            {/* Quote number badge */}
-            <div className="rounded-xl border border-border bg-secondary/40 px-8 py-6">
-              <p className="text-sm font-semibold uppercase tracking-widest text-primary mb-1">
-                Your Quote Reference
-              </p>
-              <p className="text-5xl font-bold font-display text-primary">
-                Quote #{quoteNumber}
-              </p>
-              <p className="text-sm text-muted-foreground mt-2">
-                Please keep this number for your records.
-              </p>
             </div>
 
             <div className="rounded-xl border border-border bg-card p-6 text-left space-y-3">
@@ -231,31 +289,51 @@ const GetAQuote = () => {
               <ol className="space-y-3 text-sm text-muted-foreground list-none">
                 <li className="flex gap-3">
                   <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs">1</span>
-                  <span>Our team will review your requirements and prepare a tailored quote.</span>
+                  <span>Our team will review your requirements and prepare a tailored response.</span>
                 </li>
                 <li className="flex gap-3">
                   <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs">2</span>
-                  <span>We'll reach out via email within one business day with your custom pricing.</span>
+                  <span>We'll reach out via email within 3–4 business hours.</span>
                 </li>
                 <li className="flex gap-3">
                   <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs">3</span>
-                  <span>A confirmation email with your quote reference has been sent to your inbox.</span>
+                  <span>A confirmation email has been sent to your inbox.</span>
                 </li>
               </ol>
             </div>
 
-            <p className="text-sm text-muted-foreground">
-              Questions? Email us at{" "}
-              <a
-                href="mailto:sam@launchhouse.events"
-                className="text-primary underline hover:text-primary/80"
-              >
-                sam@launchhouse.events
-              </a>
-            </p>
+            {/* Urgent contact options */}
+            <div className="rounded-xl border border-border bg-secondary/40 p-6 space-y-4">
+              <p className="text-sm font-semibold text-foreground">Need urgent assistance?</p>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <a
+                  href="mailto:sam@launchhouse.events"
+                  className="inline-flex items-center justify-center gap-2 rounded-md border border-border bg-background px-4 py-2.5 text-sm font-medium hover:bg-accent transition-colors"
+                >
+                  <Mail className="w-4 h-4" />
+                  sam@launchhouse.events
+                </a>
+                <a
+                  href="tel:+919999063734"
+                  className="inline-flex items-center justify-center gap-2 rounded-md border border-border bg-background px-4 py-2.5 text-sm font-medium hover:bg-accent transition-colors"
+                >
+                  <Phone className="w-4 h-4" />
+                  +91 9999 063 734
+                </a>
+                <a
+                  href={`https://wa.me/919999063734?text=${whatsappText}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center gap-2 rounded-md bg-[hsl(142,70%,40%)] text-white px-4 py-2.5 text-sm font-medium hover:bg-[hsl(142,70%,35%)] transition-colors"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  WhatsApp
+                </a>
+              </div>
+            </div>
 
-            <Button onClick={() => window.close()} size="lg" className="w-full sm:w-auto">
-              Close Window
+            <Button onClick={() => (window.location.href = "/")} size="lg" className="w-full sm:w-auto">
+              Back to Home
             </Button>
           </div>
         </div>
@@ -266,335 +344,164 @@ const GetAQuote = () => {
     );
   }
 
-  /* ── Form ────────────────────────────────────────────────────────── */
+  /* ── Form ────────────────────────────────────────────────────── */
   return (
     <div className="min-h-screen bg-background">
       {/* Banner */}
-      <div className="relative h-52 md:h-72 overflow-hidden">
+      <div className="relative h-52 md:h-64 overflow-hidden">
         <img
           src={bannerImg}
           alt=""
           className="w-full h-full object-cover object-center"
           loading="lazy"
         />
-        {/* Overlay to ensure logo/text always readable */}
         <div className="absolute inset-0 bg-[hsl(220,90%,10%)]/70" />
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-4">
           <Logo light />
           <h1 className="text-2xl md:text-4xl font-bold font-display text-white mt-4 drop-shadow-lg">
-            Get a Quote
+            Contact Us
           </h1>
           <p className="text-white/85 text-sm md:text-base mt-2 drop-shadow max-w-md">
-            Tell us about your event and we'll prepare a tailored quote for you
+            Tell us what you need and we'll be in touch shortly
           </p>
         </div>
       </div>
 
       {/* Form card */}
-      <div className="container max-w-2xl py-10 pb-16">
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-          {/* ── Contact Info ─────────────────────────────────────── */}
-          <div className="rounded-xl border border-border bg-card p-6 md:p-8 space-y-6 shadow-card">
-            <h2 className="text-lg font-bold font-display border-b border-border pb-3">
-              Contact Information
-            </h2>
+      <div className="container max-w-xl py-10 pb-16">
+        {/* Step indicator */}
+        <div className="flex items-center justify-center gap-3 mb-8">
+          <div className={cn(
+            "w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-colors",
+            step === 1 ? "bg-primary text-primary-foreground" : "bg-primary/20 text-primary"
+          )}>1</div>
+          <div className="w-12 h-0.5 bg-border" />
+          <div className={cn(
+            "w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-colors",
+            step === 2 ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+          )}>2</div>
+        </div>
 
-            <Field label="Full Name" required error={errors.fullName?.message}>
-              <Input
-                {...register("fullName")}
-                placeholder="Jane Smith"
-                className={errors.fullName ? "border-destructive" : ""}
-              />
-            </Field>
+        {/* ── Step 1: Contact Info ──────────────────────────────── */}
+        {step === 1 && (
+          <form onSubmit={handleSubmit(onStep1Submit)} className="space-y-6">
+            <div className="rounded-xl border border-border bg-card p-6 md:p-8 space-y-5 shadow-card">
+              <h2 className="text-lg font-bold font-display border-b border-border pb-3">
+                Your Information
+              </h2>
 
-            <Field label="Email" required error={errors.email?.message}>
-              <EmailInput
-                {...register("email")}
-                placeholder="jane@company.com"
-                externalError={errors.email?.message}
-                onVerificationChange={setEmailVerification}
-              />
-            </Field>
-          </div>
-
-          {/* ── Event Details ─────────────────────────────────────── */}
-          <div className="rounded-xl border border-border bg-card p-6 md:p-8 space-y-6 shadow-card">
-            <h2 className="text-lg font-bold font-display border-b border-border pb-3">
-              Event Details
-            </h2>
-
-            {/* New or clone */}
-            <Field
-              label="Is this a new event or a cloned event?"
-              required
-              error={errors.eventTypeNewOrClone?.message}
-            >
-              <Controller
-                control={control}
-                name="eventTypeNewOrClone"
-                render={({ field }) => (
-                  <RadioGroup
-                    onValueChange={field.onChange}
-                    value={field.value}
-                    className="flex flex-col sm:flex-row gap-3 mt-1"
-                  >
-                    {["New Event", "Existing Event"].map((opt) => (
-                      <label
-                        key={opt}
-                        className={cn(
-                          "flex items-center gap-3 rounded-lg border px-4 py-3 cursor-pointer transition-colors flex-1",
-                          field.value === opt
-                            ? "border-primary bg-secondary/50"
-                            : "border-border hover:border-primary/50"
-                        )}
-                      >
-                        <RadioGroupItem value={opt} />
-                        <span className="text-sm font-medium">{opt}</span>
-                      </label>
-                    ))}
-                  </RadioGroup>
-                )}
-              />
-            </Field>
-
-            {/* Event type */}
-            <Field
-              label="Event Type"
-              required
-              error={errors.eventType?.message}
-            >
-              <Controller
-                control={control}
-                name="eventType"
-                render={({ field }) => (
-                  <RadioGroup
-                    onValueChange={field.onChange}
-                    value={field.value}
-                    className="flex flex-col sm:flex-row gap-3 mt-1"
-                  >
-                    {["In-Person", "Virtual", "Hybrid"].map((opt) => (
-                      <label
-                        key={opt}
-                        className={cn(
-                          "flex items-center gap-3 rounded-lg border px-4 py-3 cursor-pointer transition-colors flex-1",
-                          field.value === opt
-                            ? "border-primary bg-secondary/50"
-                            : "border-border hover:border-primary/50"
-                        )}
-                      >
-                        <RadioGroupItem value={opt} />
-                        <span className="text-sm font-medium">{opt}</span>
-                      </label>
-                    ))}
-                  </RadioGroup>
-                )}
-              />
-            </Field>
-
-            {/* Event launch date */}
-            <Field
-              label="Event Launch Date"
-              required
-              error={errors.eventLaunchDate?.message}
-            >
-              <Controller
-                control={control}
-                name="eventLaunchDate"
-                render={({ field }) => (
-                  <DatePicker
-                    value={field.value}
-                    onChange={field.onChange}
+              <div className="grid sm:grid-cols-2 gap-4">
+                <Field label="First Name" required error={errors.firstName?.message}>
+                  <Input
+                    {...register("firstName")}
+                    placeholder="Jane"
+                    className={errors.firstName ? "border-destructive" : ""}
                   />
-                )}
-              />
-            </Field>
-          </div>
-
-          {/* ── Cvent Technology ─────────────────────────────────── */}
-          <div className="rounded-xl border border-border bg-card p-6 md:p-8 space-y-6 shadow-card">
-            <h2 className="text-lg font-bold font-display border-b border-border pb-3">
-              Cvent Technology
-            </h2>
-
-            <Field
-              label="What pieces of Cvent technology are you using?"
-              required
-              error={errors.cventTechnologies?.message}
-            >
-              <div className="grid sm:grid-cols-2 gap-3 mt-1">
-                {CVENT_TECHNOLOGIES.map((tech) => (
-                  <label
-                    key={tech}
-                    className={cn(
-                      "flex items-center gap-3 rounded-lg border px-4 py-3 cursor-pointer transition-colors",
-                      watchedTech.includes(tech)
-                        ? "border-primary bg-secondary/50"
-                        : "border-border hover:border-primary/50"
-                    )}
-                  >
-                    <Checkbox
-                      checked={watchedTech.includes(tech)}
-                      onCheckedChange={(checked) => {
-                        const current = watchedTech;
-                        const updated = checked
-                          ? [...current, tech]
-                          : current.filter((t) => t !== tech);
-                        setValue("cventTechnologies", updated, {
-                          shouldValidate: true,
-                        });
-                      }}
-                    />
-                    <span className="text-sm font-medium">{tech}</span>
-                  </label>
-                ))}
+                </Field>
+                <Field label="Last Name" required error={errors.lastName?.message}>
+                  <Input
+                    {...register("lastName")}
+                    placeholder="Smith"
+                    className={errors.lastName ? "border-destructive" : ""}
+                  />
+                </Field>
               </div>
-            </Field>
 
-            {/* "Other" text input */}
-            {watchedTech.includes("Other") && (
-              <Field
-                label="Please specify the other technology"
-                required
-                error={errors.cventTechnologiesOther?.message}
-              >
-                <Input
-                  {...register("cventTechnologiesOther")}
-                  placeholder="e.g. Cvent Surveys, OnArrival..."
-                  className={
-                    errors.cventTechnologiesOther ? "border-destructive" : ""
-                  }
+              <Field label="Business Email" required error={errors.email?.message}>
+                <EmailInput
+                  {...register("email")}
+                  placeholder="jane@company.com"
+                  externalError={errors.email?.message}
+                  onVerificationChange={setEmailVerification}
                 />
               </Field>
-            )}
-          </div>
+            </div>
 
-          {/* ── Scale & Scope ─────────────────────────────────────── */}
-          <div className="rounded-xl border border-border bg-card p-6 md:p-8 space-y-6 shadow-card">
-            <h2 className="text-lg font-bold font-display border-b border-border pb-3">
-              Scale & Scope
-            </h2>
+            <div className="flex justify-end">
+              <Button
+                type="submit"
+                size="lg"
+                disabled={emailVerification === "verifying" || emailVerification === "invalid"}
+                className="shadow-btn"
+              >
+                Next
+              </Button>
+            </div>
+          </form>
+        )}
 
-            {/* Registration types */}
-            <Field
-              label="How many Registration Types?"
-              required
-              error={errors.registrationTypesCount?.message}
-            >
-              <Controller
-                control={control}
-                name="registrationTypesCount"
-                render={({ field }) => (
-                  <RadioGroup
-                    onValueChange={field.onChange}
-                    value={field.value}
-                    className="flex flex-col sm:flex-row gap-3 mt-1"
-                  >
-                    {["0–3", "4–8", "More than 8"].map((opt) => (
-                      <label
-                        key={opt}
-                        className={cn(
-                          "flex items-center gap-3 rounded-lg border px-4 py-3 cursor-pointer transition-colors flex-1",
-                          field.value === opt
-                            ? "border-primary bg-secondary/50"
-                            : "border-border hover:border-primary/50"
-                        )}
-                      >
-                        <RadioGroupItem value={opt} />
-                        <span className="text-sm font-medium">{opt}</span>
-                      </label>
-                    ))}
-                  </RadioGroup>
+        {/* ── Step 2: Services & Comments ──────────────────────── */}
+        {step === 2 && (
+          <div className="space-y-6">
+            <div className="rounded-xl border border-border bg-card p-6 md:p-8 space-y-5 shadow-card">
+              <h2 className="text-lg font-bold font-display border-b border-border pb-3">
+                What can we help you with?
+              </h2>
+
+              <Field
+                label="Select the services you're interested in"
+                required
+                error={step2Error}
+              >
+                <div className="grid sm:grid-cols-2 gap-2.5 mt-1">
+                  {SERVICE_OFFERINGS.map((service) => (
+                    <label
+                      key={service}
+                      className={cn(
+                        "flex items-center gap-3 rounded-lg border px-3.5 py-2.5 cursor-pointer transition-colors text-sm",
+                        selectedServices.includes(service)
+                          ? "border-primary bg-secondary/50"
+                          : "border-border hover:border-primary/50"
+                      )}
+                    >
+                      <Checkbox
+                        checked={selectedServices.includes(service)}
+                        onCheckedChange={() => toggleService(service)}
+                      />
+                      <span className="font-medium leading-tight">{service}</span>
+                    </label>
+                  ))}
+                </div>
+              </Field>
+
+              <Field label="Additional Information" error={undefined}>
+                <Textarea
+                  placeholder="Tell us more about your event or requirements…"
+                  value={additionalInfo}
+                  onChange={(e) => handleInfoChange(e.target.value)}
+                  className="min-h-[80px]"
+                  maxLength={2000}
+                />
+              </Field>
+            </div>
+
+            <div className="flex justify-between gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setStep(1)}
+                className="gap-2"
+              >
+                <ArrowLeft className="w-4 h-4" /> Back
+              </Button>
+              <Button
+                onClick={onFinalSubmit}
+                size="lg"
+                disabled={submitting}
+                className="shadow-btn"
+              >
+                {submitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Submitting…
+                  </>
+                ) : (
+                  "Submit"
                 )}
-              />
-            </Field>
-
-            {/* Sessions count */}
-            <Field
-              label="How many tentative sessions in total?"
-              required
-              error={errors.sessionsCount?.message}
-            >
-              <Controller
-                control={control}
-                name="sessionsCount"
-                render={({ field }) => (
-                  <RadioGroup
-                    onValueChange={field.onChange}
-                    value={field.value}
-                    className="flex flex-col sm:flex-row gap-3 mt-1"
-                  >
-                    {["0–10", "11–20", "More than 21"].map((opt) => (
-                      <label
-                        key={opt}
-                        className={cn(
-                          "flex items-center gap-3 rounded-lg border px-4 py-3 cursor-pointer transition-colors flex-1",
-                          field.value === opt
-                            ? "border-primary bg-secondary/50"
-                            : "border-border hover:border-primary/50"
-                        )}
-                      >
-                        <RadioGroupItem value={opt} />
-                        <span className="text-sm font-medium">{opt}</span>
-                      </label>
-                    ))}
-                  </RadioGroup>
-                )}
-              />
-            </Field>
-
-            {/* Registration options */}
-            <Field
-              label="What registration options will be available to attendees?"
-              required
-              error={errors.registrationOptions?.message}
-            >
-              <div className="flex flex-col sm:flex-row gap-3 mt-1">
-                {REGISTRATION_OPTIONS.map((opt) => (
-                  <label
-                    key={opt}
-                    className={cn(
-                      "flex items-center gap-3 rounded-lg border px-4 py-3 cursor-pointer transition-colors flex-1",
-                      watchedRegOption === opt
-                        ? "border-primary bg-secondary/50"
-                        : "border-border hover:border-primary/50"
-                    )}
-                  >
-                    <input
-                      type="radio"
-                      name="registrationOptions"
-                      value={opt}
-                      checked={watchedRegOption === opt}
-                      onChange={() => setValue("registrationOptions", opt, { shouldValidate: true })}
-                      className="accent-primary w-4 h-4"
-                    />
-                    <span className="text-sm font-medium">{opt}</span>
-                  </label>
-                ))}
-              </div>
-            </Field>
+              </Button>
+            </div>
           </div>
-
-          {/* ── Submit ───────────────────────────────────────────── */}
-          <div className="flex flex-col sm:flex-row gap-3 justify-end">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => window.close()}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" size="lg" disabled={submitting || emailVerification === "verifying" || emailVerification === "invalid"} className="shadow-btn">
-              {submitting ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Submitting…
-                </>
-              ) : (
-                "Submit Quote Request"
-              )}
-            </Button>
-          </div>
-        </form>
+        )}
       </div>
 
       <Footer />

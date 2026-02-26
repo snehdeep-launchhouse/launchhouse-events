@@ -45,6 +45,7 @@ const App = () => (
               <Route path="/pricing" element={<Pricing />} />
               <Route path="/build-request" element={<BuildRequest />} />
               <Route path="/get-a-quote" element={<GetAQuote />} />
+              <Route path="/contact-us" element={<GetAQuote />} />
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />
               <Route path="/terms-of-service" element={<TermsOfService />} />
               <Route path="/admin-report" element={<AdminReport />} />
