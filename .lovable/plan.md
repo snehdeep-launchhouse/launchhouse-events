@@ -1,46 +1,39 @@
+Please discard the previous plan and implement this updated, enterprise-grade architecture for the Auto-Advance and Abandoned Tracking features. 
 
+CRITICAL: Do NOT break any existing functionality (NY Timezone logic, "Slot Booked" scarcity UI, 90-minute lead time, or Google Calendar/Resend booking logic).
 
-## Gaps vs. Requirements
+**1. Progressive Background Capture & Auto-Advance (UX & Lead Capture):**
 
-The feature is already built with mobile responsiveness, `?book-demo=true` trigger, Google Calendar + Meet + Resend integration, and the 3-step flow. The following specific requirements are **not yet implemented**:
+- **Email is King:** Apply this to BOTH the 'Request a Demo' and 'Contact Us' forms. The exact millisecond `emailVerification` transitions to `"valid"`, fire a background API call/Supabase UPSERT to save the email and whatever is currently in the First/Last name fields. Do not wait for them to click Next.
 
-| Requirement | Current State |
-|---|---|
-| Company logo on every step | Missing — only title text |
-| Force NY timezone (America/New_York) with visual indicator | Uses browser's local timezone |
-| "High Demand" scarcity banner above calendar | Missing |
-| Show busy slots as disabled/greyed "Slot Booked" buttons | Busy slots are hidden; only available ones shown |
-| Confirmation screen shows NY time | Shows browser timezone |
-| Edge function uses NY timezone for event creation | Uses client-sent timezone |
+- **Smooth Auto-Advance:** Update the `useEffect`. It should ONLY programmatically trigger `handleSubmit()` to advance to Step 2 if `emailVerification === "valid"` AND the `firstName` and `lastName` fields are strictly non-empty. This prevents premature "Name is required" validation errors if a user types their email first.
 
-### Plan
+**2. Bulletproof Abandoned Form Tracking:**
 
-#### 1. `src/components/RequestDemoPanel.tsx`
-- Import `Logo` component and render it at the top of every step (inside `formContent`, before the step indicator)
-- Hardcode `timezone = "America/New_York"` instead of reading from browser
-- Add visual indicator: `"All times shown in New York Time (ET)"` label near the calendar
-- Add scarcity banner: styled alert above the calendar reading "High Demand: Limited Demo Slots Available"
-- Pass `timezone: "America/New_York"` to `get-demo-availability` and `book-demo`
-- Modify `fetchAvailability` to also request **all** 30-min slots (9:00–17:30) and mark busy ones
-- Update state: change `availableSlots` to an array of `{ time: string; available: boolean }` objects
-- Render busy slots as greyed-out, disabled buttons with "Slot Booked" text; available slots as bright clickable buttons
-- Update confirmation screen to show "ET" instead of browser timezone
-- 90-minute lead time filter: compute cutoff in NY time using date-fns-tz or manual UTC offset
+- **Database Schema:** Create a table named `abandoned_demo_form` with columns: `id`, `session_id` (UUID to track the user's current session for upserts), `first_name`, `last_name`, `email`, `form_type` ('demo' or 'contact'), `last_step_reached`, `status` (default 'partial'), and `updated_at`.
 
-#### 2. `supabase/functions/get-demo-availability/index.ts`
-- Return **both** available and busy slots so the frontend can render them
-- Change response shape to `{ slots: Array<{ time: string; available: boolean }>, date, timezone }`
-- Generate all 30-min slots 09:00–17:30, mark each as available/busy based on FreeBusy response
+- **Strict RLS:** The public role must ONLY have `INSERT` and `UPDATE` (UPSERT) privileges matching their specific `session_id`. Strictly NO public `DELETE` privileges. Do not expose our leads to malicious wiping.
 
-#### 3. `supabase/functions/book-demo/index.ts`
-- Update email template to always display "ET" (New York Time) instead of the client timezone string
-- Format the time label as `formatTime12h(time) + " ET"` in both the confirmation and internal emails
+- **Drawer Close:** If the user closes the drawer `handleOpenChange(false)`), update the database row status to 'abandoned'.
 
-### Files Changed
+- **Tab Close Fallback:** Implement a `window.addEventListener("beforeunload", ...)` hook. If the user closes the browser tab while a form is in progress, use `navigator.sendBeacon()` or a synchronous fetch to update their database row status to 'abandoned' before the browser kills the session.
 
-| File | Change |
-|---|---|
-| `src/components/RequestDemoPanel.tsx` | Add logo, NY timezone, scarcity banner, busy slot UI |
-| `supabase/functions/get-demo-availability/index.ts` | Return both available + busy slots |
-| `supabase/functions/book-demo/index.ts` | Force NY timezone label in emails |
+**3. Secure Admin Notifications (Backend Webhooks):**
 
+- **Security:** Do NOT invoke the `notify-abandoned-form` Edge Function directly from the React frontend, as an open endpoint can be spammed. 
+
+- **Database Trigger:** Configure a Supabase Database Webhook (Trigger). When a row in `abandoned_demo_form` has its status updated to 'abandoned', the Postgres database itself should securely invoke the Edge Function.
+
+- **Email Delivery:** The Edge Function will use our Resend API to send a summary alert (Name, Email, Form Type) to BOTH `snehdeep@launchhouse.events` and `sam@launchhouse.events`.
+
+**4. Admin Dashboard Updates:**
+
+- Update the existing Admin Dashboard UI to fetch and display records from `abandoned_demo_form` (where status is 'abandoned') in a clean table format so our sales team can easily follow up on lost leads.
+
+**5. Strict 30-Minute Meeting Duration (Demo Form Only):**
+
+- Ensure the 'Request a Demo' frontend calendar UI only displays and allows the selection of exact 30-minute time slots.
+
+- In the `book-demo` Edge Function, strictly enforce that the Google Calendar event duration is exactly 30 minutes `end.dateTime` = `start.dateTime` + 30 mins).
+
+- Ensure the generated Google Meet link and the `.ics` calendar file attached to the Resend email also rigidly reflect this exact 30-minute block.
