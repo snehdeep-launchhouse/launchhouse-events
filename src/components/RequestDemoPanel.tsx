@@ -22,6 +22,15 @@ import {
   SheetTitle,
   SheetDescription,
 } from "@/components/ui/sheet";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerDescription,
+  DrawerClose,
+} from "@/components/ui/drawer";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 /* ── Constants ───────────────────────────────────────────────────── */
 const SERVICE_OFFERINGS = [
@@ -74,6 +83,7 @@ interface RequestDemoPanelProps {
 }
 
 const RequestDemoPanel = ({ open, onOpenChange }: RequestDemoPanelProps) => {
+  const isMobile = useIsMobile();
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -275,7 +285,359 @@ const RequestDemoPanel = ({ open, onOpenChange }: RequestDemoPanelProps) => {
     }
   };
 
-  /* ── Render ─────────────────────────────────────────────────── */
+  /* ── Form content (shared between Sheet & Drawer) ──────────── */
+  const formContent = (
+    <div className="px-6 py-5">
+      {/* ── Confirmation ──────────────────────────────────── */}
+      {submitted && confirmationData ? (
+        <div className="text-center space-y-6">
+          <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
+            <CheckCircle2 className="w-8 h-8 text-green-600" />
+          </div>
+          <div>
+            <h3 className="text-lg font-bold font-display mb-2">Demo Confirmed!</h3>
+            <p className="text-sm text-muted-foreground">
+              Your demo has been scheduled. A confirmation email has been sent.
+            </p>
+          </div>
+
+          <div className="rounded-xl border border-border bg-card p-5 space-y-3 text-left shadow-card">
+            <div className="flex items-center gap-2 text-sm">
+              <CalendarDays className="w-4 h-4 text-primary" />
+              <span className="font-medium">{confirmationData.date}</span>
+            </div>
+            <div className="flex items-center gap-2 text-sm">
+              <span className="w-4 h-4 flex items-center justify-center text-primary font-bold text-xs">⏰</span>
+              <span className="font-medium">{formatTime12h(confirmationData.time)} ({Intl.DateTimeFormat().resolvedOptions().timeZone})</span>
+            </div>
+            <div className="flex items-center gap-2 text-sm">
+              <span className="font-medium text-muted-foreground">Products:</span>
+              <span>{selectedProducts.join(", ")}</span>
+            </div>
+            {additionalAttendees.length > 0 && (
+              <div className="text-sm">
+                <span className="font-medium text-muted-foreground">Attendees:</span>
+                <span className="ml-2">{additionalAttendees.join(", ")}</span>
+              </div>
+            )}
+          </div>
+
+          <div className="flex flex-col gap-3">
+            {confirmationData.meetLink && (
+              <a
+                href={confirmationData.meetLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-2 rounded-md bg-primary text-primary-foreground px-4 py-2.5 text-sm font-medium hover:bg-primary/90 transition-colors"
+              >
+                <Video className="w-4 h-4" />
+                Join Google Meet
+              </a>
+            )}
+            {confirmationData.eventLink && (
+              <a
+                href={confirmationData.eventLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-2 rounded-md border border-border bg-card px-4 py-2.5 text-sm font-medium hover:bg-accent transition-colors"
+              >
+                <ExternalLink className="w-4 h-4" />
+                View in Google Calendar
+              </a>
+            )}
+          </div>
+
+          <Button
+            onClick={() => handleOpenChange(false)}
+            variant="outline"
+            className="w-full"
+          >
+            Close
+          </Button>
+        </div>
+      ) : (
+        <>
+          {/* Step indicator */}
+          <div className="flex items-center justify-center gap-3 mb-6">
+            {[1, 2, 3].map((s, i) => (
+              <div key={s} className="flex items-center gap-3">
+                <div
+                  className={cn(
+                    "w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-colors",
+                    step === s
+                      ? "bg-primary text-primary-foreground"
+                      : step > s
+                      ? "bg-primary/20 text-primary"
+                      : "bg-muted text-muted-foreground"
+                  )}
+                >
+                  {step > s ? "✓" : s}
+                </div>
+                {i < 2 && <div className="w-8 h-0.5 bg-border" />}
+              </div>
+            ))}
+          </div>
+
+          {/* ── Step 1 ─────────────────────────────────────── */}
+          {step === 1 && (
+            <form onSubmit={handleSubmit(onStep1Submit)} className="space-y-5">
+              <div className="rounded-xl border border-border bg-card p-5 space-y-4 shadow-card">
+                <h2 className="text-base font-bold font-display border-b border-border pb-2">
+                  Your Information
+                </h2>
+                <div className="grid sm:grid-cols-2 gap-3">
+                  <Field label="First Name" required error={errors.firstName?.message}>
+                    <Input
+                      {...register("firstName")}
+                      placeholder="Jane"
+                      className={cn("text-base md:text-sm", errors.firstName ? "border-destructive" : "")}
+                    />
+                  </Field>
+                  <Field label="Last Name" required error={errors.lastName?.message}>
+                    <Input
+                      {...register("lastName")}
+                      placeholder="Smith"
+                      className={cn("text-base md:text-sm", errors.lastName ? "border-destructive" : "")}
+                    />
+                  </Field>
+                </div>
+                <Field label="Business Email" required error={errors.email?.message}>
+                  <EmailInput
+                    {...register("email")}
+                    placeholder="jane@company.com"
+                    externalError={errors.email?.message}
+                    onVerificationChange={setEmailVerification}
+                    className="text-base md:text-sm"
+                  />
+                </Field>
+              </div>
+              <div className="flex justify-end">
+                <Button
+                  type="submit"
+                  disabled={
+                    emailVerification === "verifying" ||
+                    emailVerification === "invalid"
+                  }
+                  className="shadow-btn min-h-[44px]"
+                >
+                  Next
+                </Button>
+              </div>
+            </form>
+          )}
+
+          {/* ── Step 2 ─────────────────────────────────────── */}
+          {step === 2 && (
+            <div className="space-y-5">
+              <div className="rounded-xl border border-border bg-card p-5 space-y-4 shadow-card">
+                <h2 className="text-base font-bold font-display border-b border-border pb-2">
+                  What would you like a demo of?
+                </h2>
+                <Field
+                  label="Select the products you're interested in"
+                  required
+                  error={step2Error}
+                >
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1">
+                    {SERVICE_OFFERINGS.map((product) => (
+                      <label
+                        key={product}
+                        className={cn(
+                          "flex items-center gap-2.5 rounded-lg border px-3 py-2 cursor-pointer transition-colors text-sm min-h-[44px]",
+                          selectedProducts.includes(product)
+                            ? "border-primary bg-secondary/50"
+                            : "border-border hover:border-primary/50"
+                        )}
+                      >
+                        <Checkbox
+                          checked={selectedProducts.includes(product)}
+                          onCheckedChange={() => toggleProduct(product)}
+                        />
+                        <span className="font-medium leading-tight">
+                          {product}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </Field>
+              </div>
+              <div className="flex flex-col-reverse sm:flex-row justify-between gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setStep(1)}
+                  className="gap-2 min-h-[44px]"
+                >
+                  <ArrowLeft className="w-4 h-4" /> Back
+                </Button>
+                <Button onClick={onStep2Next} className="shadow-btn min-h-[44px]">
+                  Next
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* ── Step 3 ─────────────────────────────────────── */}
+          {step === 3 && (
+            <div className="space-y-5">
+              <div className="rounded-xl border border-border bg-card p-5 space-y-4 shadow-card">
+                <h2 className="text-base font-bold font-display border-b border-border pb-2">
+                  Pick a Date & Time
+                </h2>
+
+                <div className="flex justify-center w-full max-w-[calc(100vw-3rem)] mx-auto">
+                  <Calendar
+                    mode="single"
+                    selected={selectedDate}
+                    onSelect={handleDateSelect}
+                    disabled={(date) => {
+                      const today = new Date();
+                      today.setHours(0, 0, 0, 0);
+                      return date < today || date.getDay() === 0 || date.getDay() === 6;
+                    }}
+                    className="p-3 pointer-events-auto"
+                  />
+                </div>
+
+                {selectedDate && (
+                  <div className="space-y-3">
+                    <Label className="text-sm font-semibold">
+                      Available Times — {format(selectedDate, "MMM d, yyyy")}
+                    </Label>
+
+                    {loadingSlots ? (
+                      <div className="flex items-center justify-center py-6">
+                        <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+                        <span className="ml-2 text-sm text-muted-foreground">Loading available slots…</span>
+                      </div>
+                    ) : availableSlots.length === 0 ? (
+                      <p className="text-sm text-muted-foreground py-4 text-center">
+                        No available slots for this date. Please try another day.
+                      </p>
+                    ) : (
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        {availableSlots.map((slot) => (
+                          <button
+                            key={slot}
+                            type="button"
+                            onClick={() => setSelectedTime(slot)}
+                            className={cn(
+                              "rounded-lg border px-3 py-2 text-sm font-medium transition-colors min-h-[44px] min-w-[44px]",
+                              selectedTime === slot
+                                ? "border-primary bg-primary text-primary-foreground"
+                                : "border-border hover:border-primary/50 hover:bg-secondary/30"
+                            )}
+                          >
+                            {formatTime12h(slot)}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Additional Attendees */}
+              <div className="rounded-xl border border-border bg-card p-5 space-y-3 shadow-card">
+                <h2 className="text-base font-bold font-display border-b border-border pb-2">
+                  Additional Attendees <span className="text-muted-foreground font-normal text-sm">(Optional)</span>
+                </h2>
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="colleague@company.com"
+                    value={attendeeInput}
+                    onChange={(e) => {
+                      setAttendeeInput(e.target.value);
+                      setAttendeeError("");
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        addAttendee();
+                      }
+                    }}
+                    className="flex-1 text-base md:text-sm"
+                  />
+                  <Button type="button" size="sm" variant="outline" onClick={addAttendee} className="min-h-[44px] min-w-[44px]">
+                    <Plus className="w-4 h-4" />
+                  </Button>
+                </div>
+                {attendeeError && <p className="text-xs text-destructive">{attendeeError}</p>}
+                {additionalAttendees.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {additionalAttendees.map((email) => (
+                      <span
+                        key={email}
+                        className="inline-flex items-center gap-1 rounded-full bg-secondary px-3 py-1 text-xs font-medium"
+                      >
+                        {email}
+                        <button
+                          type="button"
+                          onClick={() => removeAttendee(email)}
+                          className="hover:text-destructive transition-colors"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="flex flex-col-reverse sm:flex-row justify-between gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setStep(2)}
+                  className="gap-2 min-h-[44px]"
+                >
+                  <ArrowLeft className="w-4 h-4" /> Back
+                </Button>
+                <Button
+                  onClick={onConfirmBooking}
+                  disabled={submitting || !selectedDate || !selectedTime}
+                  className="shadow-btn min-h-[44px]"
+                >
+                  {submitting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Booking…
+                    </>
+                  ) : (
+                    "Confirm Booking"
+                  )}
+                </Button>
+              </div>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+
+  /* ── Render: Drawer on mobile, Sheet on desktop ────────────── */
+  if (isMobile) {
+    return (
+      <Drawer open={open} onOpenChange={handleOpenChange}>
+        <DrawerContent className="max-h-[95vh] flex flex-col">
+          <DrawerHeader className="px-6 pt-4 pb-3 border-b border-border flex-shrink-0 relative">
+            <DrawerTitle className="text-xl font-bold font-display">Request a Demo</DrawerTitle>
+            <DrawerDescription className="text-sm text-muted-foreground">
+              Schedule a personalized demo with our team
+            </DrawerDescription>
+            <DrawerClose className="absolute right-4 top-4 rounded-full bg-muted p-2 hover:bg-muted/80 transition-colors">
+              <X className="w-5 h-5" />
+              <span className="sr-only">Close</span>
+            </DrawerClose>
+          </DrawerHeader>
+          <ScrollArea className="flex-1 overflow-y-auto">
+            {formContent}
+          </ScrollArea>
+        </DrawerContent>
+      </Drawer>
+    );
+  }
+
   return (
     <Sheet open={open} onOpenChange={handleOpenChange}>
       <SheetContent
@@ -290,331 +652,7 @@ const RequestDemoPanel = ({ open, onOpenChange }: RequestDemoPanelProps) => {
         </SheetHeader>
 
         <ScrollArea className="flex-1">
-          <div className="px-6 py-5">
-            {/* ── Confirmation ──────────────────────────────────── */}
-            {submitted && confirmationData ? (
-              <div className="text-center space-y-6">
-                <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
-                  <CheckCircle2 className="w-8 h-8 text-green-600" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold font-display mb-2">Demo Confirmed!</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Your demo has been scheduled. A confirmation email has been sent.
-                  </p>
-                </div>
-
-                <div className="rounded-xl border border-border bg-card p-5 space-y-3 text-left shadow-card">
-                  <div className="flex items-center gap-2 text-sm">
-                    <CalendarDays className="w-4 h-4 text-primary" />
-                    <span className="font-medium">{confirmationData.date}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <span className="w-4 h-4 flex items-center justify-center text-primary font-bold text-xs">⏰</span>
-                    <span className="font-medium">{formatTime12h(confirmationData.time)} ({Intl.DateTimeFormat().resolvedOptions().timeZone})</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <span className="font-medium text-muted-foreground">Products:</span>
-                    <span>{selectedProducts.join(", ")}</span>
-                  </div>
-                  {additionalAttendees.length > 0 && (
-                    <div className="text-sm">
-                      <span className="font-medium text-muted-foreground">Attendees:</span>
-                      <span className="ml-2">{additionalAttendees.join(", ")}</span>
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex flex-col gap-3">
-                  {confirmationData.meetLink && (
-                    <a
-                      href={confirmationData.meetLink}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center justify-center gap-2 rounded-md bg-primary text-primary-foreground px-4 py-2.5 text-sm font-medium hover:bg-primary/90 transition-colors"
-                    >
-                      <Video className="w-4 h-4" />
-                      Join Google Meet
-                    </a>
-                  )}
-                  {confirmationData.eventLink && (
-                    <a
-                      href={confirmationData.eventLink}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center justify-center gap-2 rounded-md border border-border bg-card px-4 py-2.5 text-sm font-medium hover:bg-accent transition-colors"
-                    >
-                      <ExternalLink className="w-4 h-4" />
-                      View in Google Calendar
-                    </a>
-                  )}
-                </div>
-
-                <Button
-                  onClick={() => handleOpenChange(false)}
-                  variant="outline"
-                  className="w-full"
-                >
-                  Close
-                </Button>
-              </div>
-            ) : (
-              <>
-                {/* Step indicator */}
-                <div className="flex items-center justify-center gap-3 mb-6">
-                  {[1, 2, 3].map((s, i) => (
-                    <div key={s} className="flex items-center gap-3">
-                      <div
-                        className={cn(
-                          "w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-colors",
-                          step === s
-                            ? "bg-primary text-primary-foreground"
-                            : step > s
-                            ? "bg-primary/20 text-primary"
-                            : "bg-muted text-muted-foreground"
-                        )}
-                      >
-                        {step > s ? "✓" : s}
-                      </div>
-                      {i < 2 && <div className="w-8 h-0.5 bg-border" />}
-                    </div>
-                  ))}
-                </div>
-
-                {/* ── Step 1 ─────────────────────────────────────── */}
-                {step === 1 && (
-                  <form onSubmit={handleSubmit(onStep1Submit)} className="space-y-5">
-                    <div className="rounded-xl border border-border bg-card p-5 space-y-4 shadow-card">
-                      <h2 className="text-base font-bold font-display border-b border-border pb-2">
-                        Your Information
-                      </h2>
-                      <div className="grid sm:grid-cols-2 gap-3">
-                        <Field label="First Name" required error={errors.firstName?.message}>
-                          <Input
-                            {...register("firstName")}
-                            placeholder="Jane"
-                            className={errors.firstName ? "border-destructive" : ""}
-                          />
-                        </Field>
-                        <Field label="Last Name" required error={errors.lastName?.message}>
-                          <Input
-                            {...register("lastName")}
-                            placeholder="Smith"
-                            className={errors.lastName ? "border-destructive" : ""}
-                          />
-                        </Field>
-                      </div>
-                      <Field label="Business Email" required error={errors.email?.message}>
-                        <EmailInput
-                          {...register("email")}
-                          placeholder="jane@company.com"
-                          externalError={errors.email?.message}
-                          onVerificationChange={setEmailVerification}
-                        />
-                      </Field>
-                    </div>
-                    <div className="flex justify-end">
-                      <Button
-                        type="submit"
-                        disabled={
-                          emailVerification === "verifying" ||
-                          emailVerification === "invalid"
-                        }
-                        className="shadow-btn"
-                      >
-                        Next
-                      </Button>
-                    </div>
-                  </form>
-                )}
-
-                {/* ── Step 2 ─────────────────────────────────────── */}
-                {step === 2 && (
-                  <div className="space-y-5">
-                    <div className="rounded-xl border border-border bg-card p-5 space-y-4 shadow-card">
-                      <h2 className="text-base font-bold font-display border-b border-border pb-2">
-                        What would you like a demo of?
-                      </h2>
-                      <Field
-                        label="Select the products you're interested in"
-                        required
-                        error={step2Error}
-                      >
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1">
-                          {SERVICE_OFFERINGS.map((product) => (
-                            <label
-                              key={product}
-                              className={cn(
-                                "flex items-center gap-2.5 rounded-lg border px-3 py-2 cursor-pointer transition-colors text-sm",
-                                selectedProducts.includes(product)
-                                  ? "border-primary bg-secondary/50"
-                                  : "border-border hover:border-primary/50"
-                              )}
-                            >
-                              <Checkbox
-                                checked={selectedProducts.includes(product)}
-                                onCheckedChange={() => toggleProduct(product)}
-                              />
-                              <span className="font-medium leading-tight">
-                                {product}
-                              </span>
-                            </label>
-                          ))}
-                        </div>
-                      </Field>
-                    </div>
-                    <div className="flex flex-col-reverse sm:flex-row justify-between gap-3">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => setStep(1)}
-                        className="gap-2"
-                      >
-                        <ArrowLeft className="w-4 h-4" /> Back
-                      </Button>
-                      <Button onClick={onStep2Next} className="shadow-btn">
-                        Next
-                      </Button>
-                    </div>
-                  </div>
-                )}
-
-                {/* ── Step 3 ─────────────────────────────────────── */}
-                {step === 3 && (
-                  <div className="space-y-5">
-                    <div className="rounded-xl border border-border bg-card p-5 space-y-4 shadow-card">
-                      <h2 className="text-base font-bold font-display border-b border-border pb-2">
-                        Pick a Date & Time
-                      </h2>
-
-                      <div className="flex justify-center">
-                        <Calendar
-                          mode="single"
-                          selected={selectedDate}
-                          onSelect={handleDateSelect}
-                          disabled={(date) => {
-                            const today = new Date();
-                            today.setHours(0, 0, 0, 0);
-                            return date < today || date.getDay() === 0 || date.getDay() === 6;
-                          }}
-                          className="p-3 pointer-events-auto"
-                        />
-                      </div>
-
-                      {selectedDate && (
-                        <div className="space-y-3">
-                          <Label className="text-sm font-semibold">
-                            Available Times — {format(selectedDate, "MMM d, yyyy")}
-                          </Label>
-
-                          {loadingSlots ? (
-                            <div className="flex items-center justify-center py-6">
-                              <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
-                              <span className="ml-2 text-sm text-muted-foreground">Loading available slots…</span>
-                            </div>
-                          ) : availableSlots.length === 0 ? (
-                            <p className="text-sm text-muted-foreground py-4 text-center">
-                              No available slots for this date. Please try another day.
-                            </p>
-                          ) : (
-                            <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                              {availableSlots.map((slot) => (
-                                <button
-                                  key={slot}
-                                  type="button"
-                                  onClick={() => setSelectedTime(slot)}
-                                  className={cn(
-                                    "rounded-lg border px-3 py-2 text-sm font-medium transition-colors",
-                                    selectedTime === slot
-                                      ? "border-primary bg-primary text-primary-foreground"
-                                      : "border-border hover:border-primary/50 hover:bg-secondary/30"
-                                  )}
-                                >
-                                  {formatTime12h(slot)}
-                                </button>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Additional Attendees */}
-                    <div className="rounded-xl border border-border bg-card p-5 space-y-3 shadow-card">
-                      <h2 className="text-base font-bold font-display border-b border-border pb-2">
-                        Additional Attendees <span className="text-muted-foreground font-normal text-sm">(Optional)</span>
-                      </h2>
-                      <div className="flex gap-2">
-                        <Input
-                          placeholder="colleague@company.com"
-                          value={attendeeInput}
-                          onChange={(e) => {
-                            setAttendeeInput(e.target.value);
-                            setAttendeeError("");
-                          }}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                              e.preventDefault();
-                              addAttendee();
-                            }
-                          }}
-                          className="flex-1"
-                        />
-                        <Button type="button" size="sm" variant="outline" onClick={addAttendee}>
-                          <Plus className="w-4 h-4" />
-                        </Button>
-                      </div>
-                      {attendeeError && <p className="text-xs text-destructive">{attendeeError}</p>}
-                      {additionalAttendees.length > 0 && (
-                        <div className="flex flex-wrap gap-2">
-                          {additionalAttendees.map((email) => (
-                            <span
-                              key={email}
-                              className="inline-flex items-center gap-1 rounded-full bg-secondary px-3 py-1 text-xs font-medium"
-                            >
-                              {email}
-                              <button
-                                type="button"
-                                onClick={() => removeAttendee(email)}
-                                className="hover:text-destructive transition-colors"
-                              >
-                                <X className="w-3 h-3" />
-                              </button>
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="flex flex-col-reverse sm:flex-row justify-between gap-3">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => setStep(2)}
-                        className="gap-2"
-                      >
-                        <ArrowLeft className="w-4 h-4" /> Back
-                      </Button>
-                      <Button
-                        onClick={onConfirmBooking}
-                        disabled={submitting || !selectedDate || !selectedTime}
-                        className="shadow-btn"
-                      >
-                        {submitting ? (
-                          <>
-                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                            Booking…
-                          </>
-                        ) : (
-                          "Confirm Booking"
-                        )}
-                      </Button>
-                    </div>
-                  </div>
-                )}
-              </>
-            )}
-          </div>
+          {formContent}
         </ScrollArea>
       </SheetContent>
     </Sheet>
