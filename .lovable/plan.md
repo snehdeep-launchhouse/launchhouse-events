@@ -1,45 +1,116 @@
+## Request a Demo Feature
+
+Core Instruction: do not disrupt any existing feature 
+
+### Overview
+
+Add a 3-step "Request a Demo" sliding panel with Google Calendar integration for scheduling and automated confirmation emails via Resend.
+
+### 1. Secret: `GOOGLE_CALENDAR_ID`
+
+Prompt user to add the `GOOGLE_CALENDAR_ID` secret before proceeding.
+
+### 2. Database: `demo_requests` table
+
+```sql
+CREATE TABLE public.demo_requests (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  first_name text NOT NULL,
+  last_name text NOT NULL,
+  business_email text NOT NULL,
+  selected_products text[] NOT NULL DEFAULT '{}',
+  scheduled_date date NOT NULL,
+  scheduled_time text NOT NULL,
+  additional_attendees text[] DEFAULT '{}',
+  google_event_id text,
+  google_meet_link text,
+  google_event_link text,
+  status text NOT NULL DEFAULT 'confirmed',
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
+ALTER TABLE public.demo_requests ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Allow public insert" ON public.demo_requests
+  FOR INSERT WITH CHECK (true);
+
+CREATE POLICY "Admins can view" ON public.demo_requests
+  FOR SELECT USING (
+    auth.uid() IN (SELECT id FROM admin_users WHERE status = 'active')
+  );
+```
+
+### 3. Edge Function: `book-demo`
+
+New function at `supabase/functions/book-demo/index.ts`:
+
+- Receives: `firstName`, `lastName`, `email`, `products`, `date`, `time`, `timezone`, `additionalAttendees[]`
+- **Google Calendar API flow:**
+  - Build JWT from `GOOGLE_SERVICE_ACCOUNT_KEY` secret
+  - Exchange for access token via Google OAuth
+  - Call `GET /calendars/{GOOGLE_CALENDAR_ID}/freeBusy` for availability validation
+  - Call `POST /calendars/{GOOGLE_CALENDAR_ID}/events?conferenceDataVersion=1` with:
+    - Summary: "LaunchHouse Events Demo — {Product(s)}"
+    - Attendees: main user + additional attendees
+    - `conferenceData.createRequest` to auto-generate Google Meet link
+  - Extract `hangoutLink` and `htmlLink` from response
+- **Insert into `demo_requests**` with event details
+- **Send confirmation email via Resend** to user + all attendees with: product, date/time, Meet link, event link for rescheduling
+- Config: `verify_jwt = false` in config.toml
+
+### 4. Edge Function: `get-demo-availability`
+
+New function at `supabase/functions/get-demo-availability/index.ts`:
+
+- Receives: `date` (ISO date string), `timezone`
+- Queries Google Calendar FreeBusy API for the given date
+- Returns available 30-minute slots between 9 AM–6 PM (calendar owner's working hours)
+- Frontend applies 90-minute lead-time filter client-side based on user's local time
+
+### 5. New Component: `src/components/RequestDemoPanel.tsx`
+
+Sheet-based sliding panel (same pattern as `ContactUsPanel`), 3 steps:
+
+- **Step 1 — User Details:** First Name, Last Name, Business Email with existing `EmailInput` + domain verification. "Next" disabled until email verified.
+- **Step 2 — Product Selection:** Reuses exact `SERVICE_OFFERINGS` array from ContactUsPanel. Multi-select checkboxes in 2-column grid. At least one required.
+- **Step 3 — Schedule:** 
+  - Calendar component (react-day-picker) for date selection, min date = today
+  - On date select, fetch available slots from `get-demo-availability`
+  - Display time slots as selectable chips, filtered to exclude anything < 90 min from now
+  - "Additional Attendees" section: input field + "Add" button to collect extra email addresses (validated with regex)
+  - "Confirm Booking" button submits to `book-demo` edge function
+- **Confirmation screen:** Shows confirmed date/time, Google Meet link, event link, and lists attendees
+
+### 6. `src/components/DemoPanelProvider.tsx`
+
+Same pattern as `ContactPanelProvider`: context with `openDemoPanel()`, renders `<RequestDemoPanel />` once at provider level.
+
+### 7. `src/components/ContactPanelProvider.tsx`
+
+Merge both providers into one file or wrap `DemoPanelProvider` alongside. Simplest: add `openDemoPanel` to the existing provider context, render both panels.
+
+### 8. `src/components/Navbar.tsx`
+
+- Add "Request a Demo" button next to "Contact Us" on desktop (solid primary variant, visually highlighted)
+- "Contact Us" becomes `variant="outline"` to make "Request a Demo" stand out
+- Mobile menu: add "Request a Demo" button above "Contact Us"
+- Both call `openDemoPanel()` from context
+
+### 9. `src/App.tsx`
+
+- Listen for `?book-demo=true` URL parameter at the app level
+- When detected, trigger `openDemoPanel()` on mount, then remove the param from URL
+
+### Files Changed
 
 
-## Mobile Consistency Fixes
-
-After reviewing the codebase, I found these issues where mobile doesn't match the updated desktop experience:
-
-### Issues Found
-
-1. **HeroSection "Talk to Us" button** — Still calls `scrollTo("#contact")`, but `ContactSection` was removed from the homepage. This button does nothing on mobile or desktop. It needs to open the Contact Us panel instead.
-
-2. **Navbar mobile layout** — The "Contact Us" button and hamburger icon sit side-by-side in the top bar, which can feel cramped on narrow screens (< 375px). The mobile menu already has a full-width "Contact Us" button inside it, so the top-bar button is redundant on mobile.
-
-3. **Footer "Contact" link** — Points to `mailto:snehdeep@launchhouse.events`. This is fine functionally but could be updated to be consistent with the new contact flow (minor).
-
-### Changes
-
-#### 1. `src/components/HeroSection.tsx`
-- Remove the `scrollTo` function and `#contact` reference.
-- Accept an `onContactClick` prop (callback) to open the contact panel.
-- The "Talk to Us" button calls `onContactClick()` instead of scrolling.
-
-#### 2. `src/pages/Index.tsx`
-- Lift `contactOpen` state up to `Index` (or pass it through).
-- Actually, since `Navbar` already owns the `ContactUsPanel`, the simplest approach: make `HeroSection` also trigger the panel via a shared mechanism.
-- **Approach:** Move `contactOpen` state and `<ContactUsPanel />` rendering from `Navbar` into a shared context, OR simply have `HeroSection` dispatch a custom event that `Navbar` listens to. The cleanest option: move the panel state to `Index` and pass callbacks down to both `Navbar` and `HeroSection`.
-
-**Revised approach (simpler):** Create a tiny context `ContactPanelContext` that provides `openContactPanel()`. Wrap the app (or just the layout) with it. Both `Navbar` and `HeroSection` consume it. This avoids prop-drilling across pages.
-
-#### 3. `src/components/Navbar.tsx`
-- Hide the top-bar "Contact Us" button on mobile (`hidden md:inline-flex` — it's already partially there but line 61 shows a second button for mobile). Remove the duplicate mobile button from the top bar since it's already in the mobile dropdown menu.
-
-#### 4. `src/components/ContactPanelProvider.tsx` (new)
-- Creates a React context with `openContactPanel` function and `contactOpen` state.
-- Renders `<ContactUsPanel />` once at the provider level.
-- Consumed by `Navbar` and `HeroSection`.
-
-### Files
-
-| File | Change |
-|------|--------|
-| `src/components/ContactPanelProvider.tsx` | New — context provider for contact panel state |
-| `src/components/HeroSection.tsx` | Use context to open panel instead of scrolling to removed section |
-| `src/components/Navbar.tsx` | Use context instead of local state; remove duplicate mobile button from top bar |
-| `src/App.tsx` | Wrap routes with `ContactPanelProvider` |
-
+| File                                                | Change                                                                  |
+| --------------------------------------------------- | ----------------------------------------------------------------------- |
+| Database migration                                  | Create `demo_requests` table with RLS                                   |
+| `supabase/config.toml`                              | Add `book-demo` and `get-demo-availability` function entries            |
+| `supabase/functions/get-demo-availability/index.ts` | New — fetch Google Calendar free/busy slots                             |
+| `supabase/functions/book-demo/index.ts`             | New — create Google Calendar event + send Resend confirmation emails    |
+| `src/components/RequestDemoPanel.tsx`               | New — 3-step Sheet form with calendar scheduling                        |
+| `src/components/ContactPanelProvider.tsx`           | Add `openDemoPanel` to context, render both panels                      |
+| `src/components/Navbar.tsx`                         | Add highlighted "Request a Demo" button, demote "Contact Us" to outline |
+| `src/App.tsx`                                       | Handle `?book-demo=true` URL param to auto-open demo panel              |
