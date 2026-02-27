@@ -22,6 +22,7 @@ async function getGoogleAccessToken(serviceAccountJson: string, scopes: string):
     new TextEncoder().encode(
       JSON.stringify({
         iss: sa.client_email,
+        sub: "snehdeep@launchhouse.events",
         scope: scopes,
         aud: "https://oauth2.googleapis.com/token",
         iat: now,
@@ -168,9 +169,10 @@ serve(async (req) => {
       description += `\n\nAdditional Attendees:\n${extraAttendees.filter(a => a && a !== email).join("\n")}`;
     }
 
-    // Create Google Calendar event (NO attendees, NO conferenceData to avoid service account errors)
+    // Create Google Calendar event with Domain-Wide Delegation (attendees + Meet link)
+    const allAttendees = [email, ...extraAttendees.filter(a => a && a !== email)];
     const eventRes = await fetch(
-      `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events`,
+      `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?conferenceDataVersion=1`,
       {
         method: "POST",
         headers: {
@@ -182,6 +184,13 @@ serve(async (req) => {
           description,
           start: { dateTime: startDateTime, timeZone: timezone },
           end: { dateTime: endDateTime, timeZone: timezone },
+          attendees: allAttendees.map(e => ({ email: e })),
+          conferenceData: {
+            createRequest: {
+              requestId: crypto.randomUUID(),
+              conferenceSolutionKey: { type: "hangoutsMeet" },
+            },
+          },
           reminders: { useDefault: true },
         }),
       }
