@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -88,22 +88,114 @@ const ContactUsPanel = ({ open, onOpenChange }: ContactUsPanelProps) => {
   const [additionalInfo, setAdditionalInfo] = useState("");
   const [step2Error, setStep2Error] = useState("");
 
+  // Abandoned contact tracking (existing)
   const abandonedIdRef = useRef<string | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Abandoned demo form tracking (new unified table)
+  const sessionIdRef = useRef<string>(crypto.randomUUID());
+  const abandonedDemoRowCreatedRef = useRef(false);
+  const step1DataRef = useRef<Step1Data | null>(null);
+  const stepRef = useRef<number>(1);
+  const submittedRef = useRef(false);
 
   const {
     register,
     handleSubmit,
     formState: { errors },
     reset: resetForm,
+    getValues,
   } = useForm<Step1Data>({
     resolver: zodResolver(step1Schema),
     defaultValues: { firstName: "", lastName: "", email: "" },
   });
 
+  // Keep refs in sync
+  useEffect(() => { step1DataRef.current = step1Data; }, [step1Data]);
+  useEffect(() => { stepRef.current = step; }, [step]);
+  useEffect(() => { submittedRef.current = submitted; }, [submitted]);
+
+  /* ── Abandoned demo form upsert ──────────────────────────────── */
+  const upsertAbandonedDemo = useCallback(async (data: { first_name: string; last_name: string; email: string; last_step_reached: number; status?: string }) => {
+    try {
+      if (abandonedDemoRowCreatedRef.current) {
+        await supabase
+          .from("abandoned_demo_form" as any)
+          .update({
+            first_name: data.first_name,
+            last_name: data.last_name,
+            email: data.email,
+            last_step_reached: data.last_step_reached,
+            form_type: "contact",
+            status: data.status || "partial",
+            updated_at: new Date().toISOString(),
+          } as any)
+          .eq("session_id", sessionIdRef.current);
+      } else {
+        await supabase
+          .from("abandoned_demo_form" as any)
+          .insert({
+            session_id: sessionIdRef.current,
+            first_name: data.first_name,
+            last_name: data.last_name,
+            email: data.email,
+            last_step_reached: data.last_step_reached,
+            form_type: "contact",
+            status: data.status || "partial",
+          } as any);
+        abandonedDemoRowCreatedRef.current = true;
+      }
+    } catch { /* silent */ }
+  }, []);
+
+  /* ── Auto-advance: when email is valid AND names filled ─────── */
+  useEffect(() => {
+    if (emailVerification === "valid" && step === 1) {
+      const values = getValues();
+      // Background capture immediately
+      upsertAbandonedDemo({
+        first_name: values.firstName?.trim() || "",
+        last_name: values.lastName?.trim() || "",
+        email: values.email?.trim() || "",
+        last_step_reached: 1,
+      });
+      // Only auto-advance if names are non-empty
+      if (values.firstName?.trim() && values.lastName?.trim()) {
+        handleSubmit(onStep1Submit)();
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [emailVerification]);
+
+  /* ── beforeunload: mark abandoned on tab close ─────────────── */
+  useEffect(() => {
+    const handler = () => {
+      if (step1DataRef.current && !submittedRef.current && abandonedDemoRowCreatedRef.current) {
+        const url = `${import.meta.env.VITE_SUPABASE_URL}/rest/v1/abandoned_demo_form?session_id=eq.${sessionIdRef.current}`;
+        const body = JSON.stringify({ status: "abandoned", updated_at: new Date().toISOString() });
+        navigator.sendBeacon(
+          url,
+          new Blob([body], { type: "application/json" })
+        );
+      }
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, []);
+
   /* Reset everything when panel closes */
   const handleOpenChange = (val: boolean) => {
     if (!val) {
+      // Mark as abandoned if step1 data exists and not submitted
+      if (step1DataRef.current && !submittedRef.current && abandonedDemoRowCreatedRef.current) {
+        upsertAbandonedDemo({
+          first_name: step1DataRef.current.firstName,
+          last_name: step1DataRef.current.lastName,
+          email: step1DataRef.current.email,
+          last_step_reached: stepRef.current,
+          status: "abandoned",
+        });
+      }
       // Allow close animation before resetting
       setTimeout(() => {
         setStep(1);
@@ -115,13 +207,16 @@ const ContactUsPanel = ({ open, onOpenChange }: ContactUsPanelProps) => {
         setStep1Data(null);
         setEmailVerification("idle");
         abandonedIdRef.current = null;
+        // Reset session for next open
+        sessionIdRef.current = crypto.randomUUID();
+        abandonedDemoRowCreatedRef.current = false;
         resetForm();
       }, 300);
     }
     onOpenChange(val);
   };
 
-  /* ── Abandoned tracking ──────────────────────────────────────── */
+  /* ── Abandoned tracking (existing contact requests table) ──── */
   const upsertAbandoned = useCallback(
     async (data: {
       first_name: string;
@@ -195,6 +290,13 @@ const ContactUsPanel = ({ open, onOpenChange }: ContactUsPanelProps) => {
       business_email: data.email,
       last_active_step: 1,
     });
+    // Also update the unified abandoned demo form
+    upsertAbandonedDemo({
+      first_name: data.firstName,
+      last_name: data.lastName,
+      email: data.email,
+      last_step_reached: 2,
+    });
   };
 
   const trackStep2 = useCallback(
@@ -255,6 +357,15 @@ const ContactUsPanel = ({ open, onOpenChange }: ContactUsPanelProps) => {
       });
       if (error) throw error;
       await deleteAbandoned(step1Data.email);
+      // Mark unified tracking as completed
+      if (abandonedDemoRowCreatedRef.current) {
+        try {
+          await supabase
+            .from("abandoned_demo_form" as any)
+            .update({ status: "completed", updated_at: new Date().toISOString() } as any)
+            .eq("session_id", sessionIdRef.current);
+        } catch { /* silent */ }
+      }
       setSubmitted(true);
     } catch (err: unknown) {
       console.error("Contact submission error:", err);
@@ -453,74 +564,47 @@ function ConfirmationContent({
 
   return (
     <div className="text-center space-y-6">
-      <div className="flex flex-col items-center gap-3">
-        <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
-          <CheckCircle2 className="w-8 h-8 text-primary" />
-        </div>
-        <div>
-          <h2 className="text-2xl font-bold font-display">
-            Thank You for Reaching Out!
-          </h2>
-          <p className="text-muted-foreground mt-1 text-sm">
-            We'll get back to you within 3–4 business hours.
-          </p>
-        </div>
+      <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
+        <CheckCircle2 className="w-8 h-8 text-green-600" />
+      </div>
+      <div>
+        <h3 className="text-lg font-bold font-display mb-2">Thank You, {step1Data.firstName}!</h3>
+        <p className="text-sm text-muted-foreground">
+          We've received your request and will get back to you within{" "}
+          <strong>3–4 business hours</strong>.
+        </p>
       </div>
 
-      <div className="rounded-xl border border-border bg-card p-5 text-left space-y-2.5">
-        <h3 className="font-semibold font-display text-sm">What happens next?</h3>
-        <ol className="space-y-2 text-sm text-muted-foreground list-none">
-          <li className="flex gap-2.5">
-            <span className="flex-shrink-0 w-5 h-5 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-[10px]">
-              1
-            </span>
-            <span>Our team will review your requirements and prepare a tailored response.</span>
-          </li>
-          <li className="flex gap-2.5">
-            <span className="flex-shrink-0 w-5 h-5 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-[10px]">
-              2
-            </span>
-            <span>We'll reach out via email within 3–4 business hours.</span>
-          </li>
-          <li className="flex gap-2.5">
-            <span className="flex-shrink-0 w-5 h-5 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-[10px]">
-              3
-            </span>
-            <span>A confirmation email has been sent to your inbox.</span>
-          </li>
-        </ol>
+      <div className="rounded-xl border border-border bg-card p-5 space-y-4 text-left shadow-card">
+        <h4 className="text-sm font-semibold border-b border-border pb-2">
+          Need to reach us sooner?
+        </h4>
+        <a
+          href="mailto:sam@launchhouse.events"
+          className="flex items-center gap-3 text-sm hover:text-primary transition-colors"
+        >
+          <Mail className="w-4 h-4 text-primary" />
+          sam@launchhouse.events
+        </a>
+        <a
+          href={`https://wa.me/919999063734?text=${whatsappText}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-3 text-sm hover:text-primary transition-colors"
+        >
+          <MessageCircle className="w-4 h-4 text-green-600" />
+          WhatsApp Us
+        </a>
+        <a
+          href="tel:+919999063734"
+          className="flex items-center gap-3 text-sm hover:text-primary transition-colors"
+        >
+          <Phone className="w-4 h-4 text-primary" />
+          +91 999 906 3734
+        </a>
       </div>
 
-      <div className="rounded-xl border border-border bg-secondary/40 p-4 space-y-3">
-        <p className="text-xs font-semibold text-foreground">Need urgent assistance?</p>
-        <div className="flex flex-col gap-2">
-          <a
-            href="mailto:sam@launchhouse.events"
-            className="inline-flex items-center justify-center gap-2 rounded-md border border-border bg-background px-3 py-2 text-xs font-medium hover:bg-accent transition-colors"
-          >
-            <Mail className="w-3.5 h-3.5" />
-            sam@launchhouse.events
-          </a>
-          <a
-            href="tel:+919999063734"
-            className="inline-flex items-center justify-center gap-2 rounded-md border border-border bg-background px-3 py-2 text-xs font-medium hover:bg-accent transition-colors"
-          >
-            <Phone className="w-3.5 h-3.5" />
-            +91 9999 063 734
-          </a>
-          <a
-            href={`https://wa.me/919999063734?text=${whatsappText}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center justify-center gap-2 rounded-md bg-[hsl(142,70%,40%)] text-white px-3 py-2 text-xs font-medium hover:bg-[hsl(142,70%,35%)] transition-colors"
-          >
-            <MessageCircle className="w-3.5 h-3.5" />
-            WhatsApp
-          </a>
-        </div>
-      </div>
-
-      <Button onClick={onClose} className="w-full">
+      <Button onClick={onClose} variant="outline" className="w-full">
         Close
       </Button>
     </div>

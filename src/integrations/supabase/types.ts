@@ -50,6 +50,45 @@ export type Database = {
         }
         Relationships: []
       }
+      abandoned_demo_form: {
+        Row: {
+          created_at: string
+          email: string
+          first_name: string
+          form_type: string
+          id: string
+          last_name: string
+          last_step_reached: number
+          session_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string
+          first_name?: string
+          form_type?: string
+          id?: string
+          last_name?: string
+          last_step_reached?: number
+          session_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          first_name?: string
+          form_type?: string
+          id?: string
+          last_name?: string
+          last_step_reached?: number
+          session_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       abandoned_eb_forms: {
         Row: {
           company: string | null

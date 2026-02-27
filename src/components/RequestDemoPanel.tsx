@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -114,18 +114,109 @@ const RequestDemoPanel = ({ open, onOpenChange }: RequestDemoPanelProps) => {
     time: string;
   } | null>(null);
 
+  // Abandoned tracking
+  const sessionIdRef = useRef<string>(crypto.randomUUID());
+  const abandonedRowCreatedRef = useRef(false);
+  const step1DataRef = useRef<Step1Data | null>(null);
+  const stepRef = useRef<number>(1);
+  const submittedRef = useRef(false);
+
   const {
     register,
     handleSubmit,
     formState: { errors },
     reset: resetForm,
+    getValues,
   } = useForm<Step1Data>({
     resolver: zodResolver(step1Schema),
     defaultValues: { firstName: "", lastName: "", email: "" },
   });
 
+  // Keep refs in sync
+  useEffect(() => { step1DataRef.current = step1Data; }, [step1Data]);
+  useEffect(() => { stepRef.current = step; }, [step]);
+  useEffect(() => { submittedRef.current = submitted; }, [submitted]);
+
+  /* ── Background capture: upsert on email valid ────────────── */
+  const upsertAbandonedDemo = useCallback(async (data: { first_name: string; last_name: string; email: string; last_step_reached: number; status?: string }) => {
+    try {
+      if (abandonedRowCreatedRef.current) {
+        await supabase
+          .from("abandoned_demo_form" as any)
+          .update({
+            first_name: data.first_name,
+            last_name: data.last_name,
+            email: data.email,
+            last_step_reached: data.last_step_reached,
+            form_type: "demo",
+            status: data.status || "partial",
+            updated_at: new Date().toISOString(),
+          } as any)
+          .eq("session_id", sessionIdRef.current);
+      } else {
+        await supabase
+          .from("abandoned_demo_form" as any)
+          .insert({
+            session_id: sessionIdRef.current,
+            first_name: data.first_name,
+            last_name: data.last_name,
+            email: data.email,
+            last_step_reached: data.last_step_reached,
+            form_type: "demo",
+            status: data.status || "partial",
+          } as any);
+        abandonedRowCreatedRef.current = true;
+      }
+    } catch { /* silent */ }
+  }, []);
+
+  /* ── Auto-advance: when email is valid AND names filled ─────── */
+  useEffect(() => {
+    if (emailVerification === "valid" && step === 1) {
+      const values = getValues();
+      // Background capture immediately
+      upsertAbandonedDemo({
+        first_name: values.firstName?.trim() || "",
+        last_name: values.lastName?.trim() || "",
+        email: values.email?.trim() || "",
+        last_step_reached: 1,
+      });
+      // Only auto-advance if names are non-empty
+      if (values.firstName?.trim() && values.lastName?.trim()) {
+        handleSubmit(onStep1Submit)();
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [emailVerification]);
+
+  /* ── beforeunload: mark abandoned on tab close ─────────────── */
+  useEffect(() => {
+    const handler = () => {
+      if (step1DataRef.current && !submittedRef.current && abandonedRowCreatedRef.current) {
+        const url = `${import.meta.env.VITE_SUPABASE_URL}/rest/v1/abandoned_demo_form?session_id=eq.${sessionIdRef.current}`;
+        const body = JSON.stringify({ status: "abandoned", updated_at: new Date().toISOString() });
+        navigator.sendBeacon(
+          url,
+          new Blob([body], { type: "application/json" })
+        );
+      }
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, []);
+
   const handleOpenChange = (val: boolean) => {
     if (!val) {
+      // Mark as abandoned if step1 data exists and not submitted
+      if (step1DataRef.current && !submittedRef.current && abandonedRowCreatedRef.current) {
+        upsertAbandonedDemo({
+          first_name: step1DataRef.current.firstName,
+          last_name: step1DataRef.current.lastName,
+          email: step1DataRef.current.email,
+          last_step_reached: stepRef.current,
+          status: "abandoned",
+        });
+      }
       setTimeout(() => {
         setStep(1);
         setSubmitted(false);
@@ -142,6 +233,9 @@ const RequestDemoPanel = ({ open, onOpenChange }: RequestDemoPanelProps) => {
         setAttendeeError("");
         setConfirmationData(null);
         resetForm();
+        // Reset session for next open
+        sessionIdRef.current = crypto.randomUUID();
+        abandonedRowCreatedRef.current = false;
       }, 300);
     }
     onOpenChange(val);
@@ -151,6 +245,13 @@ const RequestDemoPanel = ({ open, onOpenChange }: RequestDemoPanelProps) => {
   const onStep1Submit = (data: Step1Data) => {
     setStep1Data(data);
     setStep(2);
+    // Update abandoned record with step 2
+    upsertAbandonedDemo({
+      first_name: data.firstName,
+      last_name: data.lastName,
+      email: data.email,
+      last_step_reached: 2,
+    });
   };
 
   /* ── Step 2 ──────────────────────────────────────────────────── */
@@ -168,6 +269,14 @@ const RequestDemoPanel = ({ open, onOpenChange }: RequestDemoPanelProps) => {
       return;
     }
     setStep(3);
+    if (step1Data) {
+      upsertAbandonedDemo({
+        first_name: step1Data.firstName,
+        last_name: step1Data.lastName,
+        email: step1Data.email,
+        last_step_reached: 3,
+      });
+    }
   };
 
   /* ── Step 3 ──────────────────────────────────────────────────── */
@@ -189,7 +298,6 @@ const RequestDemoPanel = ({ open, onOpenChange }: RequestDemoPanelProps) => {
 
       // Apply 90-minute lead time filter in NY time
       if (isToday(date)) {
-        // Get current time in NY timezone
         const nowInNY = new Date(new Date().toLocaleString("en-US", { timeZone: NY_TIMEZONE }));
         const cutoff = addMinutes(nowInNY, 90);
         slots = slots.map((slot) => {
@@ -275,6 +383,16 @@ const RequestDemoPanel = ({ open, onOpenChange }: RequestDemoPanelProps) => {
       });
 
       if (error) throw error;
+
+      // Mark abandoned row as completed
+      if (abandonedRowCreatedRef.current) {
+        try {
+          await supabase
+            .from("abandoned_demo_form" as any)
+            .update({ status: "completed", updated_at: new Date().toISOString() } as any)
+            .eq("session_id", sessionIdRef.current);
+        } catch { /* silent */ }
+      }
 
       setConfirmationData({
         meetLink: data?.meetLink ?? "",
