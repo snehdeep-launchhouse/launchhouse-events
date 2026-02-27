@@ -102,7 +102,7 @@ function buildConfirmationEmail(payload: {
       <table style="width:100%;border-collapse:collapse;margin-bottom:24px;">
         <tr><td style="padding:8px 12px;border:1px solid #d1d5db;background:#f9fafb;font-weight:600;vertical-align:top;width:40%;">Product(s)</td><td style="padding:8px 12px;border:1px solid #d1d5db;vertical-align:top;">${payload.products.join(", ")}</td></tr>
         <tr><td style="padding:8px 12px;border:1px solid #d1d5db;background:#f9fafb;font-weight:600;vertical-align:top;">Date</td><td style="padding:8px 12px;border:1px solid #d1d5db;vertical-align:top;">${payload.date}</td></tr>
-        <tr><td style="padding:8px 12px;border:1px solid #d1d5db;background:#f9fafb;font-weight:600;vertical-align:top;">Time</td><td style="padding:8px 12px;border:1px solid #d1d5db;vertical-align:top;">${formatTime12h(payload.time)} (${payload.timezone})</td></tr>
+        <tr><td style="padding:8px 12px;border:1px solid #d1d5db;background:#f9fafb;font-weight:600;vertical-align:top;">Time</td><td style="padding:8px 12px;border:1px solid #d1d5db;vertical-align:top;">${formatTime12h(payload.time)} ET</td></tr>
         ${attendeeList}
       </table>
       <p style="margin:0 0 16px;">
@@ -264,7 +264,7 @@ serve(async (req) => {
         <tr><td style="padding:8px 12px;border:1px solid #d1d5db;background:#f9fafb;font-weight:600;">Email</td><td style="padding:8px 12px;border:1px solid #d1d5db;">${email}</td></tr>
         <tr><td style="padding:8px 12px;border:1px solid #d1d5db;background:#f9fafb;font-weight:600;">Products</td><td style="padding:8px 12px;border:1px solid #d1d5db;">${productsSummary}</td></tr>
         <tr><td style="padding:8px 12px;border:1px solid #d1d5db;background:#f9fafb;font-weight:600;">Date</td><td style="padding:8px 12px;border:1px solid #d1d5db;">${date}</td></tr>
-        <tr><td style="padding:8px 12px;border:1px solid #d1d5db;background:#f9fafb;font-weight:600;">Time</td><td style="padding:8px 12px;border:1px solid #d1d5db;">${formatTime12h(time)} (${timezone})</td></tr>
+        <tr><td style="padding:8px 12px;border:1px solid #d1d5db;background:#f9fafb;font-weight:600;">Time</td><td style="padding:8px 12px;border:1px solid #d1d5db;">${formatTime12h(time)} ET</td></tr>
         <tr><td style="padding:8px 12px;border:1px solid #d1d5db;background:#f9fafb;font-weight:600;">Meet Link</td><td style="padding:8px 12px;border:1px solid #d1d5db;"><a href="${meetLink}">${meetLink}</a></td></tr>
         <tr><td style="padding:8px 12px;border:1px solid #d1d5db;background:#f9fafb;font-weight:600;">Additional Attendees</td><td style="padding:8px 12px;border:1px solid #d1d5db;">${extraAttendees.length ? extraAttendees.join(", ") : "None"}</td></tr>
       </table>
