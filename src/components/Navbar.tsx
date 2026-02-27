@@ -16,7 +16,7 @@ const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const { openContactPanel } = useContactPanel();
+  const { openContactPanel, openDemoPanel } = useContactPanel();
 
   const handleNav = (e: React.MouseEvent<HTMLAnchorElement>, link: typeof navLinks[0]) => {
     e.preventDefault();
@@ -31,9 +31,14 @@ const Navbar = () => {
     }
   };
 
-  const handleCta = () => {
+  const handleContact = () => {
     setMobileOpen(false);
     openContactPanel();
+  };
+
+  const handleDemo = () => {
+    setMobileOpen(false);
+    openDemoPanel();
   };
 
   return (
@@ -55,8 +60,11 @@ const Navbar = () => {
             ))}
           </div>
           <div className="flex items-center gap-2">
-            <Button onClick={handleCta} size="sm" className="hidden md:inline-flex">
+            <Button onClick={handleContact} size="sm" variant="outline" className="hidden md:inline-flex">
               Contact Us
+            </Button>
+            <Button onClick={handleDemo} size="sm" className="hidden md:inline-flex">
+              Request a Demo
             </Button>
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
@@ -82,7 +90,10 @@ const Navbar = () => {
                   {l.label}
                 </a>
               ))}
-              <Button onClick={handleCta} size="sm" className="w-full mt-2">
+              <Button onClick={handleDemo} size="sm" className="w-full mt-2">
+                Request a Demo
+              </Button>
+              <Button onClick={handleContact} size="sm" variant="outline" className="w-full">
                 Contact Us
               </Button>
             </div>

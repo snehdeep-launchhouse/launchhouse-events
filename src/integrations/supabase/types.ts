@@ -209,6 +209,54 @@ export type Database = {
         }
         Relationships: []
       }
+      demo_requests: {
+        Row: {
+          additional_attendees: string[] | null
+          business_email: string
+          created_at: string
+          first_name: string
+          google_event_id: string | null
+          google_event_link: string | null
+          google_meet_link: string | null
+          id: string
+          last_name: string
+          scheduled_date: string
+          scheduled_time: string
+          selected_products: string[]
+          status: string
+        }
+        Insert: {
+          additional_attendees?: string[] | null
+          business_email: string
+          created_at?: string
+          first_name: string
+          google_event_id?: string | null
+          google_event_link?: string | null
+          google_meet_link?: string | null
+          id?: string
+          last_name: string
+          scheduled_date: string
+          scheduled_time: string
+          selected_products?: string[]
+          status?: string
+        }
+        Update: {
+          additional_attendees?: string[] | null
+          business_email?: string
+          created_at?: string
+          first_name?: string
+          google_event_id?: string | null
+          google_event_link?: string | null
+          google_meet_link?: string | null
+          id?: string
+          last_name?: string
+          scheduled_date?: string
+          scheduled_time?: string
+          selected_products?: string[]
+          status?: string
+        }
+        Relationships: []
+      }
       quote_requests: {
         Row: {
           cvent_technologies: string[]
