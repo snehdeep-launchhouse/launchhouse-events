@@ -78,12 +78,9 @@ serve(async (req) => {
 
     const accessToken = await getGoogleAccessToken(serviceAccountKey);
 
-    // Build time range for the requested date (9 AM - 6 PM in the given timezone)
-    // We query the full day to get busy slots, then compute available ones
     const dayStart = `${date}T00:00:00`;
     const dayEnd = `${date}T23:59:59`;
 
-    // Use timeMin/timeMax in ISO format with timezone
     const freeBusyRes = await fetch(
       "https://www.googleapis.com/calendar/v3/freeBusy",
       {
@@ -108,24 +105,21 @@ serve(async (req) => {
 
     const busySlots = freeBusyData.calendars?.[calendarId]?.busy ?? [];
 
-    // Generate 30-minute slots from 9 AM to 5:30 PM (last slot starts at 5:30, ends at 6)
-    const slots: string[] = [];
+    // Generate all 30-minute slots from 9 AM to 5:30 PM and mark each as available or busy
+    const slots: Array<{ time: string; available: boolean }> = [];
     for (let hour = 9; hour < 18; hour++) {
       for (let min = 0; min < 60; min += 30) {
         const slotStart = `${String(hour).padStart(2, "0")}:${String(min).padStart(2, "0")}`;
         const slotStartDate = new Date(`${date}T${slotStart}:00`);
         const slotEndDate = new Date(slotStartDate.getTime() + 30 * 60 * 1000);
 
-        // Check if this slot overlaps with any busy period
         const isBusy = busySlots.some((busy: { start: string; end: string }) => {
           const busyStart = new Date(busy.start).getTime();
           const busyEnd = new Date(busy.end).getTime();
           return slotStartDate.getTime() < busyEnd && slotEndDate.getTime() > busyStart;
         });
 
-        if (!isBusy) {
-          slots.push(slotStart);
-        }
+        slots.push({ time: slotStart, available: !isBusy });
       }
     }
 

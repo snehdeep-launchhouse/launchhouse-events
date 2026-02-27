@@ -9,12 +9,13 @@ import { zodEmail, type VerificationStatus } from "@/lib/email-validation";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Calendar } from "@/components/ui/calendar";
-import { Loader2, CheckCircle2, ArrowLeft, X, Plus, Video, CalendarDays, ExternalLink } from "lucide-react";
+import { Loader2, CheckCircle2, ArrowLeft, X, Plus, Video, CalendarDays, ExternalLink, AlertTriangle, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { format, isToday, addMinutes } from "date-fns";
+import Logo from "@/components/Logo";
 import {
   Sheet,
   SheetContent,
@@ -33,6 +34,8 @@ import {
 import { useIsMobile } from "@/hooks/use-mobile";
 
 /* ── Constants ───────────────────────────────────────────────────── */
+const NY_TIMEZONE = "America/New_York";
+
 const SERVICE_OFFERINGS = [
   "Event Registration And Website",
   "Attendee Hub (Website and/or Event App)",
@@ -96,7 +99,7 @@ const RequestDemoPanel = ({ open, onOpenChange }: RequestDemoPanelProps) => {
 
   // Step 3
   const [selectedDate, setSelectedDate] = useState<Date | undefined>();
-  const [availableSlots, setAvailableSlots] = useState<string[]>([]);
+  const [availableSlots, setAvailableSlots] = useState<Array<{ time: string; available: boolean }>>([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [additionalAttendees, setAdditionalAttendees] = useState<string[]>([]);
@@ -175,24 +178,28 @@ const RequestDemoPanel = ({ open, onOpenChange }: RequestDemoPanelProps) => {
 
     try {
       const dateStr = format(date, "yyyy-MM-dd");
-      const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
       const { data, error } = await supabase.functions.invoke("get-demo-availability", {
-        body: { date: dateStr, timezone },
+        body: { date: dateStr, timezone: NY_TIMEZONE },
       });
 
       if (error) throw error;
 
-      let slots: string[] = data?.slots ?? [];
+      let slots: Array<{ time: string; available: boolean }> = data?.slots ?? [];
 
-      // Apply 90-minute lead time filter
+      // Apply 90-minute lead time filter in NY time
       if (isToday(date)) {
-        const cutoff = addMinutes(new Date(), 90);
-        slots = slots.filter((slot) => {
-          const [h, m] = slot.split(":").map(Number);
-          const slotDate = new Date(date);
+        // Get current time in NY timezone
+        const nowInNY = new Date(new Date().toLocaleString("en-US", { timeZone: NY_TIMEZONE }));
+        const cutoff = addMinutes(nowInNY, 90);
+        slots = slots.map((slot) => {
+          const [h, m] = slot.time.split(":").map(Number);
+          const slotDate = new Date(nowInNY);
           slotDate.setHours(h, m, 0, 0);
-          return slotDate > cutoff;
+          if (slotDate <= cutoff) {
+            return { ...slot, available: false };
+          }
+          return slot;
         });
       }
 
@@ -253,7 +260,6 @@ const RequestDemoPanel = ({ open, onOpenChange }: RequestDemoPanelProps) => {
     setSubmitting(true);
     try {
       const dateStr = format(selectedDate, "yyyy-MM-dd");
-      const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
       const { data, error } = await supabase.functions.invoke("book-demo", {
         body: {
@@ -263,7 +269,7 @@ const RequestDemoPanel = ({ open, onOpenChange }: RequestDemoPanelProps) => {
           products: selectedProducts,
           date: dateStr,
           time: selectedTime,
-          timezone,
+          timezone: NY_TIMEZONE,
           additionalAttendees,
         },
       });
@@ -288,6 +294,11 @@ const RequestDemoPanel = ({ open, onOpenChange }: RequestDemoPanelProps) => {
   /* ── Form content (shared between Sheet & Drawer) ──────────── */
   const formContent = (
     <div className="px-6 py-5">
+      {/* Logo at top of every step */}
+      <div className="flex justify-center mb-5">
+        <Logo size={36} className="pointer-events-none" />
+      </div>
+
       {/* ── Confirmation ──────────────────────────────────── */}
       {submitted && confirmationData ? (
         <div className="text-center space-y-6">
@@ -308,7 +319,7 @@ const RequestDemoPanel = ({ open, onOpenChange }: RequestDemoPanelProps) => {
             </div>
             <div className="flex items-center gap-2 text-sm">
               <span className="w-4 h-4 flex items-center justify-center text-primary font-bold text-xs">⏰</span>
-              <span className="font-medium">{formatTime12h(confirmationData.time)} ({Intl.DateTimeFormat().resolvedOptions().timeZone})</span>
+              <span className="font-medium">{formatTime12h(confirmationData.time)} ET</span>
             </div>
             <div className="flex items-center gap-2 text-sm">
               <span className="font-medium text-muted-foreground">Products:</span>
@@ -481,9 +492,22 @@ const RequestDemoPanel = ({ open, onOpenChange }: RequestDemoPanelProps) => {
           {step === 3 && (
             <div className="space-y-5">
               <div className="rounded-xl border border-border bg-card p-5 space-y-4 shadow-card">
-                <h2 className="text-base font-bold font-display border-b border-border pb-2">
+              <h2 className="text-base font-bold font-display border-b border-border pb-2">
                   Pick a Date & Time
                 </h2>
+
+                {/* Scarcity banner */}
+                <div className="flex items-center gap-2 rounded-lg bg-amber-50 border border-amber-200 px-3 py-2.5 text-sm text-amber-800">
+                  <AlertTriangle className="w-4 h-4 flex-shrink-0 text-amber-600" />
+                  <span className="font-semibold">High Demand:</span>
+                  <span>Limited Demo Slots Available</span>
+                </div>
+
+                {/* NY timezone indicator */}
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <Clock className="w-3.5 h-3.5" />
+                  All times shown in New York Time (ET)
+                </div>
 
                 <div className="flex justify-center w-full max-w-[calc(100vw-3rem)] mx-auto">
                   <Calendar
@@ -515,20 +539,23 @@ const RequestDemoPanel = ({ open, onOpenChange }: RequestDemoPanelProps) => {
                         No available slots for this date. Please try another day.
                       </p>
                     ) : (
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                         {availableSlots.map((slot) => (
                           <button
-                            key={slot}
+                            key={slot.time}
                             type="button"
-                            onClick={() => setSelectedTime(slot)}
+                            disabled={!slot.available}
+                            onClick={() => slot.available && setSelectedTime(slot.time)}
                             className={cn(
                               "rounded-lg border px-3 py-2 text-sm font-medium transition-colors min-h-[44px] min-w-[44px]",
-                              selectedTime === slot
+                              !slot.available
+                                ? "border-border bg-muted/50 text-muted-foreground/50 cursor-not-allowed opacity-50"
+                                : selectedTime === slot.time
                                 ? "border-primary bg-primary text-primary-foreground"
                                 : "border-border hover:border-primary/50 hover:bg-secondary/30"
                             )}
                           >
-                            {formatTime12h(slot)}
+                            {slot.available ? formatTime12h(slot.time) : "Slot Booked"}
                           </button>
                         ))}
                       </div>
