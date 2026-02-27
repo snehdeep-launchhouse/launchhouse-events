@@ -159,16 +159,16 @@ serve(async (req) => {
     const endM = endMin % 60;
     const endDateTime = `${date}T${String(endH).padStart(2, "0")}:${String(endM).padStart(2, "0")}:00`;
 
-    // Build attendees list
-    const attendees = [{ email }];
     const extraAttendees: string[] = Array.isArray(additionalAttendees) ? additionalAttendees : [];
-    for (const a of extraAttendees) {
-      if (a && a !== email) attendees.push({ email: a });
-    }
-
     const productsSummary = products.join(", ");
 
-    // Create Google Calendar event with Meet link
+    // Build description with contact info (attendees array removed to avoid 403 with service accounts)
+    let description = `Demo requested by ${firstName} ${lastName} (${email}).\nProducts: ${productsSummary}`;
+    if (extraAttendees.length > 0) {
+      description += `\n\nAdditional Attendees:\n${extraAttendees.filter(a => a && a !== email).join("\n")}`;
+    }
+
+    // Create Google Calendar event with Meet link (NO attendees array)
     const eventRes = await fetch(
       `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?conferenceDataVersion=1`,
       {
@@ -179,10 +179,9 @@ serve(async (req) => {
         },
         body: JSON.stringify({
           summary: `LaunchHouse Events Demo — ${productsSummary}`,
-          description: `Demo requested by ${firstName} ${lastName} (${email}).\nProducts: ${productsSummary}`,
+          description,
           start: { dateTime: startDateTime, timeZone: timezone },
           end: { dateTime: endDateTime, timeZone: timezone },
-          attendees,
           conferenceData: {
             createRequest: {
               requestId: crypto.randomUUID(),
