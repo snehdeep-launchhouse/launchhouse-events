@@ -168,9 +168,9 @@ serve(async (req) => {
       description += `\n\nAdditional Attendees:\n${extraAttendees.filter(a => a && a !== email).join("\n")}`;
     }
 
-    // Create Google Calendar event with Meet link (NO attendees array)
+    // Create Google Calendar event (NO attendees, NO conferenceData to avoid service account errors)
     const eventRes = await fetch(
-      `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?conferenceDataVersion=1`,
+      `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events`,
       {
         method: "POST",
         headers: {
@@ -182,12 +182,6 @@ serve(async (req) => {
           description,
           start: { dateTime: startDateTime, timeZone: timezone },
           end: { dateTime: endDateTime, timeZone: timezone },
-          conferenceData: {
-            createRequest: {
-              requestId: crypto.randomUUID(),
-              conferenceSolutionKey: { type: "hangoutsMeet" },
-            },
-          },
           reminders: { useDefault: true },
         }),
       }
@@ -198,7 +192,7 @@ serve(async (req) => {
       throw new Error(`Calendar event creation failed: ${JSON.stringify(eventData)}`);
     }
 
-    const meetLink = eventData.hangoutLink || "";
+    const meetLink = eventData.hangoutLink || ""; // Will be empty without conferenceData
     const eventLink = eventData.htmlLink || "";
     const eventId = eventData.id || "";
 
