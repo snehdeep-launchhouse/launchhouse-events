@@ -1,34 +1,46 @@
 
 
-## Mobile Optimization for Request a Demo
+## Gaps vs. Requirements
 
-### Changes
+The feature is already built with mobile responsiveness, `?book-demo=true` trigger, Google Calendar + Meet + Resend integration, and the 3-step flow. The following specific requirements are **not yet implemented**:
+
+| Requirement | Current State |
+|---|---|
+| Company logo on every step | Missing — only title text |
+| Force NY timezone (America/New_York) with visual indicator | Uses browser's local timezone |
+| "High Demand" scarcity banner above calendar | Missing |
+| Show busy slots as disabled/greyed "Slot Booked" buttons | Busy slots are hidden; only available ones shown |
+| Confirmation screen shows NY time | Shows browser timezone |
+| Edge function uses NY timezone for event creation | Uses client-sent timezone |
+
+### Plan
 
 #### 1. `src/components/RequestDemoPanel.tsx`
-- Use `useIsMobile()` hook to detect mobile
-- On mobile: render as a `Drawer` (bottom sheet via vaul) instead of `Sheet` (right panel)
-- Add `text-base` (16px) class to all `Input` fields to prevent iOS auto-zoom
-- Time slot buttons: add `min-h-[44px] min-w-[44px]` for touch targets
-- Calendar container: add `w-full max-w-[calc(100vw-3rem)]` to prevent horizontal overflow on 320px screens
-- Time slots grid: change to `grid-cols-2 sm:grid-cols-4` on mobile for larger tap targets
-- Drawer version gets a large close button in header
+- Import `Logo` component and render it at the top of every step (inside `formContent`, before the step indicator)
+- Hardcode `timezone = "America/New_York"` instead of reading from browser
+- Add visual indicator: `"All times shown in New York Time (ET)"` label near the calendar
+- Add scarcity banner: styled alert above the calendar reading "High Demand: Limited Demo Slots Available"
+- Pass `timezone: "America/New_York"` to `get-demo-availability` and `book-demo`
+- Modify `fetchAvailability` to also request **all** 30-min slots (9:00–17:30) and mark busy ones
+- Update state: change `availableSlots` to an array of `{ time: string; available: boolean }` objects
+- Render busy slots as greyed-out, disabled buttons with "Slot Booked" text; available slots as bright clickable buttons
+- Update confirmation screen to show "ET" instead of browser timezone
+- 90-minute lead time filter: compute cutoff in NY time using date-fns-tz or manual UTC offset
 
-#### 2. `src/components/ui/sheet.tsx`
-- No changes needed — mobile will use Drawer instead
+#### 2. `supabase/functions/get-demo-availability/index.ts`
+- Return **both** available and busy slots so the frontend can render them
+- Change response shape to `{ slots: Array<{ time: string; available: boolean }>, date, timezone }`
+- Generate all 30-min slots 09:00–17:30, mark each as available/busy based on FreeBusy response
 
-#### 3. `src/components/Navbar.tsx`
-- Add a sticky fixed "Request a Demo" button at the bottom of the screen on mobile (visible when mobile menu is closed)
-- Use `md:hidden fixed bottom-0 left-0 right-0 z-40` with safe-area padding
-- Keep the button in the mobile hamburger menu as well
-
-#### 4. `src/index.css`
-- Add `env(safe-area-inset-bottom)` padding utility for the sticky mobile CTA
+#### 3. `supabase/functions/book-demo/index.ts`
+- Update email template to always display "ET" (New York Time) instead of the client timezone string
+- Format the time label as `formatTime12h(time) + " ET"` in both the confirmation and internal emails
 
 ### Files Changed
 
 | File | Change |
-|------|--------|
-| `src/components/RequestDemoPanel.tsx` | Conditional Drawer vs Sheet rendering, 16px inputs, 44px touch targets, calendar width constraints |
-| `src/components/Navbar.tsx` | Add sticky bottom mobile CTA button |
-| `src/index.css` | Safe-area-inset padding for bottom sticky button |
+|---|---|
+| `src/components/RequestDemoPanel.tsx` | Add logo, NY timezone, scarcity banner, busy slot UI |
+| `supabase/functions/get-demo-availability/index.ts` | Return both available + busy slots |
+| `supabase/functions/book-demo/index.ts` | Force NY timezone label in emails |
 
