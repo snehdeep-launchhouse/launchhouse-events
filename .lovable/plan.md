@@ -1,30 +1,29 @@
 
 
-## Plan: Restore Domain-Wide Delegation in `book-demo` Edge Function
+## Plan: Add JSON-LD Structured Data for Organization Schema
 
-### Changes to `supabase/functions/book-demo/index.ts`
+### What this does
+Adds machine-readable structured data to the site so Google can display rich results (knowledge panel, logo, contact info, social links) when people search for "LaunchHouse Events."
 
-**1. Add `sub` (subject) to JWT claim set (line 23-29)**
-Add `sub: "snehdeep@launchhouse.events"` to the JWT claim so the service account impersonates this user via Domain-Wide Delegation.
+### Implementation
 
-**2. Restore `conferenceDataVersion=1` in the Calendar API URL (line 173)**
-Change the URL back to include `?conferenceDataVersion=1`.
+**Edit `index.html`** — Insert a `<script type="application/ld+json">` block in `<head>` containing:
 
-**3. Restore `attendees` array and `conferenceData` block in the event payload (lines 180-186)**
-- Add `attendees` array with the booker's email + any additional attendees
-- Add `conferenceData: { createRequest: { requestId: crypto.randomUUID(), conferenceSolutionKey: { type: "hangoutsMeet" } } }`
-- Keep the description with contact info as a fallback reference
+- **Organization schema** with:
+  - Name: LaunchHouse Events
+  - URL: https://www.launchhouse.events
+  - Logo: favicon.svg (absolute URL)
+  - Description matching the meta description
+  - Contact point (email: snehdeep@launchhouse.events, type: customer service)
+  - Address: Bengaluru, Karnataka, India
+  - Founded: 2025
+  - `sameAs` array (for any social profiles like Twitter @LaunchHouseHQ)
+  - `areaServed`: Global
+  - `knowsAbout`: Cvent, Event Registration, Event Management
 
-**4. Update `meetLink` extraction (line 195)**
-Already reads `eventData.hangoutLink` — no change needed, it will now be populated.
+- **WebSite schema** with:
+  - Name and URL
+  - `potentialAction` SearchAction (optional, for sitelinks search box)
 
-**5. Confirmation email**
-The `buildConfirmationEmail` already uses `meetLink` for the "Join Google Meet" button — no change needed.
-
-### Files Modified
-| File | Change |
-|---|---|
-| `supabase/functions/book-demo/index.ts` | Add `sub` field, restore attendees + conferenceData |
-
-No other files affected. Auto-deploys after save.
+This is a single edit to `index.html`, adding ~35 lines of JSON-LD after the existing `<link rel="apple-touch-icon">` line.
 
