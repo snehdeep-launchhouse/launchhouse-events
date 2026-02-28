@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import Navbar from "@/components/Navbar";
+import BreadcrumbJsonLd from "@/components/BreadcrumbJsonLd";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import TnCTooltip from "@/components/TnCTooltip";
@@ -102,6 +103,7 @@ const Pricing = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <BreadcrumbJsonLd items={[{ name: "Pricing", path: "/pricing" }]} />
       <Navbar />
 
       {/* Hero */}

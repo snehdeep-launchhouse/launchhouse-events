@@ -1,5 +1,6 @@
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import BreadcrumbJsonLd from "@/components/BreadcrumbJsonLd";
 
 const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
   <section className="mb-10">
@@ -10,6 +11,7 @@ const Section = ({ title, children }: { title: string; children: React.ReactNode
 
 const PrivacyPolicy = () => (
   <div className="min-h-screen flex flex-col bg-background">
+    <BreadcrumbJsonLd items={[{ name: "Privacy Policy", path: "/privacy-policy" }]} />
     <Navbar />
     <main className="flex-1 pt-[var(--nav-height)]">
       <div className="container max-w-3xl py-16 px-4">

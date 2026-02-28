@@ -1,4 +1,5 @@
 import Navbar from "@/components/Navbar";
+import BreadcrumbJsonLd from "@/components/BreadcrumbJsonLd";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -73,6 +74,7 @@ const TierCard = ({ card }: { card: typeof fullBuildCards[0] }) => {
 /* ── Page ─────────────────────────────────────────────────────────── */
 const Services = () => (
   <div className="min-h-screen bg-background">
+    <BreadcrumbJsonLd items={[{ name: "Services", path: "/services" }]} />
     <Navbar />
 
     {/* Hero */}

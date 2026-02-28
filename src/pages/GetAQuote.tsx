@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import BreadcrumbJsonLd from "@/components/BreadcrumbJsonLd";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -347,6 +348,7 @@ const GetAQuote = () => {
   /* ── Form ────────────────────────────────────────────────────── */
   return (
     <div className="min-h-screen bg-background">
+      <BreadcrumbJsonLd items={[{ name: "Contact Us", path: "/contact-us" }]} />
       {/* Banner */}
       <div className="relative h-52 md:h-64 overflow-hidden">
         <img
