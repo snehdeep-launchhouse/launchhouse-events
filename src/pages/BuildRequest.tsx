@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import BreadcrumbJsonLd from "@/components/BreadcrumbJsonLd";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -337,6 +338,7 @@ const BuildRequest = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <BreadcrumbJsonLd items={[{ name: "Build Request", path: "/build-request" }]} />
       {/* Banner */}
       <div className="relative h-48 md:h-64 overflow-hidden">
         <img src={bannerImg} alt="Build Request" className="w-full h-full object-cover object-top" loading="lazy" />

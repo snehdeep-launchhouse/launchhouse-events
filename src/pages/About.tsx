@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import BreadcrumbJsonLd from "@/components/BreadcrumbJsonLd";
 import { Button } from "@/components/ui/button";
 import {
   ArrowUpRight, Users, Clock, Award, Globe, Rocket, Heart,
@@ -72,6 +73,7 @@ const About = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <BreadcrumbJsonLd items={[{ name: "About Us", path: "/about" }]} />
       <Navbar />
 
       {/* Hero */}
