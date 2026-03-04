@@ -14,14 +14,16 @@ const SectionFallback = () => (
 const Index = () => (
   <div className="min-h-screen bg-background">
     <Navbar />
-    <HeroSection />
-    <ServicesSection />
-    <Suspense fallback={<SectionFallback />}>
-      <WhyUsSection />
-    </Suspense>
-    <Suspense fallback={<SectionFallback />}>
-      <PricingSection />
-    </Suspense>
+    <main>
+      <HeroSection />
+      <ServicesSection />
+      <Suspense fallback={<SectionFallback />}>
+        <WhyUsSection />
+      </Suspense>
+      <Suspense fallback={<SectionFallback />}>
+        <PricingSection />
+      </Suspense>
+    </main>
     <Footer />
   </div>
 );
