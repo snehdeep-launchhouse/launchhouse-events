@@ -10,8 +10,8 @@ import {
   ArrowUpRight, Zap, Target, Mountain, Clock, Shield, Rocket,
   Smartphone, Video, BookOpen, Headphones, Wrench,
 } from "lucide-react";
-import heroBanner from "@/assets/hero-banner.jpg";
-import eventCheckin from "@/assets/event-checkin.jpg";
+import heroBanner from "@/assets/banners/services-banner.jpg";
+import eventCheckin from "@/assets/banners/cta-banner.jpg";
 
 const BUILD_REQUEST_URL = "/build-request";
 const GET_A_QUOTE_URL = "/get-a-quote";
