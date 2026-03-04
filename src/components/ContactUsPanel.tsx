@@ -88,8 +88,7 @@ const ContactUsPanel = ({ open, onOpenChange }: ContactUsPanelProps) => {
   const [additionalInfo, setAdditionalInfo] = useState("");
   const [step2Error, setStep2Error] = useState("");
 
-  // Abandoned contact tracking (existing)
-  const abandonedIdRef = useRef<string | null>(null);
+  // Abandoned contact tracking
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Abandoned demo form tracking (new unified table)
@@ -206,7 +205,7 @@ const ContactUsPanel = ({ open, onOpenChange }: ContactUsPanelProps) => {
         setStep2Error("");
         setStep1Data(null);
         setEmailVerification("idle");
-        abandonedIdRef.current = null;
+        // Reset for next open
         // Reset session for next open
         sessionIdRef.current = crypto.randomUUID();
         abandonedDemoRowCreatedRef.current = false;
@@ -237,34 +236,12 @@ const ContactUsPanel = ({ open, onOpenChange }: ContactUsPanelProps) => {
             : {}),
         };
 
-        if (abandonedIdRef.current) {
-          await supabase
-            .from("abandoned_contact_requests")
-            .update(payload)
-            .eq("id", abandonedIdRef.current);
-        } else {
-          const { data: existing } = await supabase
-            .from("abandoned_contact_requests")
-            .select("id")
-            .eq("business_email", data.business_email)
-            .eq("status", "partial")
-            .maybeSingle();
-
-          if (existing) {
-            abandonedIdRef.current = existing.id;
-            await supabase
-              .from("abandoned_contact_requests")
-              .update(payload)
-              .eq("id", existing.id);
-          } else {
-            const { data: row } = await supabase
-              .from("abandoned_contact_requests")
-              .insert({ ...payload, status: "partial" })
-              .select("id")
-              .single();
-            if (row) abandonedIdRef.current = row.id;
-          }
-        }
+        await supabase
+          .from("abandoned_contact_requests")
+          .upsert(
+            { ...payload, status: "partial" },
+            { onConflict: "business_email" }
+          );
       } catch {
         // silent
       }

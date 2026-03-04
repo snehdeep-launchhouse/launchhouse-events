@@ -1,0 +1,1 @@
+ALTER TABLE public.abandoned_contact_requests ADD CONSTRAINT abandoned_contact_requests_business_email_key UNIQUE (business_email);
