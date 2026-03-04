@@ -82,7 +82,6 @@ const GetAQuote = () => {
   const [step2Error, setStep2Error] = useState("");
 
   // Abandoned tracking ref
-  const abandonedIdRef = useRef<string | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -120,38 +119,12 @@ const GetAQuote = () => {
           ...(data.captured_data ? { captured_data: data.captured_data as unknown as import("@/integrations/supabase/types").Json } : {}),
         };
 
-        if (abandonedIdRef.current) {
-          await supabase
-            .from("abandoned_contact_requests")
-            .update(payload)
-            .eq("id", abandonedIdRef.current);
-        } else {
-          // Try to find existing by email first, then insert or update
-          const { data: existing } = await supabase
-            .from("abandoned_contact_requests")
-            .select("id")
-            .eq("business_email", data.business_email)
-            .eq("status", "partial")
-            .maybeSingle();
-
-          if (existing) {
-            abandonedIdRef.current = existing.id;
-            await supabase
-              .from("abandoned_contact_requests")
-              .update(payload)
-              .eq("id", existing.id);
-          } else {
-            const { data: row } = await supabase
-              .from("abandoned_contact_requests")
-              .insert({
-                ...payload,
-                status: "partial",
-              })
-              .select("id")
-              .single();
-            if (row) abandonedIdRef.current = row.id;
-          }
-        }
+        await supabase
+          .from("abandoned_contact_requests")
+          .upsert(
+            { ...payload, status: "partial" },
+            { onConflict: "business_email" }
+          );
       } catch {
         // silent — tracking should not block the user
       }
@@ -159,11 +132,11 @@ const GetAQuote = () => {
     []
   );
 
-  const deleteAbandoned = useCallback(async (email: string) => {
+  const markAbandonedCompleted = useCallback(async (email: string) => {
     try {
       await supabase
         .from("abandoned_contact_requests")
-        .delete()
+        .update({ status: "completed" })
         .eq("business_email", email);
     } catch {
       // silent
@@ -248,7 +221,7 @@ const GetAQuote = () => {
       if (error) throw error;
 
       // Delete abandoned record on success
-      await deleteAbandoned(step1Data.email);
+      await markAbandonedCompleted(step1Data.email);
 
       setSubmitted(true);
     } catch (err: unknown) {
