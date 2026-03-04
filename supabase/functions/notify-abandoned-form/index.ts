@@ -6,6 +6,13 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+function sanitize(val: unknown, maxLen = 500): string {
+  if (typeof val !== "string") return "";
+  return val.slice(0, maxLen).replace(/[<>"'&]/g, (c) =>
+    ({ "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;", "&": "&amp;" }[c] ?? c)
+  );
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -17,7 +24,11 @@ serve(async (req) => {
 
     const { first_name, last_name, email, form_type, last_step_reached } = await req.json();
 
+    const safeFirstName = sanitize(first_name, 200);
+    const safeLastName = sanitize(last_name, 200);
+    const safeEmail = sanitize(email, 255);
     const formLabel = form_type === "demo" ? "Request a Demo" : "Contact Us";
+    const safeStep = typeof last_step_reached === "number" ? last_step_reached : 0;
 
     const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"/></head>
 <body style="font-family:'Inter',Arial,sans-serif;color:#111827;background:#ffffff;margin:0;padding:24px;">
@@ -28,10 +39,10 @@ serve(async (req) => {
     <div style="padding:32px;border:1px solid #d1d5db;border-top:none;border-radius:0 0 8px 8px;">
       <p style="margin:0 0 16px;font-size:15px;color:#374151;">A visitor abandoned the <strong>${formLabel}</strong> form. Here are the captured details:</p>
       <table style="width:100%;border-collapse:collapse;margin-bottom:24px;">
-        <tr><td style="padding:8px 12px;border:1px solid #d1d5db;background:#f9fafb;font-weight:600;width:40%;">Name</td><td style="padding:8px 12px;border:1px solid #d1d5db;">${first_name} ${last_name}</td></tr>
-        <tr><td style="padding:8px 12px;border:1px solid #d1d5db;background:#f9fafb;font-weight:600;">Email</td><td style="padding:8px 12px;border:1px solid #d1d5db;">${email}</td></tr>
+        <tr><td style="padding:8px 12px;border:1px solid #d1d5db;background:#f9fafb;font-weight:600;width:40%;">Name</td><td style="padding:8px 12px;border:1px solid #d1d5db;">${safeFirstName} ${safeLastName}</td></tr>
+        <tr><td style="padding:8px 12px;border:1px solid #d1d5db;background:#f9fafb;font-weight:600;">Email</td><td style="padding:8px 12px;border:1px solid #d1d5db;">${safeEmail}</td></tr>
         <tr><td style="padding:8px 12px;border:1px solid #d1d5db;background:#f9fafb;font-weight:600;">Form Type</td><td style="padding:8px 12px;border:1px solid #d1d5db;">${formLabel}</td></tr>
-        <tr><td style="padding:8px 12px;border:1px solid #d1d5db;background:#f9fafb;font-weight:600;">Last Step Reached</td><td style="padding:8px 12px;border:1px solid #d1d5db;">Step ${last_step_reached}</td></tr>
+        <tr><td style="padding:8px 12px;border:1px solid #d1d5db;background:#f9fafb;font-weight:600;">Last Step Reached</td><td style="padding:8px 12px;border:1px solid #d1d5db;">Step ${safeStep}</td></tr>
       </table>
       <p style="margin:0;font-size:14px;color:#6b7280;">Follow up with this lead as soon as possible.</p>
     </div>
@@ -40,9 +51,8 @@ serve(async (req) => {
 </body></html>`;
 
     const from = "LaunchHouse Events <noreply@launchhouse.events>";
-    const subject = `⚠️ Abandoned ${formLabel} — ${first_name} ${last_name}`;
+    const subject = `⚠️ Abandoned ${formLabel} — ${safeFirstName} ${safeLastName}`;
 
-    // Send to both admins
     for (const recipient of ["snehdeep@launchhouse.events", "sam@launchhouse.events"]) {
       const res = await fetch("https://api.resend.com/emails", {
         method: "POST",
@@ -61,7 +71,7 @@ serve(async (req) => {
     });
   } catch (err) {
     console.error("notify-abandoned-form error:", err);
-    return new Response(JSON.stringify({ error: err.message }), {
+    return new Response(JSON.stringify({ error: "An error occurred. Please try again." }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
