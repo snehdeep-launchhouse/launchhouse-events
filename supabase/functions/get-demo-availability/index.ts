@@ -128,7 +128,7 @@ serve(async (req) => {
     });
   } catch (err) {
     console.error("get-demo-availability error:", err);
-    return new Response(JSON.stringify({ error: err.message }), {
+    return new Response(JSON.stringify({ error: "Unable to load availability. Please try again." }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
