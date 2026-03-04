@@ -1,54 +1,119 @@
+Banner Image Replacement Plan
 
+Current State
 
-## Test Results and Fix Plan
+The current banner sections across the website are using simple solid color backgrounds rather than real imagery. I want to replace these color blocks with professional banner images that visually represent our business while keeping the existing layout and text exactly the same.
 
-### Issues Found
+Objective
 
-**1. `abandoned_contact_requests` INSERT fails (401 RLS violation)**
+Generate and apply professional banner images for each page of the website using the uploaded reference images as style guidance. The banners should reflect our business as an event technology services and consulting company.
 
-The code in `ContactUsPanel.tsx` (line 246-264) and `GetAQuote.tsx` (line 130-152) tries to:
-1. `.select("id")` to find existing rows -- fails because anonymous users have no SELECT permission
-2. `.insert({...}).select("id").single()` -- the INSERT itself works, but the chained `.select("id")` requires SELECT permission, causing the entire operation to fail with 401
+The goal is to improve visual quality while preserving the existing design, layout, and text content.
 
-The `abandoned_demo_form` table works because its INSERT code (line 135-146) uses plain `.insert()` without `.select()`.
+Important Restrictions
 
-**Fix**: Add a SELECT policy for anonymous users scoped to matching their own `business_email`, or change the code to not require SELECT on insert (remove `.select("id").single()` and use a different tracking approach).
+Do NOT modify or rewrite any existing text in the hero/banner sections.
 
-The simpler and more secure approach: change the frontend code to use `.upsert()` with `onConflict: "business_email"` (there's already a unique constraint implied by the upsert pattern) and remove the need for SELECT entirely.
+Do NOT change layout, spacing, padding, overlay opacity, alignment, or component structure.
 
-**2. `GetAQuote.tsx` still uses `.delete()` instead of `.update()`**
+Do NOT modify buttons, headings, badges, or typography.
 
-Line 164-167 in `GetAQuote.tsx` still calls `.delete()` on `abandoned_contact_requests`, but the previous migration removed public DELETE access. This was fixed in `ContactUsPanel.tsx` but missed in `GetAQuote.tsx`.
+Only replace the background/banner images.
 
-**3. `build_requests` table has no INSERT policy**
+Design Style Requirements
 
-The schema shows "Can't INSERT records" for `build_requests`. The Build Request form submissions go through the edge function (`send-build-request`) which uses `SUPABASE_SERVICE_ROLE_KEY`, so this works. Not a bug -- just noting it.
+Use the uploaded reference images as inspiration for the visual style.
 
-**4. `demo_requests` INSERT works via edge function**
+Banners should feature:
 
-Same pattern as build_requests -- the `book-demo` edge function handles the insert with service role key.
+• professional corporate environments  
+• humans interacting with event technology  
+• conference or event operations environments  
+• consulting or collaboration scenes
 
----
+Visual tone should be:
 
-### Changes Required
+• modern  
+• clean  
+• corporate  
+• premium SaaS-style  
+• blue or neutral professional color palette
 
-**A. Fix `ContactUsPanel.tsx` abandoned contact tracking (lines ~240-267)**
-- Remove the SELECT-then-INSERT pattern
-- Replace with a single `.upsert()` call using `onConflict: "business_email"` 
-- Remove `.select("id").single()` from the insert
-- Track the row by `business_email` instead of `id`
+Whenever possible, compose images with a fade or softer area on the left side so existing hero text remains clearly readable.
 
-**B. Fix `GetAQuote.tsx` abandoned contact tracking (lines ~120-170)**
-- Apply the same upsert pattern fix as ContactUsPanel
-- Fix line 164-167: change `.delete()` to `.update({ status: "completed" })`
+Accessibility Requirements
 
-**C. Database: Add unique constraint on `abandoned_contact_requests.business_email`**
-- Required for the `onConflict` upsert to work
-- Run migration: `ALTER TABLE public.abandoned_contact_requests ADD CONSTRAINT abandoned_contact_requests_business_email_key UNIQUE (business_email);`
+Ensure all banner images maintain strong readability for the existing hero text.
 
-### No other forms are broken
-- Contact Us panel Step 1 -> Step 2 auto-advance works
-- Build Request form loads and renders correctly
-- Request Demo panel (uses `abandoned_demo_form` with session-based tracking) works -- INSERT returned 201, UPDATE returned 204
-- The 401 errors on `abandoned_contact_requests` are silent failures (caught by try/catch), so the user experience is not blocked, but lead tracking data is lost
+Maintain good contrast between the background image and text to comply with accessibility best practices.
 
+Do not introduce visual noise behind the text area.
+
+Images should feel subtle and professional rather than busy.
+
+Banner Images to Generate
+
+Create unique banner images for the following pages:
+
+Home / Index  
+Theme: Event technology professionals operating event dashboards, registrations, or analytics in a command center environment.
+
+About Us  
+Theme: Diverse professional team collaborating in a modern office or conference setting, representing expertise and consulting.
+
+Services  
+Theme: Event technology specialists configuring event platforms, dashboards, or registration systems in a conference environment.
+
+Pricing  
+Theme: Professional consultation scene showing planning discussions, proposals, or strategy with screens or laptops.
+
+Build Request  
+Theme: Event preparation or backstage operations with a team preparing event systems or technology setups.
+
+Get a Quote  
+Theme: Business consultation or meeting scene between professionals discussing event solutions.
+
+CTA Sections (bottom sections on About, Services, Pricing pages)  
+Theme: Corporate conference environment or event check-in area with attendees and event technology in use.
+
+Implementation Approach
+
+Create a dedicated banner image folder:
+
+src/assets/banners/
+
+Generate and store unique images:
+
+home-banner.jpg  
+about-banner.jpg  
+services-banner.jpg  
+pricing-banner.jpg  
+build-request-banner.jpg  
+get-quote-banner.jpg  
+cta-banner.jpg
+
+Update the relevant components and page files to reference these banner images.
+
+Do not overwrite existing asset files. Instead, update the import paths to the new banner images.
+
+Files Likely Referencing Banner Images
+
+Hero section component  
+Home page  
+About page  
+Services page  
+Pricing page  
+Build Request page  
+Get a Quote page
+
+Technical Requirements
+
+Images should be optimized for web performance.
+
+Maintain responsive behavior across desktop, tablet, and mobile.
+
+Ensure images scale correctly in existing hero sections without altering layout.
+
+Summary
+
+Replace the current solid-color hero backgrounds with professional banner images inspired by the uploaded references while leaving all text, layout, and components unchanged.
