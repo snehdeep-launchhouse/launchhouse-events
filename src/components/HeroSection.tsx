@@ -14,7 +14,7 @@ const HeroSection = () => {
   return (
     <section className="relative pt-[var(--nav-height)] overflow-hidden">
       <div className="absolute inset-0">
-        <img src={heroBanner} alt="" className="w-full h-full object-cover" loading="eager" fetchPriority="high" decoding="async" />
+        <img src={heroBanner} alt="" className="w-full h-full object-cover" loading="eager" fetchPriority="high" decoding="async" width={1436} height={808} />
         <div className="absolute inset-0 bg-[hsl(220,90%,10%)]/60" />
       </div>
       <div className="container relative py-24 md:py-36 flex flex-col items-center text-center gap-8">
