@@ -44,6 +44,11 @@ serve(async (req: Request) => {
       throw new Error("Only active admins can send reset password emails");
     }
 
+    const MASTER_ADMIN_ID = "b426c88b-14a2-46ed-93f3-08cb00282b83";
+    if (caller.id !== MASTER_ADMIN_ID) {
+      throw new Error("Only the master admin can reset passwords");
+    }
+
     const { email } = await req.json();
     if (!email) throw new Error("Email is required");
 
