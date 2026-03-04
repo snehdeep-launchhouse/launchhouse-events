@@ -236,12 +236,18 @@ const ContactUsPanel = ({ open, onOpenChange }: ContactUsPanelProps) => {
             : {}),
         };
 
-        await supabase
+        // Try INSERT first; if duplicate email, fall back to UPDATE
+        const { error: insertError } = await supabase
           .from("abandoned_contact_requests")
-          .upsert(
-            { ...payload, status: "partial" },
-            { onConflict: "business_email" }
-          );
+          .insert({ ...payload, status: "partial" });
+
+        if (insertError?.code === "23505") {
+          // Duplicate email — update instead
+          await supabase
+            .from("abandoned_contact_requests")
+            .update(payload)
+            .eq("business_email", data.business_email);
+        }
       } catch {
         // silent
       }
