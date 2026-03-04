@@ -274,7 +274,7 @@ const ContactUsPanel = ({ open, onOpenChange }: ContactUsPanelProps) => {
 
   const deleteAbandoned = useCallback(async (email: string) => {
     try {
-      await supabase.from("abandoned_contact_requests").delete().eq("business_email", email);
+      await supabase.from("abandoned_contact_requests").update({ status: "completed" }).eq("business_email", email);
     } catch {
       // silent
     }
