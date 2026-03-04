@@ -119,12 +119,17 @@ const GetAQuote = () => {
           ...(data.captured_data ? { captured_data: data.captured_data as unknown as import("@/integrations/supabase/types").Json } : {}),
         };
 
-        await supabase
+        // Try INSERT first; if duplicate email, fall back to UPDATE
+        const { error: insertError } = await supabase
           .from("abandoned_contact_requests")
-          .upsert(
-            { ...payload, status: "partial" },
-            { onConflict: "business_email" }
-          );
+          .insert({ ...payload, status: "partial" });
+
+        if (insertError?.code === "23505") {
+          await supabase
+            .from("abandoned_contact_requests")
+            .update(payload)
+            .eq("business_email", data.business_email);
+        }
       } catch {
         // silent — tracking should not block the user
       }
