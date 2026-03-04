@@ -1,67 +1,54 @@
 
 
-## Security Re-scan Results and Fix Plan
+## Test Results and Fix Plan
 
-The scan found **10 errors** and **12 warnings** remaining. Here is what needs to be fixed and how.
+### Issues Found
 
----
+**1. `abandoned_contact_requests` INSERT fails (401 RLS violation)**
 
-### Errors to Fix
+The code in `ContactUsPanel.tsx` (line 246-264) and `GetAQuote.tsx` (line 130-152) tries to:
+1. `.select("id")` to find existing rows -- fails because anonymous users have no SELECT permission
+2. `.insert({...}).select("id").single()` -- the INSERT itself works, but the chained `.select("id")` requires SELECT permission, causing the entire operation to fail with 401
 
-**1. Overly permissive UPDATE/DELETE policies (3 tables)**
+The `abandoned_demo_form` table works because its INSERT code (line 135-146) uses plain `.insert()` without `.select()`.
 
-The previous migration left `USING (true)` on UPDATE and DELETE policies, meaning any anonymous user can modify/delete any row.
+**Fix**: Add a SELECT policy for anonymous users scoped to matching their own `business_email`, or change the code to not require SELECT on insert (remove `.select("id").single()` and use a different tracking approach).
 
-| Table | Issue | Fix |
-|-------|-------|-----|
-| `abandoned_contact_requests` | UPDATE `USING (true)`, DELETE `USING (true)` | Remove public DELETE entirely. Scope UPDATE so users can only update rows matching their own `business_email` (the column used as identifier in frontend upsert logic). Add admin-only DELETE. |
-| `abandoned_demo_form` | UPDATE `USING (true)` | Scope UPDATE to rows matching the caller's `session_id` (frontend passes `session_id` for all updates). |
-| `abandoned_eb_forms` | UPDATE `USING (true)` | Scope UPDATE to rows matching the caller's `email` (frontend uses `onConflict: "email"` upsert). Also remove the duplicate INSERT policy (`Public can submit forms`). |
+The simpler and more secure approach: change the frontend code to use `.upsert()` with `onConflict: "business_email"` (there's already a unique constraint implied by the upsert pattern) and remove the need for SELECT entirely.
 
-**2. SELECT policies using `{public}` role instead of `{authenticated}`**
+**2. `GetAQuote.tsx` still uses `.delete()` instead of `.update()`**
 
-Several SELECT policies (on `abandoned_contact_requests`, `demo_requests`, `build_requests`, `quote_requests`) are granted to the `public` role even though they restrict via `auth.uid()` checks. Since `auth.uid()` is always null for anonymous users, these effectively block anonymous reads -- but best practice is to restrict the role to `authenticated` to make intent explicit and satisfy the scanner.
+Line 164-167 in `GetAQuote.tsx` still calls `.delete()` on `abandoned_contact_requests`, but the previous migration removed public DELETE access. This was fixed in `ContactUsPanel.tsx` but missed in `GetAQuote.tsx`.
 
-All six admin-only SELECT policies will be recreated with `TO authenticated` instead of `TO public`.
+**3. `build_requests` table has no INSERT policy**
 
----
+The schema shows "Can't INSERT records" for `build_requests`. The Build Request form submissions go through the edge function (`send-build-request`) which uses `SUPABASE_SERVICE_ROLE_KEY`, so this works. Not a bug -- just noting it.
 
-### Warnings to Fix
+**4. `demo_requests` INSERT works via edge function**
 
-**3. "RLS Policy Always True" (10 findings)**
-
-- The INSERT `WITH CHECK (true)` policies on form submission tables are **intentional** (public users must submit forms). These are acceptable.
-- The UPDATE `USING (true)` findings are addressed by Error fix #1 above.
-
-**4. "Leaked Password Protection Disabled"**
-
-Enable leaked password protection via the auth configuration tool. This checks passwords against known breach databases.
-
-**5. "Admin User List Could Be Enumerated" (low risk)**
-
-The current policy `auth.uid() = id` only lets authenticated users check their own row -- this is minimal and necessary for the admin invite acceptance flow. No change needed.
+Same pattern as build_requests -- the `book-demo` edge function handles the insert with service role key.
 
 ---
 
-### Implementation: Single SQL Migration
+### Changes Required
 
-One migration will:
-1. Drop and recreate UPDATE/DELETE policies on all three abandoned tables with proper scoping
-2. Drop the duplicate INSERT policy on `abandoned_eb_forms`
-3. Recreate all admin SELECT policies with `TO authenticated` role
-4. Enable leaked password protection via auth config tool
+**A. Fix `ContactUsPanel.tsx` abandoned contact tracking (lines ~240-267)**
+- Remove the SELECT-then-INSERT pattern
+- Replace with a single `.upsert()` call using `onConflict: "business_email"` 
+- Remove `.select("id").single()` from the insert
+- Track the row by `business_email` instead of `id`
 
-### Frontend Changes
+**B. Fix `GetAQuote.tsx` abandoned contact tracking (lines ~120-170)**
+- Apply the same upsert pattern fix as ContactUsPanel
+- Fix line 164-167: change `.delete()` to `.update({ status: "completed" })`
 
-- `ContactUsPanel.tsx`: The `deleteAbandoned` function calls `.delete().eq("business_email", email)` on `abandoned_contact_requests`. Since we're removing public DELETE, this call will fail silently (which is acceptable -- it's a cleanup convenience, not critical). Alternatively, mark the row as `completed` instead of deleting. Will update this to use `.update({ status: "completed" })` instead.
+**C. Database: Add unique constraint on `abandoned_contact_requests.business_email`**
+- Required for the `onConflict` upsert to work
+- Run migration: `ALTER TABLE public.abandoned_contact_requests ADD CONSTRAINT abandoned_contact_requests_business_email_key UNIQUE (business_email);`
 
----
-
-### Summary of Changes
-
-| Area | Files/Resources | Change |
-|------|----------------|--------|
-| Database migration | New migration SQL | Fix 8 RLS policies across 6 tables |
-| Auth config | Auth settings | Enable leaked password protection |
-| Frontend | `ContactUsPanel.tsx` | Replace `.delete()` with `.update({ status: "completed" })` for abandoned contact cleanup |
+### No other forms are broken
+- Contact Us panel Step 1 -> Step 2 auto-advance works
+- Build Request form loads and renders correctly
+- Request Demo panel (uses `abandoned_demo_form` with session-based tracking) works -- INSERT returned 201, UPDATE returned 204
+- The 401 errors on `abandoned_contact_requests` are silent failures (caught by try/catch), so the user experience is not blocked, but lead tracking data is lost
 
