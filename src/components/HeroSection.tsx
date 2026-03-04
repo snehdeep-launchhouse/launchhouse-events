@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Zap } from "lucide-react";
-import heroBanner from "@/assets/hero-banner.jpg";
+const heroBanner = "/hero-banner.jpg";
 import TnCTooltip from "@/components/TnCTooltip";
 import { useContactPanel } from "@/components/ContactPanelProvider";
 
