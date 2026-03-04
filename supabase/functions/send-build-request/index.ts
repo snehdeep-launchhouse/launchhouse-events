@@ -86,6 +86,17 @@ async function createDriveFolder(
   return meta.webViewLink ?? `https://drive.google.com/drive/folders/${folderId}`;
 }
 
+// ── Validation & sanitization helpers ───────────────────────────────
+
+const EMAIL_RE = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
+function sanitize(val: unknown, maxLen = 500): string {
+  if (typeof val !== "string") return "";
+  return val.slice(0, maxLen).replace(/[<>"'&]/g, (c) =>
+    ({ "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;", "&": "&amp;" }[c] ?? c)
+  );
+}
+
 // ── Email helpers ───────────────────────────────────────────────────
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -105,7 +116,7 @@ function buildInternalHtml(rows: [string, string][]) {
   const tableRows = rows
     .map(([field, value]) => `
       <tr>
-        <td style="padding:8px 12px;border:1px solid #d1d5db;background:#f9fafb;font-weight:600;white-space:nowrap;vertical-align:top;width:35%;">${field}</td>
+        <td style="padding:8px 12px;border:1px solid #d1d5db;background:#f9fafb;font-weight:600;white-space:nowrap;vertical-align:top;width:35%;">${sanitize(field, 200)}</td>
         <td style="padding:8px 12px;border:1px solid #d1d5db;vertical-align:top;">${String(value).replace(/\n/g, "<br/>")}</td>
       </tr>`)
     .join("");
@@ -138,14 +149,14 @@ function buildConfirmationHtml(payload: any, driveFolderLink: string | null) {
       <h1 style="margin:0;color:#ffffff;font-size:22px;font-family:'Space Grotesk',Arial,sans-serif;">Thank You for Your Build Request!</h1>
     </div>
     <div style="padding:32px;border:1px solid #d1d5db;border-top:none;border-radius:0 0 8px 8px;">
-      <p style="margin:0 0 16px;font-size:16px;">Hi ${payload.firstName ?? ""},</p>
-      <p style="margin:0 0 16px;font-size:15px;color:#374151;">Thank you for submitting your event build request for <strong>${payload.eventTitle ?? "your event"}</strong>. We've received everything and our team will be in touch shortly to confirm your kick-off call.</p>
+      <p style="margin:0 0 16px;font-size:16px;">Hi ${sanitize(payload.firstName)},</p>
+      <p style="margin:0 0 16px;font-size:15px;color:#374151;">Thank you for submitting your event build request for <strong>${sanitize(payload.eventTitle) || "your event"}</strong>. We've received everything and our team will be in touch shortly to confirm your kick-off call.</p>
       <p style="margin:0 0 16px;font-size:15px;color:#374151;">Here's a quick summary of what you submitted:</p>
       <table style="width:100%;border-collapse:collapse;margin-bottom:24px;">
-        <tr><td style="padding:8px 12px;border:1px solid #d1d5db;background:#f9fafb;font-weight:600;width:40%;vertical-align:top;">Event</td><td style="padding:8px 12px;border:1px solid #d1d5db;vertical-align:top;">${payload.eventTitle ?? ""}</td></tr>
-        <tr><td style="padding:8px 12px;border:1px solid #d1d5db;background:#f9fafb;font-weight:600;vertical-align:top;">Company</td><td style="padding:8px 12px;border:1px solid #d1d5db;vertical-align:top;">${payload.companyName ?? ""}</td></tr>
-        <tr><td style="padding:8px 12px;border:1px solid #d1d5db;background:#f9fafb;font-weight:600;vertical-align:top;">Kick-off Preference 1</td><td style="padding:8px 12px;border:1px solid #d1d5db;vertical-align:top;">${payload.kickoffDate1 ?? ""} at ${payload.kickoffTime1 ?? ""} (${payload.kickoffTimezone ?? ""})</td></tr>
-        <tr><td style="padding:8px 12px;border:1px solid #d1d5db;background:#f9fafb;font-weight:600;vertical-align:top;">Solutions Requested</td><td style="padding:8px 12px;border:1px solid #d1d5db;vertical-align:top;">${Array.isArray(payload.chosenSolutions) ? payload.chosenSolutions.join(", ") : (payload.chosenSolutions ?? "")}</td></tr>
+        <tr><td style="padding:8px 12px;border:1px solid #d1d5db;background:#f9fafb;font-weight:600;width:40%;vertical-align:top;">Event</td><td style="padding:8px 12px;border:1px solid #d1d5db;vertical-align:top;">${sanitize(payload.eventTitle)}</td></tr>
+        <tr><td style="padding:8px 12px;border:1px solid #d1d5db;background:#f9fafb;font-weight:600;vertical-align:top;">Company</td><td style="padding:8px 12px;border:1px solid #d1d5db;vertical-align:top;">${sanitize(payload.companyName)}</td></tr>
+        <tr><td style="padding:8px 12px;border:1px solid #d1d5db;background:#f9fafb;font-weight:600;vertical-align:top;">Kick-off Preference 1</td><td style="padding:8px 12px;border:1px solid #d1d5db;vertical-align:top;">${sanitize(payload.kickoffDate1)} at ${sanitize(payload.kickoffTime1)} (${sanitize(payload.kickoffTimezone)})</td></tr>
+        <tr><td style="padding:8px 12px;border:1px solid #d1d5db;background:#f9fafb;font-weight:600;vertical-align:top;">Solutions Requested</td><td style="padding:8px 12px;border:1px solid #d1d5db;vertical-align:top;">${Array.isArray(payload.chosenSolutions) ? payload.chosenSolutions.map((s: string) => sanitize(s, 100)).join(", ") : sanitize(payload.chosenSolutions)}</td></tr>
       </table>
       ${driveBlock}
       <p style="margin:0 0 16px;font-size:15px;color:#374151;">If you have any questions in the meantime, feel free to reply to this email.</p>
@@ -157,6 +168,9 @@ function buildConfirmationHtml(payload: any, driveFolderLink: string | null) {
 }
 
 function buildPlannerNotificationHtml(plannerName: string, eventTitle: string, submitterName: string, driveFolderLink: string | null) {
+  const safePlannerName = sanitize(plannerName);
+  const safeEventTitle = sanitize(eventTitle);
+  const safeSubmitterName = sanitize(submitterName);
   const driveBlock = driveFolderLink
     ? `<p style="margin:0 0 16px;font-size:15px;color:#374151;">
          A shared Google Drive folder has been created for this event. Please use it to upload any relevant documents:
@@ -172,8 +186,8 @@ function buildPlannerNotificationHtml(plannerName: string, eventTitle: string, s
       <h1 style="margin:0;color:#ffffff;font-size:22px;font-family:'Space Grotesk',Arial,sans-serif;">You've Been Added as a Planner Contact</h1>
     </div>
     <div style="padding:32px;border:1px solid #d1d5db;border-top:none;border-radius:0 0 8px 8px;">
-      <p style="margin:0 0 16px;font-size:16px;">Hi ${plannerName},</p>
-      <p style="margin:0 0 16px;font-size:15px;color:#374151;">You've been listed as a planner contact for <strong>${eventTitle}</strong> by ${submitterName}. The LaunchHouse Events team will be in touch regarding the kick-off call.</p>
+      <p style="margin:0 0 16px;font-size:16px;">Hi ${safePlannerName},</p>
+      <p style="margin:0 0 16px;font-size:15px;color:#374151;">You've been listed as a planner contact for <strong>${safeEventTitle}</strong> by ${safeSubmitterName}. The LaunchHouse Events team will be in touch regarding the kick-off call.</p>
       ${driveBlock}
       <p style="margin:0 0 16px;font-size:15px;color:#374151;">If you have any questions, feel free to reply to this email.</p>
       <p style="margin:0;font-size:15px;color:#374151;">Warm regards,<br/><strong>The LaunchHouse Events Team</strong></p>
@@ -201,34 +215,69 @@ serve(async (req) => {
 
     const payload = await req.json();
 
+    // ── Input validation ──
+    const email = typeof payload.email === "string" ? payload.email.trim() : "";
+    const firstName = typeof payload.firstName === "string" ? payload.firstName.trim() : "";
+    const lastName = typeof payload.lastName === "string" ? payload.lastName.trim() : "";
+    const companyName = typeof payload.companyName === "string" ? payload.companyName.trim() : "";
+    const eventTitle = typeof payload.eventTitle === "string" ? payload.eventTitle.trim() : "";
+
+    if (!email || !EMAIL_RE.test(email)) {
+      return new Response(JSON.stringify({ success: false, error: "A valid email address is required." }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    if (!firstName || firstName.length > 200) {
+      return new Response(JSON.stringify({ success: false, error: "First name is required (max 200 chars)." }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    if (!lastName || lastName.length > 200) {
+      return new Response(JSON.stringify({ success: false, error: "Last name is required (max 200 chars)." }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    if (!companyName || companyName.length > 300) {
+      return new Response(JSON.stringify({ success: false, error: "Company name is required (max 300 chars)." }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    if (!eventTitle || eventTitle.length > 300) {
+      return new Response(JSON.stringify({ success: false, error: "Event title is required (max 300 chars)." }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    // Validate contact emails if provided
+    if (Array.isArray(payload.contacts)) {
+      if (payload.contacts.length > 20) {
+        return new Response(JSON.stringify({ success: false, error: "Too many contacts (max 20)." }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      for (const c of payload.contacts) {
+        const cEmail = typeof c?.email === "string" ? c.email.trim() : "";
+        if (cEmail && !EMAIL_RE.test(cEmail)) {
+          return new Response(JSON.stringify({ success: false, error: `Invalid contact email: ${cEmail.slice(0, 50)}` }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
+      }
+    }
+
     // ── Build data rows for internal email ────────────────────────
     const rows: [string, string][] = [
-      ["First Name", payload.firstName ?? ""],
-      ["Last Name", payload.lastName ?? ""],
-      ["Email Address", payload.email ?? ""],
-      ["Company Name", payload.companyName ?? ""],
+      ["First Name", sanitize(payload.firstName)],
+      ["Last Name", sanitize(payload.lastName)],
+      ["Email Address", sanitize(payload.email)],
+      ["Company Name", sanitize(payload.companyName)],
       ...(Array.isArray(payload.contacts)
         ? payload.contacts.map((c: { fullName: string; email: string }, i: number) => [
             `Point of Contact ${i + 1}${i === 0 ? " (Primary)" : ""}`,
-            `${c.fullName} <${c.email}>`,
+            `${sanitize(c.fullName)} &lt;${sanitize(c.email)}&gt;`,
           ] as [string, string])
         : [["Points of Contact", "N/A"] as [string, string]]),
-      ["Contact Number of Primary POC", payload.primaryPocPhone ?? ""],
-      ["Preferred Time Zone (Kick Off)", payload.kickoffTimezone ?? ""],
-      ["Kick Off Preference 1 – Date", payload.kickoffDate1 ?? ""],
-      ["Kick Off Preference 1 – Time", payload.kickoffTime1 ?? ""],
-      ["Kick Off Preference 2 – Date", payload.kickoffDate2 ?? "N/A"],
-      ["Kick Off Preference 2 – Time", payload.kickoffTime2 ?? "N/A"],
-      ["Solutions to Include", Array.isArray(payload.chosenSolutions) ? payload.chosenSolutions.join(", ") : (payload.chosenSolutions ?? "")],
-      ["Account Number", payload.accountNumber ?? ""],
-      ["Event Title", payload.eventTitle ?? ""],
-      ["Event Start Date", payload.eventStartDate ?? ""],
-      ["Event Start Time", payload.eventStartTime ?? ""],
-      ["Event End Date", payload.eventEndDate ?? ""],
-      ["Event End Time", payload.eventEndTime ?? ""],
-      ["Event Time Zone", payload.eventTimezone ?? ""],
-      ["Expected Go Live Date", payload.goLiveDate ?? ""],
-      ["Additional Information", payload.additionalInfo ?? "N/A"],
+      ["Contact Number of Primary POC", sanitize(payload.primaryPocPhone)],
+      ["Preferred Time Zone (Kick Off)", sanitize(payload.kickoffTimezone)],
+      ["Kick Off Preference 1 – Date", sanitize(payload.kickoffDate1)],
+      ["Kick Off Preference 1 – Time", sanitize(payload.kickoffTime1)],
+      ["Kick Off Preference 2 – Date", sanitize(payload.kickoffDate2) || "N/A"],
+      ["Kick Off Preference 2 – Time", sanitize(payload.kickoffTime2) || "N/A"],
+      ["Solutions to Include", Array.isArray(payload.chosenSolutions) ? payload.chosenSolutions.map((s: string) => sanitize(s, 100)).join(", ") : sanitize(payload.chosenSolutions)],
+      ["Account Number", sanitize(payload.accountNumber)],
+      ["Event Title", sanitize(payload.eventTitle)],
+      ["Event Start Date", sanitize(payload.eventStartDate)],
+      ["Event Start Time", sanitize(payload.eventStartTime)],
+      ["Event End Date", sanitize(payload.eventEndDate)],
+      ["Event End Time", sanitize(payload.eventEndTime)],
+      ["Event Time Zone", sanitize(payload.eventTimezone)],
+      ["Expected Go Live Date", sanitize(payload.goLiveDate)],
+      ["Additional Information", sanitize(payload.additionalInfo) || "N/A"],
     ];
 
     // ── Log to database ──────────────────────────────────────────
