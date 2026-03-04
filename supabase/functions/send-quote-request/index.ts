@@ -7,6 +7,15 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const EMAIL_RE = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
+function sanitize(val: unknown, maxLen = 500): string {
+  if (typeof val !== "string") return "";
+  return val.slice(0, maxLen).replace(/[<>"'&]/g, (c) =>
+    ({ "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;", "&": "&amp;" }[c] ?? c)
+  );
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -24,6 +33,16 @@ serve(async (req) => {
     );
 
     const payload = await req.json();
+
+    // ── Input validation ──
+    const email = typeof payload.email === "string" ? payload.email.trim() : "";
+    const fullName = typeof payload.fullName === "string" ? payload.fullName.trim() : "";
+    if (!email || !EMAIL_RE.test(email)) {
+      return new Response(JSON.stringify({ success: false, error: "A valid email address is required." }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    if (!fullName || fullName.length > 200) {
+      return new Response(JSON.stringify({ success: false, error: "A valid full name is required (max 200 chars)." }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
 
     // ── Insert row into quote_requests and get back the quote_number ──
     const { data: insertedRow, error: dbError } = await supabase
@@ -62,9 +81,9 @@ serve(async (req) => {
 
     const rows: [string, string][] = [
       ["Reference", `#${quotePadded}`],
-      ["Full Name", payload.fullName ?? ""],
-      ["Email", payload.email ?? ""],
-      ["Services Interested In", `${techList}${otherTech}`],
+      ["Full Name", sanitize(payload.fullName)],
+      ["Email", sanitize(payload.email)],
+      ["Services Interested In", `${sanitize(techList)}${sanitize(otherTech)}`],
     ];
 
     const tableRows = rows
@@ -114,7 +133,7 @@ serve(async (req) => {
       </h1>
     </div>
     <div style="padding:32px;border:1px solid #d1d5db;border-top:none;border-radius:0 0 8px 8px;">
-      <p style="margin:0 0 16px;font-size:16px;">Hi ${payload.fullName ?? ""},</p>
+      <p style="margin:0 0 16px;font-size:16px;">Hi ${sanitize(payload.fullName)},</p>
       <p style="margin:0 0 16px;font-size:15px;color:#374151;">
         Thank you for contacting LaunchHouse Events. We've received your request and our team will review it shortly.
       </p>
