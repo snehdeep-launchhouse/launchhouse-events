@@ -65,7 +65,7 @@ serve(async (req) => {
 
     if (dbError) {
       console.error("DB insert error:", dbError);
-      throw new Error(`Database error: ${dbError.message}`);
+      throw new Error("Failed to process your request. Please try again.");
     }
 
     const quoteNumber = insertedRow?.quote_number ?? 0;
@@ -206,9 +206,8 @@ serve(async (req) => {
     );
   } catch (err: unknown) {
     console.error("send-quote-request error:", err);
-    const message = err instanceof Error ? err.message : "Unknown error";
     return new Response(
-      JSON.stringify({ success: false, error: message }),
+      JSON.stringify({ success: false, error: "An error occurred while processing your request. Please try again." }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

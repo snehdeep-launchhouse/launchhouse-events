@@ -7,6 +7,15 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const EMAIL_RE = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
+function sanitize(val: unknown, maxLen = 500): string {
+  if (typeof val !== "string") return "";
+  return val.slice(0, maxLen).replace(/[<>"'&]/g, (c) =>
+    ({ "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;", "&": "&amp;" }[c] ?? c)
+  );
+}
+
 function base64url(data: Uint8Array): string {
   let binary = "";
   for (const byte of data) binary += String.fromCharCode(byte);
@@ -87,8 +96,13 @@ function buildConfirmationEmail(payload: {
   eventLink: string;
   attendees: string[];
 }): string {
+  const safeFirst = sanitize(payload.firstName);
+  const safeProducts = payload.products.map(p => sanitize(p, 100)).join(", ");
+  const safeDate = sanitize(payload.date, 50);
+  const safeAttendees = payload.attendees.map(a => sanitize(a, 255)).join(", ");
+
   const attendeeList = payload.attendees.length > 0
-    ? `<tr><td style="padding:8px 12px;border:1px solid #d1d5db;background:#f9fafb;font-weight:600;vertical-align:top;">Additional Attendees</td><td style="padding:8px 12px;border:1px solid #d1d5db;vertical-align:top;">${payload.attendees.join(", ")}</td></tr>`
+    ? `<tr><td style="padding:8px 12px;border:1px solid #d1d5db;background:#f9fafb;font-weight:600;vertical-align:top;">Additional Attendees</td><td style="padding:8px 12px;border:1px solid #d1d5db;vertical-align:top;">${safeAttendees}</td></tr>`
     : "";
 
   return `<!DOCTYPE html><html><head><meta charset="UTF-8"/></head>
@@ -98,11 +112,11 @@ function buildConfirmationEmail(payload: {
       <h1 style="margin:0;color:#ffffff;font-size:22px;font-family:'Space Grotesk',Arial,sans-serif;">Your Demo is Confirmed!</h1>
     </div>
     <div style="padding:32px;border:1px solid #d1d5db;border-top:none;border-radius:0 0 8px 8px;">
-      <p style="margin:0 0 16px;font-size:16px;">Hi ${payload.firstName},</p>
+      <p style="margin:0 0 16px;font-size:16px;">Hi ${safeFirst},</p>
       <p style="margin:0 0 16px;font-size:15px;color:#374151;">Your demo has been scheduled. Here are the details:</p>
       <table style="width:100%;border-collapse:collapse;margin-bottom:24px;">
-        <tr><td style="padding:8px 12px;border:1px solid #d1d5db;background:#f9fafb;font-weight:600;vertical-align:top;width:40%;">Product(s)</td><td style="padding:8px 12px;border:1px solid #d1d5db;vertical-align:top;">${payload.products.join(", ")}</td></tr>
-        <tr><td style="padding:8px 12px;border:1px solid #d1d5db;background:#f9fafb;font-weight:600;vertical-align:top;">Date</td><td style="padding:8px 12px;border:1px solid #d1d5db;vertical-align:top;">${payload.date}</td></tr>
+        <tr><td style="padding:8px 12px;border:1px solid #d1d5db;background:#f9fafb;font-weight:600;vertical-align:top;width:40%;">Product(s)</td><td style="padding:8px 12px;border:1px solid #d1d5db;vertical-align:top;">${safeProducts}</td></tr>
+        <tr><td style="padding:8px 12px;border:1px solid #d1d5db;background:#f9fafb;font-weight:600;vertical-align:top;">Date</td><td style="padding:8px 12px;border:1px solid #d1d5db;vertical-align:top;">${safeDate}</td></tr>
         <tr><td style="padding:8px 12px;border:1px solid #d1d5db;background:#f9fafb;font-weight:600;vertical-align:top;">Time</td><td style="padding:8px 12px;border:1px solid #d1d5db;vertical-align:top;">${formatTime12h(payload.time)} ET</td></tr>
         ${attendeeList}
       </table>
@@ -130,8 +144,12 @@ serve(async (req) => {
     const calendarId = Deno.env.get("GOOGLE_CALENDAR_ID");
     const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 
-    if (!serviceAccountKey || !calendarId) throw new Error("Google Calendar secrets not configured");
-    if (!RESEND_API_KEY) throw new Error("RESEND_API_KEY not configured");
+    if (!serviceAccountKey || !calendarId || !RESEND_API_KEY) {
+      console.error("Missing required environment configuration");
+      return new Response(JSON.stringify({ error: "Service temporarily unavailable. Please try again later." }), {
+        status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
@@ -141,11 +159,36 @@ serve(async (req) => {
     const payload = await req.json();
     const { firstName, lastName, email, products, date, time, timezone, additionalAttendees } = payload;
 
-    if (!firstName || !lastName || !email || !products?.length || !date || !time || !timezone) {
-      return new Response(JSON.stringify({ error: "Missing required fields" }), {
+    // ── Input validation ──
+    if (!firstName || typeof firstName !== "string" || firstName.length > 200) {
+      return new Response(JSON.stringify({ error: "First name is required (max 200 chars)." }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    if (!lastName || typeof lastName !== "string" || lastName.length > 200) {
+      return new Response(JSON.stringify({ error: "Last name is required (max 200 chars)." }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    if (!email || typeof email !== "string" || !EMAIL_RE.test(email.trim())) {
+      return new Response(JSON.stringify({ error: "A valid email address is required." }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    if (!Array.isArray(products) || products.length === 0 || products.length > 20) {
+      return new Response(JSON.stringify({ error: "At least one product is required (max 20)." }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    if (!date || !time || !timezone) {
+      return new Response(JSON.stringify({ error: "Date, time, and timezone are required." }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const extraAttendees: string[] = Array.isArray(additionalAttendees)
+      ? additionalAttendees.filter((a: unknown) => typeof a === "string" && EMAIL_RE.test(a.trim())).slice(0, 10)
+      : [];
 
     const accessToken = await getGoogleAccessToken(
       serviceAccountKey,
@@ -154,22 +197,21 @@ serve(async (req) => {
 
     // Build event start/end times
     const startDateTime = `${date}T${time}:00`;
-    const endHour = parseInt(time.split(":")[0]) ;
+    const endHour = parseInt(time.split(":")[0]);
     const endMin = parseInt(time.split(":")[1]) + 30;
     const endH = endHour + Math.floor(endMin / 60);
     const endM = endMin % 60;
     const endDateTime = `${date}T${String(endH).padStart(2, "0")}:${String(endM).padStart(2, "0")}:00`;
 
-    const extraAttendees: string[] = Array.isArray(additionalAttendees) ? additionalAttendees : [];
-    const productsSummary = products.join(", ");
+    const productsSummary = products.map((p: string) => sanitize(p, 100)).join(", ");
 
-    // Build description with contact info (attendees array removed to avoid 403 with service accounts)
-    let description = `Demo requested by ${firstName} ${lastName} (${email}).\nProducts: ${productsSummary}`;
+    // Build description with contact info
+    let description = `Demo requested by ${sanitize(firstName)} ${sanitize(lastName)} (${sanitize(email)}).\nProducts: ${productsSummary}`;
     if (extraAttendees.length > 0) {
-      description += `\n\nAdditional Attendees:\n${extraAttendees.filter(a => a && a !== email).join("\n")}`;
+      description += `\n\nAdditional Attendees:\n${extraAttendees.filter(a => a && a !== email).map(a => sanitize(a, 255)).join("\n")}`;
     }
 
-    // Create Google Calendar event with Domain-Wide Delegation (attendees + Meet link)
+    // Create Google Calendar event
     const allAttendees = [email, ...extraAttendees.filter(a => a && a !== email)];
     const eventRes = await fetch(
       `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?conferenceDataVersion=1`,
@@ -198,10 +240,13 @@ serve(async (req) => {
 
     const eventData = await eventRes.json();
     if (!eventRes.ok) {
-      throw new Error(`Calendar event creation failed: ${JSON.stringify(eventData)}`);
+      console.error("Calendar event creation failed:", eventData);
+      return new Response(JSON.stringify({ error: "Failed to create calendar event. Please try again." }), {
+        status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
-    const meetLink = eventData.hangoutLink || ""; // Will be empty without conferenceData
+    const meetLink = eventData.hangoutLink || "";
     const eventLink = eventData.htmlLink || "";
     const eventId = eventData.id || "";
 
@@ -236,7 +281,6 @@ serve(async (req) => {
       attendees: extraAttendees,
     });
 
-    // Send to all recipients
     for (const recipient of allRecipients) {
       try {
         await sendEmail(RESEND_API_KEY, {
@@ -248,12 +292,14 @@ serve(async (req) => {
       } catch (emailErr) {
         console.error(`Failed to send email to ${recipient}:`, emailErr);
       }
-      // Rate limit
       await new Promise((r) => setTimeout(r, 600));
     }
 
-    // Also send internal notification
-    const internalSubject = `New Demo Booking — ${firstName} ${lastName} (${productsSummary})`;
+    // Internal notification
+    const safeFirst = sanitize(firstName);
+    const safeLast = sanitize(lastName);
+    const safeEmail = sanitize(email);
+    const internalSubject = `New Demo Booking — ${safeFirst} ${safeLast} (${productsSummary})`;
     const internalHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8"/></head>
 <body style="font-family:'Inter',Arial,sans-serif;color:#111827;background:#ffffff;margin:0;padding:24px;">
   <div style="max-width:600px;margin:0 auto;">
@@ -262,13 +308,13 @@ serve(async (req) => {
     </div>
     <div style="padding:32px;border:1px solid #d1d5db;border-top:none;border-radius:0 0 8px 8px;">
       <table style="width:100%;border-collapse:collapse;">
-        <tr><td style="padding:8px 12px;border:1px solid #d1d5db;background:#f9fafb;font-weight:600;">Name</td><td style="padding:8px 12px;border:1px solid #d1d5db;">${firstName} ${lastName}</td></tr>
-        <tr><td style="padding:8px 12px;border:1px solid #d1d5db;background:#f9fafb;font-weight:600;">Email</td><td style="padding:8px 12px;border:1px solid #d1d5db;">${email}</td></tr>
+        <tr><td style="padding:8px 12px;border:1px solid #d1d5db;background:#f9fafb;font-weight:600;">Name</td><td style="padding:8px 12px;border:1px solid #d1d5db;">${safeFirst} ${safeLast}</td></tr>
+        <tr><td style="padding:8px 12px;border:1px solid #d1d5db;background:#f9fafb;font-weight:600;">Email</td><td style="padding:8px 12px;border:1px solid #d1d5db;">${safeEmail}</td></tr>
         <tr><td style="padding:8px 12px;border:1px solid #d1d5db;background:#f9fafb;font-weight:600;">Products</td><td style="padding:8px 12px;border:1px solid #d1d5db;">${productsSummary}</td></tr>
-        <tr><td style="padding:8px 12px;border:1px solid #d1d5db;background:#f9fafb;font-weight:600;">Date</td><td style="padding:8px 12px;border:1px solid #d1d5db;">${date}</td></tr>
+        <tr><td style="padding:8px 12px;border:1px solid #d1d5db;background:#f9fafb;font-weight:600;">Date</td><td style="padding:8px 12px;border:1px solid #d1d5db;">${sanitize(date, 50)}</td></tr>
         <tr><td style="padding:8px 12px;border:1px solid #d1d5db;background:#f9fafb;font-weight:600;">Time</td><td style="padding:8px 12px;border:1px solid #d1d5db;">${formatTime12h(time)} ET</td></tr>
-        <tr><td style="padding:8px 12px;border:1px solid #d1d5db;background:#f9fafb;font-weight:600;">Meet Link</td><td style="padding:8px 12px;border:1px solid #d1d5db;"><a href="${meetLink}">${meetLink}</a></td></tr>
-        <tr><td style="padding:8px 12px;border:1px solid #d1d5db;background:#f9fafb;font-weight:600;">Additional Attendees</td><td style="padding:8px 12px;border:1px solid #d1d5db;">${extraAttendees.length ? extraAttendees.join(", ") : "None"}</td></tr>
+        <tr><td style="padding:8px 12px;border:1px solid #d1d5db;background:#f9fafb;font-weight:600;">Meet Link</td><td style="padding:8px 12px;border:1px solid #d1d5db;"><a href="${meetLink}">${sanitize(meetLink)}</a></td></tr>
+        <tr><td style="padding:8px 12px;border:1px solid #d1d5db;background:#f9fafb;font-weight:600;">Additional Attendees</td><td style="padding:8px 12px;border:1px solid #d1d5db;">${extraAttendees.length ? extraAttendees.map(a => sanitize(a, 255)).join(", ") : "None"}</td></tr>
       </table>
     </div>
   </div>
@@ -303,7 +349,7 @@ serve(async (req) => {
     );
   } catch (err) {
     console.error("book-demo error:", err);
-    return new Response(JSON.stringify({ error: err.message }), {
+    return new Response(JSON.stringify({ error: "An error occurred. Please try again." }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }

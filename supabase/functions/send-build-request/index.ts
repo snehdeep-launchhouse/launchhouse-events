@@ -407,9 +407,8 @@ serve(async (req) => {
     );
   } catch (err: unknown) {
     console.error("send-build-request error:", err);
-    const message = err instanceof Error ? err.message : "Unknown error";
     return new Response(
-      JSON.stringify({ success: false, error: message }),
+      JSON.stringify({ success: false, error: "An error occurred while processing your request. Please try again." }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

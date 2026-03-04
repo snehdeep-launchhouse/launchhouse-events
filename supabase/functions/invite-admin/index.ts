@@ -158,9 +158,8 @@ serve(async (req: Request) => {
     );
   } catch (err: unknown) {
     console.error("invite-admin error:", err);
-    const message = err instanceof Error ? err.message : "Unknown error";
     return new Response(
-      JSON.stringify({ success: false, error: message }),
+      JSON.stringify({ success: false, error: "An error occurred. Please try again." }),
       { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
