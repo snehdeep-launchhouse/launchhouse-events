@@ -8,12 +8,13 @@ const TnCTooltip = () => {
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <span
-          className="text-primary underline cursor-pointer hover:text-primary/80 transition-colors"
+        <button
+          type="button"
+          className="text-primary underline cursor-pointer hover:text-primary/80 transition-colors inline text-inherit font-inherit p-0 bg-transparent border-none"
           onClick={(e) => { e.stopPropagation(); setOpen(!open); }}
         >
           T&C Apply
-        </span>
+        </button>
       </PopoverTrigger>
       <PopoverContent side="bottom" className="max-w-sm p-4 text-left relative">
         <button
