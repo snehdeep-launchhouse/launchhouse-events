@@ -355,7 +355,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      check_own_admin_status: {
+        Args: { user_id: string }
+        Returns: {
+          id: string
+          status: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
