@@ -16,7 +16,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import Logo from "@/components/Logo";
 import Footer from "@/components/Footer";
-import bannerImg from "@/assets/get-a-quote-banner.jpg";
+import bannerImg from "@/assets/banners/get-quote-banner.jpg";
 
 /* ── Constants ───────────────────────────────────────────────────── */
 const SERVICE_OFFERINGS = [

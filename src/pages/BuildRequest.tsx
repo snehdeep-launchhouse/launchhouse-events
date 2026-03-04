@@ -22,7 +22,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import DualListPicker from "@/components/DualListPicker";
 import Logo from "@/components/Logo";
 import Footer from "@/components/Footer";
-import bannerImg from "@/assets/event-checkin.jpg";
+import bannerImg from "@/assets/banners/build-request-banner.jpg";
 
 /* ── Constants ──────────────────────────────────────────────────── */
 const US_TIMEZONES = [

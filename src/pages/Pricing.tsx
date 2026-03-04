@@ -8,8 +8,8 @@ import {
   ArrowUpRight, DollarSign, Layers, Building2, Smartphone,
   Headphones, Video, Code, CheckCircle2, HelpCircle, Zap, Clock, Timer,
 } from "lucide-react";
-import heroBanner from "@/assets/hero-banner.jpg";
-import eventCheckin from "@/assets/event-checkin.jpg";
+import heroBanner from "@/assets/banners/pricing-banner.jpg";
+import eventCheckin from "@/assets/banners/cta-banner.jpg";
 
 const BUILD_REQUEST_URL = "/build-request";
 const GET_A_QUOTE_URL = "/get-a-quote";

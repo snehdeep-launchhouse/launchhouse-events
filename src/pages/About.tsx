@@ -7,8 +7,8 @@ import {
   ArrowUpRight, Users, Clock, Award, Globe, Rocket, Heart,
   Target, MapPin, Zap, DollarSign, ShieldCheck,
 } from "lucide-react";
-import heroBanner from "@/assets/hero-banner.jpg";
-import eventCheckin from "@/assets/event-checkin.jpg";
+import heroBanner from "@/assets/banners/about-banner.jpg";
+import eventCheckin from "@/assets/banners/cta-banner.jpg";
 
 const BUILD_REQUEST_URL = "/build-request";
 
