@@ -195,7 +195,7 @@ const AdminReport = () => {
 
     const resolveAuth = async (userId: string, userEmail: string | undefined) => {
       if (cancelled) return;
-      const { data } = await supabase.from("admin_users").select("id, status").eq("id", userId).single();
+      const { data } = await supabase.rpc("check_own_admin_status", { user_id: userId }).single();
       if (cancelled) return;
       if (data) {
         setCurrentUserId(userId);
@@ -266,7 +266,7 @@ const AdminReport = () => {
     try {
       const { data: authData, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) { setLoginError(error.message); return; }
-      const { data, error: adminError } = await supabase.from("admin_users").select("id").eq("id", authData.user.id).single();
+      const { data, error: adminError } = await supabase.rpc("check_own_admin_status", { user_id: authData.user.id }).single();
       if (adminError || !data) {
         await supabase.auth.signOut();
         setLoginError("You are not authorized to access this dashboard.");
