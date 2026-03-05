@@ -333,7 +333,11 @@ const GetAQuote = () => {
           src={bannerImg}
           alt=""
           className="w-full h-full object-cover object-center"
-          loading="lazy"
+          loading="eager"
+          fetchPriority="high"
+          decoding="async"
+          width={1920}
+          height={1080}
         />
         <div className="absolute inset-0 bg-[hsl(220,90%,10%)]/70" />
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-4">
