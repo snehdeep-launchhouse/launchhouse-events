@@ -8,7 +8,7 @@ import {
   Target, MapPin, Zap, DollarSign, ShieldCheck,
 } from "lucide-react";
 import heroBanner from "@/assets/banners/about-banner.jpg";
-import eventCheckin from "@/assets/banners/cta-banner.jpg";
+import ctaBanner from "@/assets/banners/about-cta-banner.jpg";
 
 const BUILD_REQUEST_URL = "/build-request";
 
@@ -212,7 +212,7 @@ const About = () => {
       {/* CTA */}
       <section className="relative py-20 md:py-28 overflow-hidden">
         <div className="absolute inset-0">
-          <img src={eventCheckin} alt="" className="w-full h-full object-cover" />
+          <img src={ctaBanner} alt="" className="w-full h-full object-cover" />
           <div className="absolute inset-0 bg-[hsl(220,90%,10%)]/75" />
         </div>
         <div className="container relative text-center">
