@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, lazy, Suspense, type ReactNode } from "react";
+import { createContext, useContext, useState, useCallback, useEffect, lazy, Suspense, type ReactNode } from "react";
 
 const ContactUsPanel = lazy(() => import("./ContactUsPanel"));
 const RequestDemoPanel = lazy(() => import("./RequestDemoPanel"));
@@ -19,9 +19,23 @@ export const useContactPanel = () => {
 const ContactPanelProvider = ({ children }: { children: ReactNode }) => {
   const [contactOpen, setContactOpen] = useState(false);
   const [demoOpen, setDemoOpen] = useState(false);
-  // Track if panels have ever been opened to avoid loading until needed
   const [contactMounted, setContactMounted] = useState(false);
   const [demoMounted, setDemoMounted] = useState(false);
+
+  // Prefetch panel chunks during idle time so first open is instant
+  useEffect(() => {
+    const prefetch = () => {
+      import("./ContactUsPanel");
+      import("./RequestDemoPanel");
+    };
+    if ("requestIdleCallback" in window) {
+      const id = requestIdleCallback(prefetch);
+      return () => cancelIdleCallback(id);
+    } else {
+      const id = setTimeout(prefetch, 2000);
+      return () => clearTimeout(id);
+    }
+  }, []);
 
   const openContactPanel = useCallback(() => {
     setContactMounted(true);
