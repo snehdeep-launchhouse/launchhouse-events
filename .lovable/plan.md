@@ -1,22 +1,34 @@
 
 
-## Fix: Remove Text Artifacts from Two Banner Images
+## Fix: Remove Text Artifacts from Banner Images & Add Unique CTA Images
 
 ### Problem
-Two AI-generated banner images contain unwanted embedded text:
-1. **Get a Quote** (`src/assets/banners/get-quote-banner.jpg`) — has "Business ... Solutions" text baked into the image
-2. **Build Request** (`src/assets/banners/build-request-banner.jpg`) — has distorted text artifacts
+1. **Hero banners** on About, Services, and Pricing pages contain AI-generated text baked into the images.
+2. **CTA sections** on all three pages reuse the same `cta-banner.jpg`, and the user wants unique, page-relevant bottom images that don't repeat the hero banner.
 
 ### Solution
-Regenerate both images using the AI image model with explicit "no text" instructions, matching the existing style (corporate event tech, blue tones, subtle left-side fade).
+Regenerate **6 images** total using the higher-quality `google/gemini-3-pro-image-preview` model with strict "no text" instructions:
 
-**Get a Quote** — prompt: Business consultation scene, professionals discussing event solutions at a modern table with laptops, blue corporate tones, no text whatsoever, clean background suitable for text overlay, subtle left fade.
+**Hero banners (3):**
+- `about-banner.jpg` — Diverse team collaborating in a modern office, blue corporate tones, no text, left-side fade
+- `services-banner.jpg` — Event technicians configuring registration systems at a conference, no text, left-side fade
+- `pricing-banner.jpg` — Professional consultation with screens showing plans/proposals, no text, left-side fade
 
-**Build Request** — prompt: Event preparation backstage, team setting up event technology and registration systems, conference environment, blue corporate tones, no text whatsoever, clean background suitable for text overlay, subtle left fade.
+**CTA section images (3 new files):**
+- `about-cta-banner.jpg` — Corporate networking event with attendees mingling, warm lighting, no text
+- `services-cta-banner.jpg` — Live event stage with AV and tech crew operating equipment, no text
+- `pricing-cta-banner.jpg` — Business handshake or deal-closing moment in a modern office, no text
 
 ### Files Changed
-- `src/assets/banners/get-quote-banner.jpg` (regenerated)
-- `src/assets/banners/build-request-banner.jpg` (regenerated)
+- `src/assets/banners/about-banner.jpg` (regenerated, no text)
+- `src/assets/banners/services-banner.jpg` (regenerated, no text)
+- `src/assets/banners/pricing-banner.jpg` (regenerated, no text)
+- `src/assets/banners/about-cta-banner.jpg` (new)
+- `src/assets/banners/services-cta-banner.jpg` (new)
+- `src/assets/banners/pricing-cta-banner.jpg` (new)
+- `src/pages/About.tsx` — Update CTA image import from `cta-banner.jpg` to `about-cta-banner.jpg`
+- `src/pages/Services.tsx` — Update CTA image import to `services-cta-banner.jpg`
+- `src/pages/Pricing.tsx` — Update CTA image import to `pricing-cta-banner.jpg`
 
-No code, layout, or text changes.
+No changes to text, layout, spacing, overlays, or component structure.
 
