@@ -341,7 +341,7 @@ const BuildRequest = () => {
       <BreadcrumbJsonLd items={[{ name: "Build Request", path: "/build-request" }]} />
       {/* Banner */}
       <div className="relative h-48 md:h-64 overflow-hidden">
-        <img src={bannerImg} alt="Build Request" className="w-full h-full object-cover object-top" loading="lazy" />
+        <img src={bannerImg} alt="Build Request" className="w-full h-full object-cover object-top" loading="eager" fetchPriority="high" decoding="async" width={1920} height={1080} />
         <div className="absolute inset-0 bg-[hsl(220,90%,10%)]/80" />
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-4">
           <Logo light />
