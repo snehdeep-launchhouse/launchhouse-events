@@ -109,7 +109,7 @@ const Pricing = () => {
       {/* Hero */}
       <section className="relative pt-[var(--nav-height)] overflow-hidden">
         <div className="absolute inset-0">
-          <img src={heroBanner} alt="" className="w-full h-full object-cover" loading="eager" fetchPriority="high" decoding="async" width={1920} height={1080} />
+          <img src={heroBanner} alt="" className="banner-img" loading="eager" fetchPriority="high" decoding="async" width={1920} height={1080} />
           <div className="absolute inset-0 bg-[hsl(220,90%,10%)]/60" />
         </div>
         <div className="container relative py-16 md:py-22 flex flex-col items-center text-center gap-6 animate-fade-in">
@@ -198,7 +198,7 @@ const Pricing = () => {
       </section>
 
       {/* Expedited Builds */}
-      <section className="py-20 md:py-28">
+      <section className="py-20 md:py-28 section-lazy">
         <div className="container">
           <div className="text-center mb-12">
             <p className="text-sm font-semibold uppercase tracking-widest text-primary mb-3">Fast-Track</p>
@@ -245,7 +245,7 @@ const Pricing = () => {
       </section>
 
       {/* Attendee Hub Pricing */}
-      <section className="py-20 md:py-28">
+      <section className="py-20 md:py-28 section-lazy">
         <div className="container">
           <div className="text-center mb-12">
             <p className="text-sm font-semibold uppercase tracking-widest text-primary mb-3">Attendee Hub</p>
@@ -280,7 +280,7 @@ const Pricing = () => {
       </section>
 
       {/* Creative & Support Services */}
-      <section className="py-20 md:py-28 bg-muted/30">
+      <section className="py-20 md:py-28 bg-muted/30 section-lazy">
         <div className="container">
           <div className="text-center mb-12">
             <p className="text-sm font-semibold uppercase tracking-widest text-primary mb-3">Specialist Services</p>
@@ -316,7 +316,7 @@ const Pricing = () => {
       </section>
 
       {/* Payment Options */}
-      <section className="py-20 md:py-28">
+      <section className="py-20 md:py-28 section-lazy">
         <div className="container">
           <div className="text-center mb-12">
             <p className="text-sm font-semibold uppercase tracking-widest text-primary mb-3">Payment Terms</p>
@@ -378,7 +378,7 @@ const Pricing = () => {
       {/* CTA */}
       <section className="relative py-20 md:py-28 overflow-hidden">
         <div className="absolute inset-0">
-          <img src={ctaBanner} alt="" className="w-full h-full object-cover" loading="lazy" decoding="async" width={1920} height={1080} />
+          <img src={ctaBanner} alt="" className="banner-img" loading="lazy" decoding="async" width={1920} height={1080} />
           <div className="absolute inset-0 bg-[hsl(220,90%,10%)]/75" />
         </div>
         <div className="container relative text-center">

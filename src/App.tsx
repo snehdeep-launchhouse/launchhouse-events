@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -7,9 +7,10 @@ import { BrowserRouter, Routes, Route, useSearchParams } from "react-router-dom"
 import { Loader2 } from "lucide-react";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
-import CookieBanner from "./components/CookieBanner";
 import ErrorBoundary from "./components/ErrorBoundary";
 import ContactPanelProvider, { useContactPanel } from "./components/ContactPanelProvider";
+
+const CookieBanner = lazy(() => import("./components/CookieBanner"));
 
 // Lazy-loaded routes
 const Services = lazy(() => import("./pages/Services"));
@@ -46,12 +47,30 @@ const BookDemoListener = () => {
   return null;
 };
 
+/** Defers CookieBanner until after initial paint */
+const DeferredCookieBanner = () => {
+  const [show, setShow] = useState(false);
+  useEffect(() => {
+    if ("requestIdleCallback" in window) {
+      (window as any).requestIdleCallback(() => setShow(true));
+    } else {
+      setTimeout(() => setShow(true), 1500);
+    }
+  }, []);
+  if (!show) return null;
+  return (
+    <Suspense fallback={null}>
+      <CookieBanner />
+    </Suspense>
+  );
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <CookieBanner />
+      <DeferredCookieBanner />
       <BrowserRouter>
         <ErrorBoundary>
           <ContactPanelProvider>

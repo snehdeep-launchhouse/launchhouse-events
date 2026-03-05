@@ -1,6 +1,7 @@
-import { createContext, useContext, useState, useCallback, type ReactNode } from "react";
-import ContactUsPanel from "./ContactUsPanel";
-import RequestDemoPanel from "./RequestDemoPanel";
+import { createContext, useContext, useState, useCallback, lazy, Suspense, type ReactNode } from "react";
+
+const ContactUsPanel = lazy(() => import("./ContactUsPanel"));
+const RequestDemoPanel = lazy(() => import("./RequestDemoPanel"));
 
 interface ContactPanelContextValue {
   openContactPanel: () => void;
@@ -18,14 +19,33 @@ export const useContactPanel = () => {
 const ContactPanelProvider = ({ children }: { children: ReactNode }) => {
   const [contactOpen, setContactOpen] = useState(false);
   const [demoOpen, setDemoOpen] = useState(false);
-  const openContactPanel = useCallback(() => setContactOpen(true), []);
-  const openDemoPanel = useCallback(() => setDemoOpen(true), []);
+  // Track if panels have ever been opened to avoid loading until needed
+  const [contactMounted, setContactMounted] = useState(false);
+  const [demoMounted, setDemoMounted] = useState(false);
+
+  const openContactPanel = useCallback(() => {
+    setContactMounted(true);
+    setContactOpen(true);
+  }, []);
+
+  const openDemoPanel = useCallback(() => {
+    setDemoMounted(true);
+    setDemoOpen(true);
+  }, []);
 
   return (
     <ContactPanelContext.Provider value={{ openContactPanel, openDemoPanel }}>
       {children}
-      <ContactUsPanel open={contactOpen} onOpenChange={setContactOpen} />
-      <RequestDemoPanel open={demoOpen} onOpenChange={setDemoOpen} />
+      {contactMounted && (
+        <Suspense fallback={null}>
+          <ContactUsPanel open={contactOpen} onOpenChange={setContactOpen} />
+        </Suspense>
+      )}
+      {demoMounted && (
+        <Suspense fallback={null}>
+          <RequestDemoPanel open={demoOpen} onOpenChange={setDemoOpen} />
+        </Suspense>
+      )}
     </ContactPanelContext.Provider>
   );
 };

@@ -79,7 +79,7 @@ const About = () => {
       {/* Hero */}
       <section className="relative pt-[var(--nav-height)] overflow-hidden">
         <div className="absolute inset-0">
-          <img src={heroBanner} alt="" className="w-full h-full object-cover" loading="eager" fetchPriority="high" decoding="async" width={1920} height={1080} />
+          <img src={heroBanner} alt="" className="banner-img" loading="eager" fetchPriority="high" decoding="async" width={1920} height={1080} />
           <div className="absolute inset-0 bg-[hsl(220,90%,10%)]/60" />
         </div>
         <div className="container relative py-16 md:py-22 flex flex-col items-center text-center gap-6 animate-fade-in">
@@ -125,7 +125,7 @@ const About = () => {
 
 
       {/* Team DNA */}
-      <section className="py-20 md:py-28">
+      <section className="py-20 md:py-28 section-lazy">
         <div className="container">
           <div className="text-center mb-12">
             <p className="text-sm font-semibold uppercase tracking-widest text-primary mb-3">Our Team DNA</p>
@@ -157,7 +157,7 @@ const About = () => {
       </section>
 
       {/* Philosophy */}
-      <section className="py-20 md:py-28 bg-muted/30">
+      <section className="py-20 md:py-28 bg-muted/30 section-lazy">
         <div className="container">
           <div className="text-center mb-12">
             <p className="text-sm font-semibold uppercase tracking-widest text-primary mb-3">Our Philosophy</p>
@@ -189,7 +189,7 @@ const About = () => {
       </section>
 
       {/* Why Bengaluru */}
-      <section className="py-20 md:py-28">
+      <section className="py-20 md:py-28 section-lazy">
         <div className="container">
           <div className="max-w-3xl mx-auto text-center">
             <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6">
@@ -212,7 +212,7 @@ const About = () => {
       {/* CTA */}
       <section className="relative py-20 md:py-28 overflow-hidden">
         <div className="absolute inset-0">
-          <img src={ctaBanner} alt="" className="w-full h-full object-cover" loading="lazy" decoding="async" width={1920} height={1080} />
+          <img src={ctaBanner} alt="" className="banner-img" loading="lazy" decoding="async" width={1920} height={1080} />
           <div className="absolute inset-0 bg-[hsl(220,90%,10%)]/75" />
         </div>
         <div className="container relative text-center">

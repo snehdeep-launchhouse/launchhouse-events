@@ -17,12 +17,16 @@ const Index = () => (
     <main>
       <HeroSection />
       <ServicesSection />
-      <Suspense fallback={<SectionFallback />}>
-        <WhyUsSection />
-      </Suspense>
-      <Suspense fallback={<SectionFallback />}>
-        <PricingSection />
-      </Suspense>
+      <div className="section-lazy">
+        <Suspense fallback={<SectionFallback />}>
+          <WhyUsSection />
+        </Suspense>
+      </div>
+      <div className="section-lazy">
+        <Suspense fallback={<SectionFallback />}>
+          <PricingSection />
+        </Suspense>
+      </div>
     </main>
     <Footer />
   </div>
