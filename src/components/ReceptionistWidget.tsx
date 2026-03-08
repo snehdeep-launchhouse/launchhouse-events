@@ -1,7 +1,9 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { MessageCircle, X, Send, Loader2, Calendar } from "lucide-react";
+import { MessageCircle, X, Send, Loader2, Calendar, BarChart3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { useNavigate, useLocation } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 
 type Msg = { role: "user" | "assistant"; content: string };
@@ -21,6 +23,9 @@ export function ReceptionistWidget() {
   const [loading, setLoading] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const isMobile = useIsMobile();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const scroll = useCallback(() => {
     setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "smooth" }), 50);
@@ -116,13 +121,44 @@ export function ReceptionistWidget() {
     }
   };
 
+  const handleConsultation = () => {
+    setOpen(false);
+    // Navigate to home with book-demo param to trigger the demo panel
+    if (location.pathname === "/") {
+      const params = new URLSearchParams(location.search);
+      params.set("book-demo", "true");
+      window.history.replaceState(null, "", `/?${params.toString()}`);
+      window.dispatchEvent(new PopStateEvent("popstate"));
+      // Fallback: just reload with param
+      window.location.href = "/?book-demo=true";
+    } else {
+      navigate("/?book-demo=true");
+    }
+  };
+
+  const handleCalculator = () => {
+    setOpen(false);
+    if (location.pathname === "/pricing") {
+      // Already on pricing — scroll to top where calculator would be
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } else {
+      navigate("/pricing");
+    }
+  };
+
+  // Mobile: bottom-20 to clear sticky CTA bar; Desktop: bottom-5
+  const positionClass = isMobile ? "bottom-20 right-3" : "bottom-5 right-5";
+
   return (
     <>
       {/* Floating button */}
       {!open && (
         <button
           onClick={() => setOpen(true)}
-          className="fixed bottom-5 right-5 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform hover:scale-105 active:scale-95"
+          className={cn(
+            "fixed z-50 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform hover:scale-105 active:scale-95",
+            positionClass
+          )}
           title="Chat with Launchhouse"
         >
           <MessageCircle className="h-6 w-6" />
@@ -131,7 +167,12 @@ export function ReceptionistWidget() {
 
       {/* Chat panel */}
       {open && (
-        <div className="fixed bottom-5 right-5 z-50 flex h-[500px] w-[360px] flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl animate-fade-in">
+        <div className={cn(
+          "fixed z-50 flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl animate-fade-in",
+          isMobile
+            ? "bottom-20 right-3 left-3 h-[28rem]"
+            : "bottom-5 right-5 h-[500px] w-[360px]"
+        )}>
           {/* Header */}
           <div className="flex items-center justify-between border-b border-border bg-primary px-4 py-3">
             <div>
@@ -184,15 +225,22 @@ export function ReceptionistWidget() {
             <div ref={bottomRef} />
           </div>
 
-          {/* Schedule button */}
-          <div className="border-t border-border px-3 py-2">
-            <a
-              href="/request-demo"
-              className="flex items-center justify-center gap-1.5 rounded-lg bg-accent px-3 py-1.5 text-xs font-medium text-accent-foreground hover:bg-accent/80 transition-colors"
+          {/* Action buttons */}
+          <div className="border-t border-border px-3 py-2 flex gap-2">
+            <button
+              onClick={handleConsultation}
+              className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-accent px-3 py-1.5 text-xs font-medium text-accent-foreground hover:bg-accent/80 transition-colors"
             >
               <Calendar className="h-3.5 w-3.5" />
-              Schedule a Consultation
-            </a>
+              Schedule Consultation
+            </button>
+            <button
+              onClick={handleCalculator}
+              className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary hover:bg-primary/20 transition-colors"
+            >
+              <BarChart3 className="h-3.5 w-3.5" />
+              Try Calculator
+            </button>
           </div>
 
           {/* Input */}
@@ -223,3 +271,5 @@ export function ReceptionistWidget() {
     </>
   );
 }
+
+export default ReceptionistWidget;
