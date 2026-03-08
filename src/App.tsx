@@ -22,6 +22,7 @@ const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const AdminReport = lazy(() => import("./pages/AdminReport"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
+const AiReceptionistWidget = lazy(() => import("./components/AiReceptionistWidget"));
 
 const queryClient = new QueryClient();
 
@@ -91,6 +92,9 @@ const App = () => (
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
+            </Suspense>
+            <Suspense fallback={null}>
+              <AiReceptionistWidget />
             </Suspense>
           </ContactPanelProvider>
         </ErrorBoundary>

@@ -1,39 +1,34 @@
 
 
-## AI Receptionist Chat Widget
+## Fix: Slow First Open of Contact/Demo Panels
 
-### Overview
-Add a floating AI chat widget in the bottom-right corner that uses Lovable AI via a new `receptionist-chat` edge function with streaming responses. The widget will answer questions about Launchhouse services, pricing, and Cvent event builds.
+### Problem
+The panels use `React.lazy` which only starts downloading the JS chunk **after** the user clicks. This causes a visible delay on first open because the chunk must be fetched, parsed, and rendered before the panel appears.
 
-### Files to Create
+### Solution: Prefetch chunks on idle
+Instead of waiting for a click, **preload** both panel chunks during browser idle time (after initial page render). This way the JS is already cached when the user clicks, making the first open instant.
 
-**1. `supabase/functions/receptionist-chat/index.ts`** — Edge function
-- CORS headers, OPTIONS handler
-- System prompt covering Launchhouse services, complexity tiers (Simple $899, Medium $2,199, Advanced $3,499, Complex $4,999), delivery timelines, Cvent products
-- Streams response from Lovable AI gateway (`google/gemini-3-flash-preview`)
-- Handles 429/402 errors
+### Implementation
 
-**2. `src/components/AiReceptionistWidget.tsx`** — Chat widget component
-- Floating button (bottom-right, `z-50`) with a chat icon; positioned above the mobile sticky CTA bar (`bottom-20 md:bottom-6`)
-- Expandable chat panel with message list, input, and send button
-- Token-by-token SSE streaming with `onDelta` pattern
-- `react-markdown` for rendering assistant messages
-- "Schedule a Consultation" button linking to `/get-a-quote`
-- Styled with the site's blue `--primary` theme
-- Lazy-loaded in App.tsx to avoid impacting initial bundle
+**File: `src/components/ContactPanelProvider.tsx`**
 
-### Files to Modify
+Add a `useEffect` that triggers dynamic `import()` calls via `requestIdleCallback` (with a setTimeout fallback) shortly after mount. This prefetches the chunks without blocking the initial render. The existing `React.lazy` references continue to work — they resolve instantly from the module cache.
 
-**3. `src/App.tsx`** — Add lazy-loaded `AiReceptionistWidget` after Routes inside ContactPanelProvider
+```tsx
+useEffect(() => {
+  const prefetch = () => {
+    import("./ContactUsPanel");
+    import("./RequestDemoPanel");
+  };
+  if ("requestIdleCallback" in window) {
+    const id = requestIdleCallback(prefetch);
+    return () => cancelIdleCallback(id);
+  } else {
+    const id = setTimeout(prefetch, 2000);
+    return () => clearTimeout(id);
+  }
+}, []);
+```
 
-**4. `supabase/config.toml`** — Add `[functions.receptionist-chat]` with `verify_jwt = false`
-
-### Dependencies
-- `react-markdown` — needs to be installed
-
-### Key Details
-- LOVABLE_API_KEY is already available as a secret
-- Widget won't modify any existing components
-- Chat history is kept in local state (not persisted)
-- Mobile: widget button sits above the sticky "Request a Demo" bar
+One file change, no visual or functional impact. Panels will open instantly on first click.
 

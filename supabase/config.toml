@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.send-reset-password]
 verify_jwt = false
+
+[functions.receptionist-chat]
+verify_jwt = false
