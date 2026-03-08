@@ -1,34 +1,26 @@
 
+## Plan: Auto-collapse Chat Widget Pill
 
-## Fix: Slow First Open of Contact/Demo Panels
+### Objective
+Reduce visual clutter by automatically collapsing the "Ask me anything" button to just the icon after 5 seconds on the page, while maintaining accessibility by re-expanding it on hover.
 
-### Problem
-The panels use `React.lazy` which only starts downloading the JS chunk **after** the user clicks. This causes a visible delay on first open because the chunk must be fetched, parsed, and rendered before the panel appears.
+### Changes to `src/components/ReceptionistWidget.tsx`
 
-### Solution: Prefetch chunks on idle
-Instead of waiting for a click, **preload** both panel chunks during browser idle time (after initial page render). This way the JS is already cached when the user clicks, making the first open instant.
+1. **Add Collapse State**
+   - Introduce an `isExpanded` state variable initialized to `true`.
+   - Add a `useEffect` hook to automatically set `isExpanded` to `false` after a 5000ms delay.
 
-### Implementation
+2. **Update Button Layout & Styling**
+   - Attach `onMouseEnter={() => setIsExpanded(true)}` and `onMouseLeave={() => setIsExpanded(false)}` to the floating button so it intuitively expands when the user hovers over it.
+   - Conditionally apply padding and gap classes based on the state:
+     - Expanded: `gap-2.5 pl-4 pr-2 py-2` (Current design)
+     - Collapsed: `gap-0 p-2` (Creates a perfectly circular 56x56px button)
+   
+3. **Smooth Width Transition**
+   - Wrap the "Ask me anything" text span in a new `div` that handles the transition.
+   - Expanded state classes: `max-w-[200px] opacity-100`
+   - Collapsed state classes: `max-w-0 opacity-0`
+   - Apply `overflow-hidden`, `whitespace-nowrap`, and `transition-all duration-300` to the wrapper to create a smooth, layout-stable slide-and-fade effect.
 
-**File: `src/components/ContactPanelProvider.tsx`**
-
-Add a `useEffect` that triggers dynamic `import()` calls via `requestIdleCallback` (with a setTimeout fallback) shortly after mount. This prefetches the chunks without blocking the initial render. The existing `React.lazy` references continue to work — they resolve instantly from the module cache.
-
-```tsx
-useEffect(() => {
-  const prefetch = () => {
-    import("./ContactUsPanel");
-    import("./RequestDemoPanel");
-  };
-  if ("requestIdleCallback" in window) {
-    const id = requestIdleCallback(prefetch);
-    return () => cancelIdleCallback(id);
-  } else {
-    const id = setTimeout(prefetch, 2000);
-    return () => clearTimeout(id);
-  }
-}, []);
-```
-
-One file change, no visual or functional impact. Panels will open instantly on first click.
-
+### Impact
+The button will draw attention on initial page load for 5 seconds to educate the user that the AI assistant is available, then quietly tuck itself away to a minimal floating chat icon. It remains easily discoverable via hover interaction on desktop.
