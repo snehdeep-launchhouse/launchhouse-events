@@ -1,34 +1,19 @@
 
 
-## Fix: Slow First Open of Contact/Demo Panels
+## No Changes Needed
 
-### Problem
-The panels use `React.lazy` which only starts downloading the JS chunk **after** the user clicks. This causes a visible delay on first open because the chunk must be fetched, parsed, and rendered before the panel appears.
+After verifying every file, all 6 components already exist in this project with identical content to the source project (38c71fe5):
 
-### Solution: Prefetch chunks on idle
-Instead of waiting for a click, **preload** both panel chunks during browser idle time (after initial page render). This way the JS is already cached when the user clicks, making the first open instant.
+| File | Status |
+|------|--------|
+| `src/components/ChatBubble.tsx` | Present and identical (30 lines) |
+| `src/components/OptionButtons.tsx` | Present and identical (86 lines) |
+| `src/components/ResultCard.tsx` | Present and identical (96 lines) |
+| `src/components/LeadForm.tsx` | Present and identical (189 lines) |
+| `src/components/DescribeEvent.tsx` | Present and identical (96 lines) |
+| `src/lib/calculator-data.ts` | Present and identical (295 lines) |
 
-### Implementation
+These components are available for the chatbot (ReceptionistWidget) to import and use. The pricing page is untouched -- it remains the static page you restored. No files need to be created or modified.
 
-**File: `src/components/ContactPanelProvider.tsx`**
-
-Add a `useEffect` that triggers dynamic `import()` calls via `requestIdleCallback` (with a setTimeout fallback) shortly after mount. This prefetches the chunks without blocking the initial render. The existing `React.lazy` references continue to work — they resolve instantly from the module cache.
-
-```tsx
-useEffect(() => {
-  const prefetch = () => {
-    import("./ContactUsPanel");
-    import("./RequestDemoPanel");
-  };
-  if ("requestIdleCallback" in window) {
-    const id = requestIdleCallback(prefetch);
-    return () => cancelIdleCallback(id);
-  } else {
-    const id = setTimeout(prefetch, 2000);
-    return () => clearTimeout(id);
-  }
-}, []);
-```
-
-One file change, no visual or functional impact. Panels will open instantly on first click.
+**Next step**: When you're ready, we can integrate these calculator components into the ReceptionistWidget chatbot container so users can run the pricing calculator entirely within the chat widget.
 
