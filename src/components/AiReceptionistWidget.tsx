@@ -1,236 +1,229 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { MessageCircle, X, Send, ArrowRight, Loader2 } from "lucide-react";
+import { MessageCircle, X, Send, Loader2, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { cn } from "@/lib/utils";
 import ReactMarkdown from "react-markdown";
 import { Link } from "react-router-dom";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
-const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/receptionist-chat`;
+const GREETING =
+  "Hi! I'm the Launchhouse assistant. I can help answer questions about Cvent event builds, pricing, timelines, and how our services work.";
 
-async function streamChat({
-  messages,
-  onDelta,
-  onDone,
-  onError,
-}: {
-  messages: Msg[];
-  onDelta: (text: string) => void;
-  onDone: () => void;
-  onError: (msg: string) => void;
-}) {
-  const resp = await fetch(CHAT_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-    },
-    body: JSON.stringify({ messages }),
-  });
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
-  if (!resp.ok) {
-    const body = await resp.json().catch(() => ({}));
-    onError(body.error || "Something went wrong. Please try again.");
-    return;
-  }
-
-  if (!resp.body) {
-    onError("No response received.");
-    return;
-  }
-
-  const reader = resp.body.getReader();
-  const decoder = new TextDecoder();
-  let buf = "";
-  let done = false;
-
-  while (!done) {
-    const { done: streamDone, value } = await reader.read();
-    if (streamDone) break;
-    buf += decoder.decode(value, { stream: true });
-
-    let idx: number;
-    while ((idx = buf.indexOf("\n")) !== -1) {
-      let line = buf.slice(0, idx);
-      buf = buf.slice(idx + 1);
-      if (line.endsWith("\r")) line = line.slice(0, -1);
-      if (line.startsWith(":") || line.trim() === "") continue;
-      if (!line.startsWith("data: ")) continue;
-      const json = line.slice(6).trim();
-      if (json === "[DONE]") { done = true; break; }
-      try {
-        const parsed = JSON.parse(json);
-        const c = parsed.choices?.[0]?.delta?.content as string | undefined;
-        if (c) onDelta(c);
-      } catch {
-        buf = line + "\n" + buf;
-        break;
-      }
-    }
-  }
-
-  // flush leftovers
-  if (buf.trim()) {
-    for (let raw of buf.split("\n")) {
-      if (!raw) continue;
-      if (raw.endsWith("\r")) raw = raw.slice(0, -1);
-      if (!raw.startsWith("data: ")) continue;
-      const json = raw.slice(6).trim();
-      if (json === "[DONE]") continue;
-      try {
-        const p = JSON.parse(json);
-        const c = p.choices?.[0]?.delta?.content as string | undefined;
-        if (c) onDelta(c);
-      } catch { /* ignore */ }
-    }
-  }
-  onDone();
-}
-
-const GREETING: Msg = {
-  role: "assistant",
-  content: "Hi! 👋 I'm the Launchhouse AI assistant. I can help with questions about our Cvent event build services, pricing, and timelines. How can I help you today?",
-};
-
-const AiReceptionistWidget = () => {
+export default function AiReceptionistWidget() {
   const [open, setOpen] = useState(false);
-  const [messages, setMessages] = useState<Msg[]>([GREETING]);
+  const [messages, setMessages] = useState<Msg[]>([
+    { role: "assistant", content: GREETING },
+  ]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
 
+  const scroll = useCallback(() => {
+    setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "smooth" }), 50);
+  }, []);
+
+  useEffect(scroll, [messages, scroll]);
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+    if (open) inputRef.current?.focus();
+  }, [open]);
 
-  const send = useCallback(async () => {
+  const send = async () => {
     const text = input.trim();
     if (!text || loading) return;
-    setInput("");
+
     const userMsg: Msg = { role: "user", content: text };
-    setMessages((prev) => [...prev, userMsg]);
+    const history = [...messages, userMsg];
+    setMessages(history);
+    setInput("");
     setLoading(true);
 
-    let soFar = "";
-    const upsert = (chunk: string) => {
-      soFar += chunk;
-      setMessages((prev) => {
-        const last = prev[prev.length - 1];
-        if (last?.role === "assistant" && prev.length > 1 && prev[prev.length - 2]?.role === "user") {
-          return prev.map((m, i) => (i === prev.length - 1 ? { ...m, content: soFar } : m));
-        }
-        return [...prev, { role: "assistant", content: soFar }];
-      });
-    };
+    let assistantSoFar = "";
 
     try {
-      await streamChat({
-        messages: [...messages, userMsg],
-        onDelta: upsert,
-        onDone: () => setLoading(false),
-        onError: (msg) => {
-          setMessages((prev) => [...prev, { role: "assistant", content: msg }]);
-          setLoading(false);
+      const resp = await fetch(`${SUPABASE_URL}/functions/v1/receptionist-chat`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${SUPABASE_KEY}`,
         },
+        body: JSON.stringify({
+          messages: history.map((m) => ({ role: m.role, content: m.content })),
+        }),
       });
-    } catch {
-      setMessages((prev) => [...prev, { role: "assistant", content: "Sorry, something went wrong. Please try again." }]);
+
+      if (!resp.ok || !resp.body) {
+        const err = await resp.json().catch(() => ({}));
+        throw new Error(err.error || "Failed to connect");
+      }
+
+      const reader = resp.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+
+        let idx: number;
+        while ((idx = buffer.indexOf("\n")) !== -1) {
+          let line = buffer.slice(0, idx);
+          buffer = buffer.slice(idx + 1);
+          if (line.endsWith("\r")) line = line.slice(0, -1);
+          if (!line.startsWith("data: ")) continue;
+          const json = line.slice(6).trim();
+          if (json === "[DONE]") break;
+          try {
+            const parsed = JSON.parse(json);
+            const content = parsed.choices?.[0]?.delta?.content;
+            if (content) {
+              assistantSoFar += content;
+              setMessages((prev) => {
+                const last = prev[prev.length - 1];
+                if (last?.role === "assistant" && prev.length > history.length) {
+                  return prev.map((m, i) =>
+                    i === prev.length - 1 ? { ...m, content: assistantSoFar } : m
+                  );
+                }
+                return [...prev, { role: "assistant", content: assistantSoFar }];
+              });
+            }
+          } catch {
+            buffer = line + "\n" + buffer;
+            break;
+          }
+        }
+      }
+    } catch (e: any) {
+      console.error("Receptionist error:", e);
+      setMessages((prev) => [
+        ...prev,
+        { role: "assistant", content: "Sorry, I'm having trouble connecting. Please try again." },
+      ]);
+    } finally {
       setLoading(false);
     }
-  }, [input, loading, messages]);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      send();
+    }
+  };
 
   return (
     <>
-      {/* Floating trigger */}
+      {/* Floating trigger button */}
       {!open && (
         <button
           onClick={() => setOpen(true)}
-          className="fixed bottom-20 right-4 md:bottom-6 md:right-6 z-50 w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 transition-all flex items-center justify-center"
-          aria-label="Open chat"
+          className="fixed bottom-5 right-5 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform hover:scale-105 active:scale-95"
+          title="Chat with Launchhouse"
         >
-          <MessageCircle className="w-6 h-6" />
+          <MessageCircle className="h-6 w-6" />
         </button>
       )}
 
       {/* Chat panel */}
       {open && (
-        <div className="fixed bottom-20 right-4 md:bottom-6 md:right-6 z-50 w-[calc(100vw-2rem)] max-w-sm h-[28rem] md:h-[32rem] flex flex-col rounded-2xl border border-border bg-card shadow-xl overflow-hidden">
+        <div className="fixed bottom-5 right-5 z-50 flex h-[32rem] w-[22rem] max-w-[calc(100vw-2.5rem)] flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-xl">
           {/* Header */}
-          <div className="flex items-center justify-between px-4 py-3 bg-primary text-primary-foreground">
-            <span className="font-semibold text-sm">Launchhouse Assistant</span>
-            <button onClick={() => setOpen(false)} aria-label="Close chat" className="hover:opacity-80">
-              <X className="w-5 h-5" />
+          <div className="flex items-center justify-between bg-primary px-4 py-3">
+            <div>
+              <p className="text-sm font-semibold text-primary-foreground">
+                Launchhouse Assistant
+              </p>
+              <p className="text-xs text-primary-foreground/70">
+                Ask me anything
+              </p>
+            </div>
+            <button
+              onClick={() => setOpen(false)}
+              className="rounded-full p-1 text-primary-foreground/80 hover:bg-primary-foreground/10 hover:text-primary-foreground"
+            >
+              <X className="h-5 w-5" />
             </button>
           </div>
 
           {/* Messages */}
-          <ScrollArea className="flex-1 px-4 py-3">
-            <div className="space-y-3">
-              {messages.map((m, i) => (
-                <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
-                  <div
-                    className={`max-w-[85%] rounded-xl px-3 py-2 text-sm ${
-                      m.role === "user"
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-secondary text-secondary-foreground"
-                    }`}
-                  >
-                    {m.role === "assistant" ? (
-                      <div className="prose prose-sm max-w-none [&_p]:m-0 [&_ul]:my-1 [&_ol]:my-1 [&_li]:my-0">
-                        <ReactMarkdown>{m.content}</ReactMarkdown>
-                      </div>
-                    ) : (
-                      m.content
-                    )}
-                  </div>
+          <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3">
+            {messages.map((msg, i) => (
+              <div
+                key={i}
+                className={cn(
+                  "flex",
+                  msg.role === "user" ? "justify-end" : "justify-start"
+                )}
+              >
+                <div
+                  className={cn(
+                    "max-w-[85%] rounded-xl px-3 py-2 text-sm",
+                    msg.role === "user"
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-secondary text-secondary-foreground"
+                  )}
+                >
+                  {msg.role === "assistant" ? (
+                    <div className="prose prose-sm max-w-none [&_p]:m-0 [&_ul]:my-1 [&_ol]:my-1 [&_li]:my-0">
+                      <ReactMarkdown>{msg.content}</ReactMarkdown>
+                    </div>
+                  ) : (
+                    msg.content
+                  )}
                 </div>
-              ))}
-              {loading && messages[messages.length - 1]?.role === "user" && (
-                <div className="flex justify-start">
-                  <div className="bg-secondary text-secondary-foreground rounded-xl px-3 py-2">
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  </div>
+              </div>
+            ))}
+            {loading && messages[messages.length - 1]?.role !== "assistant" && (
+              <div className="flex justify-start">
+                <div className="rounded-xl bg-secondary px-3 py-2">
+                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
                 </div>
-              )}
-              <div ref={bottomRef} />
-            </div>
-          </ScrollArea>
+              </div>
+            )}
+            <div ref={bottomRef} />
+          </div>
 
           {/* CTA */}
           <div className="px-4 pb-2">
             <Link to="/get-a-quote" onClick={() => setOpen(false)}>
-              <Button variant="outline" size="sm" className="w-full text-xs gap-1">
-                Schedule a Consultation <ArrowRight className="w-3 h-3" />
+              <Button variant="outline" size="sm" className="w-full gap-1 text-xs">
+                <Calendar className="h-3 w-3" />
+                Schedule a Consultation
               </Button>
             </Link>
           </div>
 
           {/* Input */}
-          <form
-            onSubmit={(e) => { e.preventDefault(); send(); }}
-            className="flex items-center gap-2 px-4 py-3 border-t border-border"
-          >
-            <input
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask about our services..."
-              className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
-              disabled={loading}
-            />
-            <button
-              type="submit"
-              disabled={loading || !input.trim()}
-              className="text-primary disabled:opacity-40 hover:text-primary/80 transition-colors"
-              aria-label="Send"
-            >
-              <Send className="w-5 h-5" />
-            </button>
-          </form>
+          <div className="border-t border-border px-4 py-3">
+            <div className="flex items-end gap-2">
+              <textarea
+                ref={inputRef}
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Ask a question..."
+                rows={1}
+                className="flex-1 resize-none rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                disabled={loading}
+              />
+              <Button
+                size="icon"
+                className="h-9 w-9 shrink-0"
+                onClick={send}
+                disabled={loading || !input.trim()}
+              >
+                <Send className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
         </div>
       )}
     </>
   );
-};
-
-export default AiReceptionistWidget;
+}
