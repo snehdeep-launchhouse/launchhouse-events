@@ -22,7 +22,7 @@ const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const AdminReport = lazy(() => import("./pages/AdminReport"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
-const AiReceptionistWidget = lazy(() => import("./components/AiReceptionistWidget"));
+const ReceptionistWidget = lazy(() => import("./components/ReceptionistWidget").then(m => ({ default: m.ReceptionistWidget })));
 
 const queryClient = new QueryClient();
 
@@ -94,7 +94,7 @@ const App = () => (
               </Routes>
             </Suspense>
             <Suspense fallback={null}>
-              <AiReceptionistWidget />
+              <ReceptionistWidget />
             </Suspense>
           </ContactPanelProvider>
         </ErrorBoundary>

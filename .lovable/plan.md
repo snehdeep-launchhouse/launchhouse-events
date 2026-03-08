@@ -1,29 +1,34 @@
 
 
-## Migrate Receptionist Widget from Other Project
+## Fix: Slow First Open of Contact/Demo Panels
 
-### What changes are needed
+### Problem
+The panels use `React.lazy` which only starts downloading the JS chunk **after** the user clicks. This causes a visible delay on first open because the chunk must be fetched, parsed, and rendered before the panel appears.
 
-**1. Replace `supabase/functions/receptionist-chat/index.ts`**
-Overwrite with the version from the other project. Key differences: updated system prompt with complexity drivers, delivery timelines per tier, and a recommendation to use the Event Complexity Calculator.
+### Solution: Prefetch chunks on idle
+Instead of waiting for a click, **preload** both panel chunks during browser idle time (after initial page render). This way the JS is already cached when the user clicks, making the first open instant.
 
-**2. Create `src/components/ReceptionistWidget.tsx`**
-New file, byte-for-byte copy from the other project. This is the tested widget with SSE streaming, markdown rendering, and the "Schedule a Consultation" CTA linking to `/request-demo`.
+### Implementation
 
-**3. Update `src/App.tsx`**
-- Change the lazy import from `AiReceptionistWidget` to `ReceptionistWidget` (importing from `./components/ReceptionistWidget`)
-- Update the rendered component name in the existing `<Suspense>` block after `</Routes>`
-- No other changes to routes or components
+**File: `src/components/ContactPanelProvider.tsx`**
 
-**4. No other changes needed**
-- `supabase/config.toml` already has `[functions.receptionist-chat]` with `verify_jwt = false`
-- `react-markdown` is already installed
-- The existing `AiReceptionistWidget.tsx` file can remain (unused) or be deleted
+Add a `useEffect` that triggers dynamic `import()` calls via `requestIdleCallback` (with a setTimeout fallback) shortly after mount. This prefetches the chunks without blocking the initial render. The existing `React.lazy` references continue to work — they resolve instantly from the module cache.
 
-### Files to create
-- `src/components/ReceptionistWidget.tsx` (exact copy from other project)
+```tsx
+useEffect(() => {
+  const prefetch = () => {
+    import("./ContactUsPanel");
+    import("./RequestDemoPanel");
+  };
+  if ("requestIdleCallback" in window) {
+    const id = requestIdleCallback(prefetch);
+    return () => cancelIdleCallback(id);
+  } else {
+    const id = setTimeout(prefetch, 2000);
+    return () => clearTimeout(id);
+  }
+}, []);
+```
 
-### Files to modify
-- `supabase/functions/receptionist-chat/index.ts` (replace with other project's version)
-- `src/App.tsx` (swap lazy import to `ReceptionistWidget`)
+One file change, no visual or functional impact. Panels will open instantly on first click.
 
