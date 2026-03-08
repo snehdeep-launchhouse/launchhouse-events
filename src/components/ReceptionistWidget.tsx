@@ -9,7 +9,7 @@ import ReactMarkdown from "react-markdown";
 type Msg = { role: "user" | "assistant"; content: string };
 
 const GREETING =
-  "Hi! I'm the Launchhouse assistant. I can help answer questions about Cvent event builds, pricing, timelines, and how our services work.";
+  "Hi! I'm Chloe, your Launchhouse assistant. I can help answer questions about Cvent event builds, pricing, timelines, and how our services work.";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
@@ -176,8 +176,8 @@ export function ReceptionistWidget() {
           {/* Header */}
           <div className="flex items-center justify-between border-b border-border bg-primary px-4 py-3">
             <div>
-              <p className="text-sm font-semibold text-primary-foreground">Launchhouse Assistant</p>
-              <p className="text-xs text-primary-foreground/70">Ask me anything</p>
+              <p className="text-sm font-semibold text-primary-foreground">Chloe</p>
+              <p className="text-xs text-primary-foreground/70">Launchhouse AI Assistant</p>
             </div>
             <button
               onClick={() => setOpen(false)}
