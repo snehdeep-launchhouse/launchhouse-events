@@ -14,3 +14,6 @@ verify_jwt = false
 
 [functions.receptionist-chat]
 verify_jwt = false
+
+[functions.analyze-event]
+verify_jwt = false
