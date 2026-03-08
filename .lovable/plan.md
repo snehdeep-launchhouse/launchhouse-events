@@ -1,43 +1,34 @@
 
 
-## Plan: Restore Original Pricing Page & Keep Calculator Components for Chatbot
+## Fix: Slow First Open of Contact/Demo Panels
 
-### Step 1 — Rewrite `src/pages/Pricing.tsx` (original static page)
+### Problem
+The panels use `React.lazy` which only starts downloading the JS chunk **after** the user clicks. This causes a visible delay on first open because the chunk must be fetched, parsed, and rendered before the panel appears.
 
-Replace the entire calculator-based pricing page with the original static layout matching other pages' pattern (Navbar → Hero → Sections → CTA → Footer):
+### Solution: Prefetch chunks on idle
+Instead of waiting for a click, **preload** both panel chunks during browser idle time (after initial page render). This way the JS is already cached when the user clicks, making the first open instant.
 
-- **Hero section** with `pricing-banner.jpg` background, title "Transparent, Complexity-Based Pricing", subtitle, and CTA button
-- **Event Build Tiers** — 4 cards (Simple $899, Medium $2,199, Advanced $3,499, Complex $4,999) with delivery SLAs and feature lists
-- **Same Day Delivery** — 12-hour turnaround details with requirements callout
-- **Payment Options** — 50/50 split and 100% advance (10% discount) cards
-- **Attendee Hub & Event App** — Standard, Rush, Premium Hub tiers
-- **Additional Services** — Training, Post Launch Support, Custom Tasks (from existing `PricingSection.tsx` data)
-- **CTA banner** with `pricing-cta-banner.jpg` and "Get a Quote" button
+### Implementation
 
-No calculator imports. No chat state machine. Pure static content.
+**File: `src/components/ContactPanelProvider.tsx`**
 
-### Step 2 — Verify calculator component files still exist
+Add a `useEffect` that triggers dynamic `import()` calls via `requestIdleCallback` (with a setTimeout fallback) shortly after mount. This prefetches the chunks without blocking the initial render. The existing `React.lazy` references continue to work — they resolve instantly from the module cache.
 
-These files are already present and will remain untouched (confirmed they exist):
-- `src/components/ChatBubble.tsx`
-- `src/components/OptionButtons.tsx`
-- `src/components/ResultCard.tsx`
-- `src/components/LeadForm.tsx`
-- `src/components/DescribeEvent.tsx`
-- `src/lib/calculator-data.ts`
+```tsx
+useEffect(() => {
+  const prefetch = () => {
+    import("./ContactUsPanel");
+    import("./RequestDemoPanel");
+  };
+  if ("requestIdleCallback" in window) {
+    const id = requestIdleCallback(prefetch);
+    return () => cancelIdleCallback(id);
+  } else {
+    const id = setTimeout(prefetch, 2000);
+    return () => clearTimeout(id);
+  }
+}, []);
+```
 
-### Step 3 — Verify chatbot still works
-
-The `ReceptionistWidget` is already lazy-loaded in `App.tsx` (line 96-98) and runs globally. The `receptionist-chat` edge function is deployed. No changes needed — the chatbot widget continues to work independently in the bottom-right corner across all pages.
-
-### What stays the same
-- All edge functions (`receptionist-chat`, `analyze-event`, etc.)
-- Database table `event_complexity_leads`
-- Calculator component files (available for future chatbot integration)
-- `ReceptionistWidget` in `App.tsx`
-- CSS variables (chat tokens, success tokens already in `index.css`)
-- Tailwind config
-
-### Summary
-Only one file changes: `src/pages/Pricing.tsx` — rewritten from calculator to static pricing page.
+One file change, no visual or functional impact. Panels will open instantly on first click.
 
