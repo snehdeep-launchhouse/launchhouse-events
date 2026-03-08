@@ -5,66 +5,100 @@ import BreadcrumbJsonLd from "@/components/BreadcrumbJsonLd";
 import { Button } from "@/components/ui/button";
 import { useContactPanel } from "@/components/ContactPanelProvider";
 import {
-  ArrowUpRight, Check, Zap, DollarSign, Clock, Rocket, Shield, Smartphone,
-  BookOpen, Headphones, Wrench,
+  ArrowUpRight, CheckCircle2, Zap, DollarSign, Clock,
+  Smartphone, Headphones, Code2, Video,
+  CircleCheckBig, Layers, FileBarChart, HelpCircle,
 } from "lucide-react";
 import heroBanner from "@/assets/banners/pricing-banner.jpg";
 import ctaBanner from "@/assets/banners/pricing-cta-banner.jpg";
-import TnCTooltip from "@/components/TnCTooltip";
 
 const GET_A_QUOTE_URL = "/get-a-quote";
 
-/* ── Event Build Tiers ───────────────────────────────────────────── */
-const tiers = [
+/* ── Registration Build Packages ─────────────────────────────────── */
+const buildPackages = [
   {
-    tier: "Simple",
-    price: "$899",
-    draft: "2 Business Days",
-    revision: "1 Business Day",
-    features: ["Single-page registration", "Standard branding", "Basic email confirmation", "Up to 2 registration types"],
+    icon: CircleCheckBig,
+    title: "Simple Build",
+    price: "From $899",
+    desc: "Single-page registrations with standard branding and email confirmations. Same-day delivery available.",
+    features: ["Single-page registration", "Standard branding", "Email confirmation", "Same-day turnaround"],
+    cta: "Get Started",
+    ctaVariant: "default" as const,
   },
   {
-    tier: "Medium",
-    price: "$2,199",
-    draft: "2 Business Days",
-    revision: "2 Business Days",
+    icon: Layers,
+    title: "Medium Build",
+    price: "Custom Quote",
+    desc: "Multi-page registrations with custom branding, automated workflows, and basic reporting.",
     features: ["Multi-page registration", "Custom branding & design", "Automated email workflows", "Basic reporting setup"],
+    cta: "Get a Quote",
+    ctaVariant: "outline" as const,
   },
   {
-    tier: "Advanced",
-    price: "$3,499",
-    draft: "3 Business Days",
-    revision: "3 Business Days",
-    features: ["Complex conditional logic", "Payment integration", "Multi-session support", "Advanced reporting & analytics"],
+    icon: FileBarChart,
+    title: "Advanced Build",
+    price: "Custom Quote",
+    desc: "Complex conditional logic, payment integrations, multi-session support, and advanced analytics.",
+    features: ["Complex conditional logic", "Payment integration", "Multi-session support", "Advanced reporting"],
+    cta: "Get a Quote",
+    ctaVariant: "outline" as const,
   },
   {
-    tier: "Complex",
-    price: "$4,999",
-    draft: "4 Business Days",
-    revision: "3 Business Days",
+    icon: HelpCircle,
+    title: "Complex Build",
+    price: "Custom Quote",
+    desc: "Enterprise-grade solutions with approval workflows, API integrations, and dedicated project management.",
     features: ["Approval workflows", "API integrations", "Multi-event management", "Dedicated project manager"],
+    cta: "Get a Quote",
+    ctaVariant: "outline" as const,
   },
 ];
 
-/* ── Attendee Hub Cards ──────────────────────────────────────────── */
+/* ── Attendee Hub & Training ─────────────────────────────────────── */
 const hubCards = [
-  { icon: Smartphone, title: "Standard Hub", timeline: "20+ days", desc: "Initial draft plus three feedback rounds to align your Attendee Hub perfectly with your brand." },
-  { icon: Rocket, title: "Rush Hub", timeline: "7–21 days", desc: "Fast-tracked configuration with draft and two consolidated rounds of critical changes." },
-  { icon: Shield, title: "Premium Hub Management", timeline: "Ongoing", desc: "Complete peace of mind — we handle drafting, revisions, and post-launch session & speaker updates in real-time." },
+  {
+    icon: Smartphone,
+    title: "Attendee Hub Build",
+    price: "$1,999",
+    desc: "Complete Attendee Hub setup including branding, session configuration, speaker profiles, and mobile app readiness.",
+  },
+  {
+    icon: Headphones,
+    title: "Premium Hub Support",
+    price: "$99/hour",
+    desc: "Ongoing post-launch support for your Attendee Hub — session updates, speaker changes, and real-time troubleshooting.",
+  },
+  {
+    icon: Video,
+    title: "Training Video",
+    price: "From $499",
+    desc: "Custom attendee training video guiding users through your Hub experience, driving adoption and reducing support queries.",
+  },
 ];
 
-/* ── Additional Services ─────────────────────────────────────────── */
-const additionalServices = [
-  { icon: BookOpen, title: "Cvent Platform Training", desc: "Hands-on training sessions for your team to master the Cvent platform and maximize your investment." },
-  { icon: Headphones, title: "Post Launch Support", desc: "Ongoing technical support and troubleshooting after your event registration goes live." },
-  { icon: Wrench, title: "Custom Tasks", desc: "Ad-hoc requests and custom development work tailored to your unique event requirements." },
+/* ── Specialist Services ─────────────────────────────────────────── */
+const specialistServices = [
+  {
+    icon: Code2,
+    category: "CREATIVE SERVICES",
+    title: "HTML Support",
+    price: "$75/hour",
+    desc: "Custom HTML email templates, registration page enhancements, and branded design elements built to specification.",
+  },
+  {
+    icon: Headphones,
+    category: "SUPPORT SERVICES",
+    title: "Post-Launch Support",
+    price: "$75/hour",
+    desc: "Dedicated technical support during your live event — invitee management, reporting adjustments, and real-time issue resolution.",
+  },
 ];
 
 const Pricing = () => {
   const { openContactPanel } = useContactPanel();
 
   useEffect(() => {
-    document.title = "Pricing — LaunchHouse Events | Transparent, Complexity-Based Pricing";
+    document.title = "Pricing — LaunchHouse Events | Transparent Pricing, Exceptional Value";
     return () => { document.title = "LaunchHouse Events"; };
   }, []);
 
@@ -81,130 +115,140 @@ const Pricing = () => {
         </div>
         <div className="container relative py-24 md:py-36 flex flex-col items-center text-center gap-8">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 text-white text-sm font-medium backdrop-blur-sm">
-            <Zap className="w-4 h-4" />
-            Transparent, Complexity-Based Pricing
+            <DollarSign className="w-4 h-4" />
+            Transparent Pricing · No Hidden Fees
           </div>
 
           <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold font-display tracking-tight max-w-4xl leading-[1.1] text-white">
-            Know Exactly{" "}
-            <span className="text-white/80">What You're Paying For.</span>
+            Transparent Pricing,{" "}
+            <span className="text-white/80">Exceptional Value</span>
           </h1>
 
           <p className="text-lg md:text-xl text-white/70 max-w-2xl leading-relaxed">
-            No hidden fees. No surprise invoices. Our pricing is structured around event complexity so you get a fair, predictable quote every time.
-          </p>
-
-          <div className="flex flex-col sm:flex-row gap-4 mt-2">
-            <Button size="lg" className="shadow-btn" onClick={() => window.open(GET_A_QUOTE_URL, "_blank")}>
-              Get a Quote <ArrowUpRight className="w-4 h-4 ml-2" />
-            </Button>
-            <Button size="lg" variant="outline" className="border-white text-white bg-white/10 hover:bg-white/20" onClick={openContactPanel}>
-              Talk to Us
-            </Button>
-          </div>
-
-          <p className="text-sm text-white/60 mt-4">
-            Starting at <strong className="text-white">$899</strong> · Same-day delivery available <TnCTooltip />
+            Premium Cvent expertise without the enterprise price tag. Get a tailored quote in under 24 hours.
           </p>
         </div>
       </section>
 
-      {/* ── Event Build Tiers ─────────────────────────────────────────── */}
+      {/* ── Why Some Builds Require a Custom Quote ────────────────────── */}
+      <section className="py-20 md:py-28">
+        <div className="container max-w-3xl text-center">
+          <p className="text-sm font-semibold uppercase tracking-widest text-primary mb-3">Our Approach</p>
+          <h2 className="text-3xl md:text-4xl font-bold font-display tracking-tight mb-8">
+            Why Some Builds Require a Custom Quote
+          </h2>
+          <div className="text-muted-foreground leading-relaxed space-y-4 text-sm md:text-base">
+            <p>
+              Think of it this way — building a beach shack is a vastly different undertaking to constructing a five-star resort. Both serve a purpose, but the complexity, materials, and craftsmanship involved are worlds apart. Event registrations work the same way.
+            </p>
+            <p>
+              A <strong className="text-foreground">Simple Build</strong> follows a well-defined blueprint — we can price it confidently and even deliver it the same day. But Medium, Advanced, and Complex events often carry hidden layers: conditional logic trees, multi-currency payment flows, approval chains, or integrations with your existing tech stack.
+            </p>
+            <p>
+              Rather than padding a flat rate to cover unknowns, we scope every project individually. That way you only pay for what your event actually needs — nothing more, nothing less. Simple builds start from <strong className="text-foreground">$899</strong>, and for everything else, one of our consultants will provide a transparent breakdown within 24 hours.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Registration Build Packages ───────────────────────────────── */}
       <section className="py-20 md:py-28 bg-muted/30">
         <div className="container">
           <div className="text-center mb-12">
-            <p className="text-sm font-semibold uppercase tracking-widest text-primary mb-3">Pricing</p>
-            <h2 className="text-3xl md:text-4xl font-bold font-display tracking-tight">Event Build Tiers</h2>
+            <p className="text-sm font-semibold uppercase tracking-widest text-primary mb-3">Event Builds</p>
+            <h2 className="text-3xl md:text-4xl font-bold font-display tracking-tight">Registration Build Packages</h2>
             <p className="text-muted-foreground mt-4 max-w-xl mx-auto">
-              Transparent, complexity-based pricing. Unlimited revisions within your allocated hours.
+              Four tiers designed to match every level of event complexity — from a one-page sign-up to a multi-layered enterprise programme.
             </p>
           </div>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {tiers.map((p) => (
-              <div
-                key={p.tier}
-                className="rounded-xl border border-border/50 bg-card-gradient p-6 shadow-card hover:shadow-card-hover hover:scale-[1.02] transition-all duration-300 flex flex-col"
-              >
-                <p className="text-sm font-semibold text-primary mb-1">{p.tier}</p>
-                <p className="text-3xl font-bold font-display mb-1">{p.price}</p>
-                <p className="text-xs text-muted-foreground mb-4">Starting price</p>
-                <div className="text-xs text-muted-foreground space-y-1 mb-4 pb-4 border-b border-border/50">
-                  <p>First Draft: <span className="font-medium text-foreground">{p.draft}</span></p>
-                  <p>Revisions: <span className="font-medium text-foreground">{p.revision}</span></p>
+            {buildPackages.map((p) => {
+              const Icon = p.icon;
+              return (
+                <div
+                  key={p.title}
+                  className="rounded-xl border border-border/50 bg-card p-6 shadow-card hover:shadow-card-hover hover:scale-[1.02] transition-all duration-300 flex flex-col"
+                >
+                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
+                    <Icon className="w-5 h-5 text-primary" />
+                  </div>
+                  <h3 className="text-lg font-bold font-display mb-1">{p.title}</h3>
+                  <p className="text-xl font-bold font-display text-primary mb-3">{p.price}</p>
+                  <p className="text-sm text-muted-foreground leading-relaxed mb-5">{p.desc}</p>
+                  <ul className="space-y-2 flex-1 mb-6">
+                    {p.features.map((f) => (
+                      <li key={f} className="flex items-start gap-2 text-sm text-muted-foreground">
+                        <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0 text-primary" />
+                        <span>{f}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <Button
+                    variant={p.ctaVariant}
+                    className="w-full"
+                    onClick={() => window.open(GET_A_QUOTE_URL, "_blank")}
+                  >
+                    {p.cta} <ArrowUpRight className="w-4 h-4 ml-1" />
+                  </Button>
                 </div>
-                <ul className="space-y-2 flex-1">
-                  {p.features.map((f) => (
-                    <li key={f} className="flex items-start gap-2 text-sm text-muted-foreground">
-                      <Check className="w-4 h-4 mt-0.5 flex-shrink-0 text-primary" />
-                      <span>{f}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>
 
-      {/* ── Same Day Delivery & Payment Options ──────────────────────── */}
+      {/* ── Expedited Builds ──────────────────────────────────────────── */}
       <section className="py-20 md:py-28">
         <div className="container">
-          <div className="grid md:grid-cols-2 gap-12 max-w-4xl mx-auto">
-            {/* Same Day Delivery */}
-            <div>
-              <div className="flex items-center gap-3 mb-4">
+          <div className="text-center mb-12">
+            <p className="text-sm font-semibold uppercase tracking-widest text-primary mb-3">Fast-Track</p>
+            <h2 className="text-3xl md:text-4xl font-bold font-display tracking-tight">Expedited Builds</h2>
+            <p className="text-muted-foreground mt-4 max-w-xl mx-auto">
+              Need your event live sooner? Our expedited service fast-tracks your build to the front of the queue — without compromising on quality.
+            </p>
+          </div>
+
+          <div className="max-w-3xl mx-auto">
+            <div className="rounded-xl border border-border/50 bg-card p-8 shadow-card">
+              <div className="flex items-center gap-3 mb-2">
                 <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
                   <Zap className="w-5 h-5 text-primary" />
                 </div>
-                <h3 className="text-xl font-bold font-display">Same Day Delivery</h3>
+                <h3 className="text-xl font-bold font-display">Priority Delivery</h3>
               </div>
-              <p className="text-sm text-muted-foreground leading-relaxed mb-3">
-                Available for <span className="font-semibold text-foreground">Simple</span> and eligible <span className="font-semibold text-foreground">Medium</span> builds. Project must start by <span className="font-semibold text-foreground">8:00 AM ET</span> (Mon–Fri).
+              <p className="text-xl font-bold font-display text-primary mb-4">$299 – $599</p>
+              <p className="text-sm text-muted-foreground leading-relaxed mb-6">
+                When timelines are tight and deadlines are non-negotiable, our expedited service ensures your event registration is built, tested, and delivered ahead of schedule. The fee scales with the complexity of your build — a straightforward Simple registration sits at the lower end, while multi-layered Advanced or Complex builds command a higher premium.
               </p>
-              <p className="text-sm text-muted-foreground leading-relaxed mb-3">
-                Guaranteed delivery by <span className="font-semibold text-foreground">8:00 PM ET</span> — a 12-hour turnaround window. Full refund if we miss the deadline.
-              </p>
-              <div className="rounded-lg border border-primary/20 bg-primary/5 px-4 py-3 text-xs text-muted-foreground">
-                <p className="font-semibold text-foreground mb-1">Requirements</p>
-                <p>100% advance payment required. All creative assets and event logistics must be provided upfront.</p>
-              </div>
-            </div>
-
-            {/* Payment Options */}
-            <div>
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <DollarSign className="w-5 h-5 text-primary" />
-                </div>
-                <h3 className="text-xl font-bold font-display">Payment Options</h3>
-              </div>
-              <div className="space-y-4">
-                <div className="rounded-xl border border-border/50 bg-card-gradient p-4 shadow-card">
-                  <p className="text-sm font-semibold text-foreground mb-1">Option A — 50 / 50 Split</p>
-                  <p className="text-sm text-muted-foreground">50% deposit to start, remaining 50% upon delivery of first draft.</p>
-                </div>
-                <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 shadow-card">
-                  <div className="flex items-center gap-2 mb-1">
-                    <p className="text-sm font-semibold text-foreground">Option B — 100% Advance</p>
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-primary bg-primary/10 px-2 py-0.5 rounded-full">Save 10%</span>
-                  </div>
-                  <p className="text-sm text-muted-foreground">Pay in full upfront and receive a 10% discount. Mandatory for Same Day Delivery.</p>
-                </div>
-              </div>
+              <ul className="space-y-3 mb-6">
+                {[
+                  "Prioritised in the build queue — your project jumps to the front",
+                  "Accelerated turnaround without cutting corners on quality",
+                  "Available across all build tiers — Simple through Complex",
+                ].map((f) => (
+                  <li key={f} className="flex items-start gap-2 text-sm text-muted-foreground">
+                    <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0 text-primary" />
+                    <span>{f}</span>
+                  </li>
+                ))}
+              </ul>
+              <Button onClick={() => window.open(GET_A_QUOTE_URL, "_blank")}>
+                Get Started <ArrowUpRight className="w-4 h-4 ml-1" />
+              </Button>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ── Attendee Hub & Event App ─────────────────────────────────── */}
+      {/* ── Attendee Hub & Training ───────────────────────────────────── */}
       <section className="py-20 md:py-28 bg-muted/30">
         <div className="container">
           <div className="text-center mb-12">
             <p className="text-sm font-semibold uppercase tracking-widest text-primary mb-3">Attendee Hub</p>
-            <h2 className="text-3xl md:text-4xl font-bold font-display tracking-tight">Attendee Hub & Event App</h2>
+            <h2 className="text-3xl md:text-4xl font-bold font-display tracking-tight">Attendee Hub & Training</h2>
             <p className="text-muted-foreground mt-4 max-w-xl mx-auto">
-              Whether you need a branded web hub, mobile app, or both — we have a tier calibrated to your timeline.
+              Deliver a polished attendee experience with a branded Hub, ongoing support, and custom training content.
             </p>
           </div>
 
@@ -212,17 +256,16 @@ const Pricing = () => {
             {hubCards.map((c) => {
               const Icon = c.icon;
               return (
-                <div key={c.title} className="rounded-xl border border-border/50 bg-card-gradient p-6 shadow-card hover:shadow-card-hover hover:scale-[1.02] transition-all duration-300">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <Icon className="w-5 h-5 text-primary" />
-                    </div>
-                    <div>
-                      <h4 className="font-bold font-display">{c.title}</h4>
-                      <span className="text-xs font-semibold text-primary">{c.timeline}</span>
-                    </div>
+                <div key={c.title} className="rounded-xl border border-border/50 bg-card p-6 shadow-card hover:shadow-card-hover hover:scale-[1.02] transition-all duration-300 flex flex-col">
+                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
+                    <Icon className="w-5 h-5 text-primary" />
                   </div>
-                  <p className="text-sm text-muted-foreground leading-relaxed">{c.desc}</p>
+                  <h4 className="text-lg font-bold font-display mb-1">{c.title}</h4>
+                  <p className="text-xl font-bold font-display text-primary mb-3">{c.price}</p>
+                  <p className="text-sm text-muted-foreground leading-relaxed flex-1 mb-6">{c.desc}</p>
+                  <Button className="w-full" onClick={() => window.open(GET_A_QUOTE_URL, "_blank")}>
+                    Get Started <ArrowUpRight className="w-4 h-4 ml-1" />
+                  </Button>
                 </div>
               );
             })}
@@ -230,31 +273,96 @@ const Pricing = () => {
         </div>
       </section>
 
-      {/* ── Additional Services ───────────────────────────────────────── */}
+      {/* ── Specialist Services: Creative & Support ───────────────────── */}
       <section className="py-20 md:py-28">
         <div className="container">
           <div className="text-center mb-12">
-            <p className="text-sm font-semibold uppercase tracking-widest text-primary mb-3">Beyond Builds</p>
-            <h2 className="text-3xl md:text-4xl font-bold font-display tracking-tight">Additional Services</h2>
+            <p className="text-sm font-semibold uppercase tracking-widest text-primary mb-3">Specialist Services</p>
+            <h2 className="text-3xl md:text-4xl font-bold font-display tracking-tight">Creative & Support</h2>
             <p className="text-muted-foreground mt-4 max-w-xl mx-auto">
-              Extend the value of your Cvent investment with our specialized add-on services.
+              On-demand expertise for HTML builds, post-launch event management, and everything in between.
             </p>
           </div>
 
-          <div className="grid sm:grid-cols-3 gap-6 max-w-4xl mx-auto">
-            {additionalServices.map((s) => {
+          <div className="grid sm:grid-cols-2 gap-6 max-w-3xl mx-auto">
+            {specialistServices.map((s) => {
               const Icon = s.icon;
               return (
-                <div key={s.title} className="rounded-xl border border-border/50 bg-card-gradient p-6 shadow-card hover:shadow-card-hover hover:scale-[1.02] transition-all duration-300">
+                <div key={s.title} className="rounded-xl border border-border/50 bg-card p-6 shadow-card hover:shadow-card-hover hover:scale-[1.02] transition-all duration-300 flex flex-col">
                   <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
                     <Icon className="w-5 h-5 text-primary" />
                   </div>
-                  <h4 className="font-bold font-display mb-2">{s.title}</h4>
-                  <p className="text-sm text-muted-foreground leading-relaxed">{s.desc}</p>
+                  <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-1">{s.category}</p>
+                  <h4 className="text-lg font-bold font-display mb-1">{s.title}</h4>
+                  <p className="text-xl font-bold font-display text-primary mb-3">{s.price}</p>
+                  <p className="text-sm text-muted-foreground leading-relaxed flex-1 mb-6">{s.desc}</p>
+                  <Button className="w-full" onClick={() => window.open(GET_A_QUOTE_URL, "_blank")}>
+                    Get Started <ArrowUpRight className="w-4 h-4 ml-1" />
+                  </Button>
                 </div>
               );
             })}
           </div>
+        </div>
+      </section>
+
+      {/* ── Flexible Payment Options ──────────────────────────────────── */}
+      <section className="py-20 md:py-28 bg-muted/30">
+        <div className="container">
+          <div className="text-center mb-12">
+            <p className="text-sm font-semibold uppercase tracking-widest text-primary mb-3">Payment Terms</p>
+            <h2 className="text-3xl md:text-4xl font-bold font-display tracking-tight">Flexible Payment Options</h2>
+            <p className="text-muted-foreground mt-4 max-w-xl mx-auto">
+              Choose the payment structure that works best for you. Both options are available across all build tiers.
+            </p>
+          </div>
+
+          <div className="grid sm:grid-cols-2 gap-6 max-w-3xl mx-auto">
+            {/* Option 1 — Staged Payment */}
+            <div className="rounded-xl border border-border/50 bg-card p-6 shadow-card">
+              <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-2">Option 1</p>
+              <h4 className="text-lg font-bold font-display mb-1">Staged Payment</h4>
+              <p className="text-2xl font-bold font-display text-primary mb-4">50% + 50%</p>
+              <p className="text-sm text-muted-foreground leading-relaxed mb-5">
+                Pay a minimum booking deposit of <strong className="text-foreground">50%</strong> to kick off your project. The remaining balance is due upon submission of the First Draft.
+              </p>
+              <ul className="space-y-2">
+                <li className="flex items-start gap-2 text-sm text-muted-foreground">
+                  <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0 text-primary" />
+                  <span>50% deposit to secure your build slot</span>
+                </li>
+                <li className="flex items-start gap-2 text-sm text-muted-foreground">
+                  <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0 text-primary" />
+                  <span>Balance due on first draft delivery</span>
+                </li>
+              </ul>
+            </div>
+
+            {/* Option 2 — Full Advance */}
+            <div className="rounded-xl border-2 border-primary/30 bg-primary/5 p-6 shadow-card relative">
+              <span className="absolute top-4 right-4 text-[11px] font-bold uppercase tracking-wider text-primary-foreground bg-primary px-3 py-1 rounded-full">Save 10%</span>
+              <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-2">Option 2</p>
+              <h4 className="text-lg font-bold font-display mb-1">Full Advance</h4>
+              <p className="text-2xl font-bold font-display text-primary mb-4">100% Upfront</p>
+              <p className="text-sm text-muted-foreground leading-relaxed mb-5">
+                Pay the full amount upfront and receive a <strong className="text-foreground">flat 10% discount</strong> applied to your final invoice — the best value for committed clients.
+              </p>
+              <ul className="space-y-2">
+                <li className="flex items-start gap-2 text-sm text-muted-foreground">
+                  <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0 text-primary" />
+                  <span>10% discount on the total invoice</span>
+                </li>
+                <li className="flex items-start gap-2 text-sm text-muted-foreground">
+                  <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0 text-primary" />
+                  <span>Mandatory for Same Day Delivery builds</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <p className="text-xs text-muted-foreground text-center mt-8 max-w-2xl mx-auto">
+            LaunchHouse Events reserves the right to pause or withhold delivery of work in the event of outstanding payments.
+          </p>
         </div>
       </section>
 
@@ -265,12 +373,12 @@ const Pricing = () => {
           <div className="absolute inset-0 bg-[hsl(220,90%,10%)]/75" />
         </div>
         <div className="container relative text-center">
-          <h2 className="text-3xl md:text-4xl font-bold font-display tracking-tight mb-4 text-white">Ready to Get Started?</h2>
+          <h2 className="text-3xl md:text-4xl font-bold font-display tracking-tight mb-4 text-white">Ready to Scope Your Event?</h2>
           <p className="text-white/80 max-w-lg mx-auto mb-8">
-            Tell us about your event and we'll put together a tailored proposal within 24 hours.
+            Tell us about your event and one of our sales consultants will reach out with a transparent, tailored quote within 24 hours.
           </p>
-          <Button size="lg" className="shadow-btn" onClick={() => window.open(GET_A_QUOTE_URL, "_blank")}>
-            Get a Quote <ArrowUpRight className="w-4 h-4 ml-1" />
+          <Button size="lg" className="shadow-btn" onClick={openContactPanel}>
+            Contact Us <ArrowUpRight className="w-4 h-4 ml-1" />
           </Button>
         </div>
       </section>
