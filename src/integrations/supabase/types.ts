@@ -296,6 +296,78 @@ export type Database = {
         }
         Relationships: []
       }
+      event_complexity_leads: {
+        Row: {
+          appointment_scheduling: string | null
+          branding_level: string | null
+          company: string
+          complexity_level: string | null
+          contact_types: string | null
+          created_at: string | null
+          cvent_products: string | null
+          email: string
+          event_date: string | null
+          event_length: string | null
+          hotel_required: string | null
+          id: string
+          integrations: string | null
+          languages: string | null
+          name: string
+          registration_paths: string | null
+          registration_rules: string | null
+          sessions: string | null
+          speaker_management: string | null
+          starting_price: string | null
+          website_pages: string | null
+        }
+        Insert: {
+          appointment_scheduling?: string | null
+          branding_level?: string | null
+          company: string
+          complexity_level?: string | null
+          contact_types?: string | null
+          created_at?: string | null
+          cvent_products?: string | null
+          email: string
+          event_date?: string | null
+          event_length?: string | null
+          hotel_required?: string | null
+          id?: string
+          integrations?: string | null
+          languages?: string | null
+          name: string
+          registration_paths?: string | null
+          registration_rules?: string | null
+          sessions?: string | null
+          speaker_management?: string | null
+          starting_price?: string | null
+          website_pages?: string | null
+        }
+        Update: {
+          appointment_scheduling?: string | null
+          branding_level?: string | null
+          company?: string
+          complexity_level?: string | null
+          contact_types?: string | null
+          created_at?: string | null
+          cvent_products?: string | null
+          email?: string
+          event_date?: string | null
+          event_length?: string | null
+          hotel_required?: string | null
+          id?: string
+          integrations?: string | null
+          languages?: string | null
+          name?: string
+          registration_paths?: string | null
+          registration_rules?: string | null
+          sessions?: string | null
+          speaker_management?: string | null
+          starting_price?: string | null
+          website_pages?: string | null
+        }
+        Relationships: []
+      }
       quote_requests: {
         Row: {
           cvent_technologies: string[]
