@@ -1,229 +1,115 @@
-import { useState, useRef, useEffect, useCallback } from "react";
-import { Progress } from "@/components/ui/progress";
-import { ChatBubble } from "@/components/ChatBubble";
-import { OptionButtons } from "@/components/OptionButtons";
-import { ResultCard } from "@/components/ResultCard";
-import { LeadForm } from "@/components/LeadForm";
-import { DescribeEvent } from "@/components/DescribeEvent";
+import { useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import BreadcrumbJsonLd from "@/components/BreadcrumbJsonLd";
-import {
-  questions,
-  calculateResult,
-  getFilteredCventOptions,
-  type QuestionOption,
-  type Result,
-} from "@/lib/calculator-data";
-import { RotateCcw, Check, Zap, DollarSign, ArrowUpRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useContactPanel } from "@/components/ContactPanelProvider";
+import {
+  ArrowUpRight, Check, Zap, DollarSign, Clock, Rocket, Shield, Smartphone,
+  BookOpen, Headphones, Wrench,
+} from "lucide-react";
+import heroBanner from "@/assets/banners/pricing-banner.jpg";
 import ctaBanner from "@/assets/banners/pricing-cta-banner.jpg";
+import TnCTooltip from "@/components/TnCTooltip";
 
-interface Message {
-  role: "assistant" | "user";
-  content: string;
-  questionIndex?: number;
-  isResult?: boolean;
-  isLeadForm?: boolean;
-}
+const GET_A_QUOTE_URL = "/get-a-quote";
 
-const INTRO_MSG =
-  "Hi there! 👋 Welcome to the Launchhouse Event Complexity Calculator.\n\nIn less than 60 seconds, I'll help estimate the complexity of building your event in Cvent, along with typical delivery timelines and starting pricing.\n\nLet's get started.";
+/* ── Event Build Tiers ───────────────────────────────────────────── */
+const tiers = [
+  {
+    tier: "Simple",
+    price: "$899",
+    draft: "2 Business Days",
+    revision: "1 Business Day",
+    features: ["Single-page registration", "Standard branding", "Basic email confirmation", "Up to 2 registration types"],
+  },
+  {
+    tier: "Medium",
+    price: "$2,199",
+    draft: "2 Business Days",
+    revision: "2 Business Days",
+    features: ["Multi-page registration", "Custom branding & design", "Automated email workflows", "Basic reporting setup"],
+  },
+  {
+    tier: "Advanced",
+    price: "$3,499",
+    draft: "3 Business Days",
+    revision: "3 Business Days",
+    features: ["Complex conditional logic", "Payment integration", "Multi-session support", "Advanced reporting & analytics"],
+  },
+  {
+    tier: "Complex",
+    price: "$4,999",
+    draft: "4 Business Days",
+    revision: "3 Business Days",
+    features: ["Approval workflows", "API integrations", "Multi-event management", "Dedicated project manager"],
+  },
+];
+
+/* ── Attendee Hub Cards ──────────────────────────────────────────── */
+const hubCards = [
+  { icon: Smartphone, title: "Standard Hub", timeline: "20+ days", desc: "Initial draft plus three feedback rounds to align your Attendee Hub perfectly with your brand." },
+  { icon: Rocket, title: "Rush Hub", timeline: "7–21 days", desc: "Fast-tracked configuration with draft and two consolidated rounds of critical changes." },
+  { icon: Shield, title: "Premium Hub Management", timeline: "Ongoing", desc: "Complete peace of mind — we handle drafting, revisions, and post-launch session & speaker updates in real-time." },
+];
+
+/* ── Additional Services ─────────────────────────────────────────── */
+const additionalServices = [
+  { icon: BookOpen, title: "Cvent Platform Training", desc: "Hands-on training sessions for your team to master the Cvent platform and maximize your investment." },
+  { icon: Headphones, title: "Post Launch Support", desc: "Ongoing technical support and troubleshooting after your event registration goes live." },
+  { icon: Wrench, title: "Custom Tasks", desc: "Ad-hoc requests and custom development work tailored to your unique event requirements." },
+];
 
 const Pricing = () => {
-  const [messages, setMessages] = useState<Message[]>([
-    { role: "assistant", content: INTRO_MSG },
-  ]);
-  const [currentQ, setCurrentQ] = useState(-1); // -1 = describe event phase
-  const [answers, setAnswers] = useState<Record<string, number>>({});
-  const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
-  const [result, setResult] = useState<Result | null>(null);
-  const [showOptions, setShowOptions] = useState(true);
-  const [showDescribe, setShowDescribe] = useState(true);
-  const bottomRef = useRef<HTMLDivElement>(null);
+  const { openContactPanel } = useContactPanel();
 
   useEffect(() => {
-    document.title = "Pricing — LaunchHouse Events | Event Complexity Calculator";
+    document.title = "Pricing — LaunchHouse Events | Transparent, Complexity-Based Pricing";
     return () => { document.title = "LaunchHouse Events"; };
   }, []);
-
-  const scroll = useCallback(() => {
-    setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "smooth" }), 80);
-  }, []);
-
-  useEffect(scroll, [messages, scroll]);
-
-  const startManualFlow = () => {
-    setShowDescribe(false);
-    setCurrentQ(0);
-    setMessages((prev) => [
-      ...prev,
-      { role: "assistant", content: questions[0].text, questionIndex: 0 },
-    ]);
-  };
-
-  const handleAIAnalysis = (aiAnswers: Record<string, number>, products: string[]) => {
-    setShowDescribe(false);
-    setAnswers(aiAnswers);
-    setSelectedProducts(products);
-
-    const r = calculateResult(aiAnswers, products);
-    setResult(r);
-    setCurrentQ(questions.length);
-
-    setMessages((prev) => [
-      ...prev,
-      { role: "user", content: "✨ Event analyzed automatically" },
-      {
-        role: "assistant",
-        content: "Based on your event description, here's your event assessment:",
-        isResult: true,
-      },
-      { role: "assistant", content: "", isLeadForm: true },
-    ]);
-  };
-
-  const handleSelect = (selected: QuestionOption | QuestionOption[]) => {
-    setShowOptions(false);
-    const q = questions[currentQ];
-
-    let userLabel: string;
-    let scoreValue: number;
-
-    if (Array.isArray(selected)) {
-      userLabel = selected.map((s) => s.label).join(", ");
-      scoreValue = selected.reduce((s, o) => s + o.value, 0);
-      setSelectedProducts(selected.map((s) => s.label));
-    } else {
-      userLabel = selected.label;
-      scoreValue = selected.value;
-    }
-
-    const newAnswers = { ...answers, [q.id]: scoreValue };
-    setAnswers(newAnswers);
-
-    const nextQ = currentQ + 1;
-    const newMessages: Message[] = [
-      ...messages,
-      { role: "user", content: userLabel },
-    ];
-
-    if (nextQ < questions.length) {
-      newMessages.push({
-        role: "assistant",
-        content: questions[nextQ].text,
-        questionIndex: nextQ,
-      });
-      setCurrentQ(nextQ);
-      setTimeout(() => setShowOptions(true), 300);
-    } else {
-      const r = calculateResult(
-        newAnswers,
-        Array.isArray(selected) ? selected.map((s) => s.label) : selectedProducts
-      );
-      setResult(r);
-      newMessages.push({
-        role: "assistant",
-        content: "Based on your answers, here's your event assessment:",
-        isResult: true,
-      });
-      newMessages.push({
-        role: "assistant",
-        content: "",
-        isLeadForm: true,
-      });
-    }
-
-    setMessages(newMessages);
-  };
-
-  const restart = () => {
-    setMessages([{ role: "assistant", content: INTRO_MSG }]);
-    setCurrentQ(-1);
-    setAnswers({});
-    setSelectedProducts([]);
-    setResult(null);
-    setShowOptions(true);
-    setShowDescribe(true);
-  };
-
-  const progress = result
-    ? 100
-    : currentQ <= 0
-      ? 0
-      : (currentQ / questions.length) * 100;
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <BreadcrumbJsonLd items={[{ name: "Pricing", path: "/pricing" }]} />
       <Navbar />
 
-      {/* Calculator header with progress */}
-      <div className="sticky top-[var(--nav-height)] z-10 border-b border-border bg-card/80 backdrop-blur-md">
-        <div className="mx-auto flex max-w-2xl items-center justify-between px-4 py-3">
-          <div>
-            <h1 className="text-lg font-bold font-display text-foreground">Event Complexity Calculator</h1>
-            <p className="text-xs text-muted-foreground">Estimate your Cvent build in under 60 seconds</p>
-          </div>
-          <div className="flex items-center gap-3">
-            {(result || currentQ > 0) && (
-              <Button variant="ghost" size="icon" onClick={restart} title="Start over">
-                <RotateCcw className="h-4 w-4" />
-              </Button>
-            )}
-          </div>
+      {/* ── Hero ──────────────────────────────────────────────────────── */}
+      <section className="relative pt-[var(--nav-height)] overflow-hidden">
+        <div className="absolute inset-0">
+          <img src={heroBanner} alt="" className="banner-img" loading="eager" fetchPriority="high" decoding="async" width={1920} height={1080} />
+          <div className="absolute inset-0 bg-[hsl(220,90%,10%)]/60" />
         </div>
-        <Progress value={progress} className="h-1 rounded-none" />
-      </div>
+        <div className="container relative py-24 md:py-36 flex flex-col items-center text-center gap-8">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 text-white text-sm font-medium backdrop-blur-sm">
+            <Zap className="w-4 h-4" />
+            Transparent, Complexity-Based Pricing
+          </div>
 
-      {/* Chat area */}
-      <main className="flex-1 overflow-y-auto">
-        <div className="mx-auto flex max-w-2xl flex-col gap-3 px-4 py-6">
-          {messages.map((msg, i) => {
-            if (msg.isResult && result) {
-              return (
-                <div key={i} className="flex flex-col gap-3">
-                  <ChatBubble role="assistant">{msg.content}</ChatBubble>
-                  <ResultCard result={result} />
-                </div>
-              );
-            }
-            if (msg.isLeadForm) {
-              return <LeadForm key={i} answers={answers} selectedProducts={selectedProducts} result={result} />;
-            }
-            return (
-              <ChatBubble key={i} role={msg.role}>
-                {msg.content}
-              </ChatBubble>
-            );
-          })}
+          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold font-display tracking-tight max-w-4xl leading-[1.1] text-white">
+            Know Exactly{" "}
+            <span className="text-white/80">What You're Paying For.</span>
+          </h1>
 
-          {/* Describe event section */}
-          {showDescribe && !result && (
-            <DescribeEvent onAnalyzed={handleAIAnalysis} onSkip={startManualFlow} />
-          )}
+          <p className="text-lg md:text-xl text-white/70 max-w-2xl leading-relaxed">
+            No hidden fees. No surprise invoices. Our pricing is structured around event complexity so you get a fair, predictable quote every time.
+          </p>
 
-          {/* Option buttons for current question */}
-          {!result && !showDescribe && currentQ >= 0 && showOptions && (
-            <OptionButtons
-              key={currentQ}
-              options={
-                questions[currentQ].id === "cvent_products"
-                  ? getFilteredCventOptions(answers)
-                  : questions[currentQ].options
-              }
-              multiSelect={questions[currentQ].multiSelect}
-              onSelect={handleSelect}
-            />
-          )}
+          <div className="flex flex-col sm:flex-row gap-4 mt-2">
+            <Button size="lg" className="shadow-btn" onClick={() => window.open(GET_A_QUOTE_URL, "_blank")}>
+              Get a Quote <ArrowUpRight className="w-4 h-4 ml-2" />
+            </Button>
+            <Button size="lg" variant="outline" className="border-white text-white bg-white/10 hover:bg-white/20" onClick={openContactPanel}>
+              Talk to Us
+            </Button>
+          </div>
 
-          <div ref={bottomRef} />
+          <p className="text-sm text-white/60 mt-4">
+            Starting at <strong className="text-white">$899</strong> · Same-day delivery available <TnCTooltip />
+          </p>
         </div>
-      </main>
+      </section>
 
-      {/* ── Static Pricing Details ─────────────────────────────────── */}
-
-      {/* Pricing Tiers */}
+      {/* ── Event Build Tiers ─────────────────────────────────────────── */}
       <section className="py-20 md:py-28 bg-muted/30">
         <div className="container">
           <div className="text-center mb-12">
@@ -235,12 +121,7 @@ const Pricing = () => {
           </div>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[
-              { tier: "Simple", price: "$899", draft: "2 Business Days", revision: "1 Business Day", features: ["Single-page registration", "Standard branding", "Basic email confirmation", "Up to 2 registration types"] },
-              { tier: "Medium", price: "$2,199", draft: "2 Business Days", revision: "2 Business Days", features: ["Multi-page registration", "Custom branding & design", "Automated email workflows", "Basic reporting setup"] },
-              { tier: "Advanced", price: "$3,499", draft: "3 Business Days", revision: "3 Business Days", features: ["Complex conditional logic", "Payment integration", "Multi-session support", "Advanced reporting & analytics"] },
-              { tier: "Complex", price: "$4,999", draft: "4 Business Days", revision: "3 Business Days", features: ["Approval workflows", "API integrations", "Multi-event management", "Dedicated project manager"] },
-            ].map((p) => (
+            {tiers.map((p) => (
               <div
                 key={p.tier}
                 className="rounded-xl border border-border/50 bg-card-gradient p-6 shadow-card hover:shadow-card-hover hover:scale-[1.02] transition-all duration-300 flex flex-col"
@@ -266,7 +147,7 @@ const Pricing = () => {
         </div>
       </section>
 
-      {/* Expedited & Payment Options */}
+      {/* ── Same Day Delivery & Payment Options ──────────────────────── */}
       <section className="py-20 md:py-28">
         <div className="container">
           <div className="grid md:grid-cols-2 gap-12 max-w-4xl mx-auto">
@@ -316,7 +197,7 @@ const Pricing = () => {
         </div>
       </section>
 
-      {/* Attendee Hub Pricing */}
+      {/* ── Attendee Hub & Event App ─────────────────────────────────── */}
       <section className="py-20 md:py-28 bg-muted/30">
         <div className="container">
           <div className="text-center mb-12">
@@ -328,22 +209,56 @@ const Pricing = () => {
           </div>
 
           <div className="grid sm:grid-cols-3 gap-6 max-w-4xl mx-auto">
-            {[
-              { title: "Standard Hub", timeline: "20+ days", desc: "Initial draft plus three feedback rounds to align your Attendee Hub perfectly with your brand." },
-              { title: "Rush Hub", timeline: "7–21 days", desc: "Fast-tracked configuration with draft and two consolidated rounds of critical changes." },
-              { title: "Premium Hub Management", timeline: "Ongoing", desc: "Complete peace of mind — we handle drafting, revisions, and post-launch session & speaker updates in real-time." },
-            ].map((c) => (
-              <div key={c.title} className="rounded-xl border border-border/50 bg-card-gradient p-6 shadow-card hover:shadow-card-hover hover:scale-[1.02] transition-all duration-300">
-                <h4 className="font-bold font-display mb-1">{c.title}</h4>
-                <span className="text-xs font-semibold text-primary">{c.timeline}</span>
-                <p className="text-sm text-muted-foreground leading-relaxed mt-3">{c.desc}</p>
-              </div>
-            ))}
+            {hubCards.map((c) => {
+              const Icon = c.icon;
+              return (
+                <div key={c.title} className="rounded-xl border border-border/50 bg-card-gradient p-6 shadow-card hover:shadow-card-hover hover:scale-[1.02] transition-all duration-300">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <Icon className="w-5 h-5 text-primary" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold font-display">{c.title}</h4>
+                      <span className="text-xs font-semibold text-primary">{c.timeline}</span>
+                    </div>
+                  </div>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{c.desc}</p>
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>
 
-      {/* CTA */}
+      {/* ── Additional Services ───────────────────────────────────────── */}
+      <section className="py-20 md:py-28">
+        <div className="container">
+          <div className="text-center mb-12">
+            <p className="text-sm font-semibold uppercase tracking-widest text-primary mb-3">Beyond Builds</p>
+            <h2 className="text-3xl md:text-4xl font-bold font-display tracking-tight">Additional Services</h2>
+            <p className="text-muted-foreground mt-4 max-w-xl mx-auto">
+              Extend the value of your Cvent investment with our specialized add-on services.
+            </p>
+          </div>
+
+          <div className="grid sm:grid-cols-3 gap-6 max-w-4xl mx-auto">
+            {additionalServices.map((s) => {
+              const Icon = s.icon;
+              return (
+                <div key={s.title} className="rounded-xl border border-border/50 bg-card-gradient p-6 shadow-card hover:shadow-card-hover hover:scale-[1.02] transition-all duration-300">
+                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
+                    <Icon className="w-5 h-5 text-primary" />
+                  </div>
+                  <h4 className="font-bold font-display mb-2">{s.title}</h4>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{s.desc}</p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* ── CTA Banner ────────────────────────────────────────────────── */}
       <section className="relative py-20 md:py-28 overflow-hidden">
         <div className="absolute inset-0">
           <img src={ctaBanner} alt="" className="banner-img" loading="lazy" decoding="async" width={1920} height={1080} />
@@ -354,7 +269,7 @@ const Pricing = () => {
           <p className="text-white/80 max-w-lg mx-auto mb-8">
             Tell us about your event and we'll put together a tailored proposal within 24 hours.
           </p>
-          <Button size="lg" className="shadow-btn" onClick={() => window.open("/get-a-quote", "_blank")}>
+          <Button size="lg" className="shadow-btn" onClick={() => window.open(GET_A_QUOTE_URL, "_blank")}>
             Get a Quote <ArrowUpRight className="w-4 h-4 ml-1" />
           </Button>
         </div>
