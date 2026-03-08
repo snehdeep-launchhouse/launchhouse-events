@@ -3,7 +3,6 @@ import { MessageCircle, X, Send, Loader2, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import ReactMarkdown from "react-markdown";
-import { Link } from "react-router-dom";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
@@ -13,7 +12,7 @@ const GREETING =
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
-export default function AiReceptionistWidget() {
+export function ReceptionistWidget() {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Msg[]>([
     { role: "assistant", content: GREETING },
@@ -119,7 +118,7 @@ export default function AiReceptionistWidget() {
 
   return (
     <>
-      {/* Floating trigger button */}
+      {/* Floating button */}
       {!open && (
         <button
           onClick={() => setOpen(true)}
@@ -179,7 +178,7 @@ export default function AiReceptionistWidget() {
                 </div>
               </div>
             ))}
-            {loading && messages[messages.length - 1]?.role !== "assistant" && (
+            {loading && !messages[messages.length - 1]?.content && (
               <div className="flex justify-start">
                 <div className="rounded-xl bg-secondary px-3 py-2">
                   <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
@@ -189,14 +188,18 @@ export default function AiReceptionistWidget() {
             <div ref={bottomRef} />
           </div>
 
-          {/* CTA */}
+          {/* Schedule button */}
           <div className="px-4 pb-2">
-            <Link to="/get-a-quote" onClick={() => setOpen(false)}>
-              <Button variant="outline" size="sm" className="w-full gap-1 text-xs">
-                <Calendar className="h-3 w-3" />
-                Schedule a Consultation
-              </Button>
-            </Link>
+            <button
+              onClick={() => {
+                setOpen(false);
+                document.getElementById("lead-form")?.scrollIntoView({ behavior: "smooth" });
+              }}
+              className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-accent px-3 py-1.5 text-xs font-medium text-accent-foreground hover:bg-accent/80 transition-colors"
+            >
+              <Calendar className="h-3 w-3" />
+              Schedule a Consultation
+            </button>
           </div>
 
           {/* Input */}
@@ -227,3 +230,5 @@ export default function AiReceptionistWidget() {
     </>
   );
 }
+
+export default ReceptionistWidget;
