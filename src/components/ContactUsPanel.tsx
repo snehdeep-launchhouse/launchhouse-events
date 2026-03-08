@@ -21,6 +21,14 @@ import {
   SheetTitle,
   SheetDescription,
 } from "@/components/ui/sheet";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerDescription,
+} from "@/components/ui/drawer";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 /* ── Constants ───────────────────────────────────────────────────── */
 const SERVICE_OFFERINGS = [
@@ -88,6 +96,8 @@ const ContactUsPanel = ({ open, onOpenChange }: ContactUsPanelProps) => {
   const [additionalInfo, setAdditionalInfo] = useState("");
   const [step2Error, setStep2Error] = useState("");
 
+  const isMobile = useIsMobile();
+
   // Abandoned contact tracking
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -151,14 +161,12 @@ const ContactUsPanel = ({ open, onOpenChange }: ContactUsPanelProps) => {
   useEffect(() => {
     if (emailVerification === "valid" && step === 1) {
       const values = getValues();
-      // Background capture immediately
       upsertAbandonedDemo({
         first_name: values.firstName?.trim() || "",
         last_name: values.lastName?.trim() || "",
         email: values.email?.trim() || "",
         last_step_reached: 1,
       });
-      // Only auto-advance if names are non-empty
       if (values.firstName?.trim() && values.lastName?.trim()) {
         handleSubmit(onStep1Submit)();
       }
@@ -185,7 +193,6 @@ const ContactUsPanel = ({ open, onOpenChange }: ContactUsPanelProps) => {
   /* Reset everything when panel closes */
   const handleOpenChange = (val: boolean) => {
     if (!val) {
-      // Mark as abandoned if step1 data exists and not submitted
       if (step1DataRef.current && !submittedRef.current && abandonedDemoRowCreatedRef.current) {
         upsertAbandonedDemo({
           first_name: step1DataRef.current.firstName,
@@ -195,7 +202,6 @@ const ContactUsPanel = ({ open, onOpenChange }: ContactUsPanelProps) => {
           status: "abandoned",
         });
       }
-      // Allow close animation before resetting
       setTimeout(() => {
         setStep(1);
         setSubmitted(false);
@@ -205,8 +211,6 @@ const ContactUsPanel = ({ open, onOpenChange }: ContactUsPanelProps) => {
         setStep2Error("");
         setStep1Data(null);
         setEmailVerification("idle");
-        // Reset for next open
-        // Reset session for next open
         sessionIdRef.current = crypto.randomUUID();
         abandonedDemoRowCreatedRef.current = false;
         resetForm();
@@ -236,13 +240,11 @@ const ContactUsPanel = ({ open, onOpenChange }: ContactUsPanelProps) => {
             : {}),
         };
 
-        // Try INSERT first; if duplicate email, fall back to UPDATE
         const { error: insertError } = await supabase
           .from("abandoned_contact_requests")
           .insert({ ...payload, status: "partial" });
 
         if (insertError?.code === "23505") {
-          // Duplicate email — update instead
           await supabase
             .from("abandoned_contact_requests")
             .update(payload)
@@ -273,7 +275,6 @@ const ContactUsPanel = ({ open, onOpenChange }: ContactUsPanelProps) => {
       business_email: data.email,
       last_active_step: 1,
     });
-    // Also update the unified abandoned demo form
     upsertAbandonedDemo({
       first_name: data.firstName,
       last_name: data.lastName,
@@ -340,7 +341,6 @@ const ContactUsPanel = ({ open, onOpenChange }: ContactUsPanelProps) => {
       });
       if (error) throw error;
       await deleteAbandoned(step1Data.email);
-      // Mark unified tracking as completed
       if (abandonedDemoRowCreatedRef.current) {
         try {
           await supabase
@@ -358,7 +358,189 @@ const ContactUsPanel = ({ open, onOpenChange }: ContactUsPanelProps) => {
     }
   };
 
-  /* ── Render ──────────────────────────────────────────────────── */
+  /* ── Form content (shared between Sheet and Drawer) ──────────── */
+  const formContent = (
+    <ScrollArea className="flex-1">
+      <div className="px-6 py-5">
+        {submitted && step1Data ? (
+          <ConfirmationContent
+            step1Data={step1Data}
+            onClose={() => handleOpenChange(false)}
+          />
+        ) : (
+          <>
+            {/* Step indicator */}
+            <div className="flex items-center justify-center gap-3 mb-6">
+              <div
+                className={cn(
+                  "w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-colors",
+                  step === 1
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-primary/20 text-primary"
+                )}
+              >
+                1
+              </div>
+              <div className="w-10 h-0.5 bg-border" />
+              <div
+                className={cn(
+                  "w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-colors",
+                  step === 2
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted text-muted-foreground"
+                )}
+              >
+                2
+              </div>
+            </div>
+
+            {/* ── Step 1 ─────────────────────────────────────── */}
+            {step === 1 && (
+              <form onSubmit={handleSubmit(onStep1Submit)} className="space-y-5">
+                <div className="rounded-xl border border-border bg-card p-5 space-y-4 shadow-card">
+                  <h2 className="text-base font-bold font-display border-b border-border pb-2">
+                    Your Information
+                  </h2>
+                  <div className="grid sm:grid-cols-2 gap-3">
+                    <Field label="First Name" required error={errors.firstName?.message}>
+                      <Input
+                        {...register("firstName")}
+                        placeholder="Jane"
+                        className={cn(
+                          "text-base md:text-sm",
+                          errors.firstName ? "border-destructive" : ""
+                        )}
+                      />
+                    </Field>
+                    <Field label="Last Name" required error={errors.lastName?.message}>
+                      <Input
+                        {...register("lastName")}
+                        placeholder="Smith"
+                        className={cn(
+                          "text-base md:text-sm",
+                          errors.lastName ? "border-destructive" : ""
+                        )}
+                      />
+                    </Field>
+                  </div>
+                  <Field label="Business Email" required error={errors.email?.message}>
+                    <EmailInput
+                      {...register("email")}
+                      placeholder="jane@company.com"
+                      externalError={errors.email?.message}
+                      onVerificationChange={setEmailVerification}
+                      className="text-base md:text-sm"
+                    />
+                  </Field>
+                </div>
+                <div className="flex justify-end">
+                  <Button
+                    type="submit"
+                    disabled={
+                      emailVerification === "verifying" ||
+                      emailVerification === "invalid"
+                    }
+                    className="shadow-btn min-h-[44px]"
+                  >
+                    Next
+                  </Button>
+                </div>
+              </form>
+            )}
+
+            {/* ── Step 2 ─────────────────────────────────────── */}
+            {step === 2 && (
+              <div className="space-y-5">
+                <div className="rounded-xl border border-border bg-card p-5 space-y-4 shadow-card">
+                  <h2 className="text-base font-bold font-display border-b border-border pb-2">
+                    What can we help you with?
+                  </h2>
+                  <Field
+                    label="Select the services you're interested in"
+                    required
+                    error={step2Error}
+                  >
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1">
+                      {SERVICE_OFFERINGS.map((service) => (
+                        <label
+                          key={service}
+                          className={cn(
+                            "flex items-center gap-2.5 rounded-lg border px-3 py-2.5 cursor-pointer transition-colors text-sm min-h-[44px] touch-manipulation",
+                            selectedServices.includes(service)
+                              ? "border-primary bg-secondary/50"
+                              : "border-border hover:border-primary/50"
+                          )}
+                        >
+                          <Checkbox
+                            checked={selectedServices.includes(service)}
+                            onCheckedChange={() => toggleService(service)}
+                          />
+                          <span className="font-medium leading-tight">
+                            {service}
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                  </Field>
+                  <Field label="Additional Information" error={undefined}>
+                    <Textarea
+                      placeholder="Tell us more about your event or requirements…"
+                      value={additionalInfo}
+                      onChange={(e) => handleInfoChange(e.target.value)}
+                      className="min-h-[70px] text-base md:text-sm"
+                      maxLength={2000}
+                    />
+                  </Field>
+                </div>
+                <div className="flex flex-col-reverse sm:flex-row justify-between gap-3">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setStep(1)}
+                    className="gap-2 min-h-[44px]"
+                  >
+                    <ArrowLeft className="w-4 h-4" /> Back
+                  </Button>
+                  <Button
+                    onClick={onFinalSubmit}
+                    disabled={submitting}
+                    className="shadow-btn min-h-[44px]"
+                  >
+                    {submitting ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Submitting…
+                      </>
+                    ) : (
+                      "Submit"
+                    )}
+                  </Button>
+                </div>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    </ScrollArea>
+  );
+
+  /* ── Render: Drawer on mobile, Sheet on desktop ──────────────── */
+  if (isMobile) {
+    return (
+      <Drawer open={open} onOpenChange={handleOpenChange}>
+        <DrawerContent className="max-h-[85vh] flex flex-col">
+          <DrawerHeader className="px-6 pt-4 pb-3 border-b border-border flex-shrink-0">
+            <DrawerTitle className="text-xl font-bold font-display">Contact Us</DrawerTitle>
+            <DrawerDescription className="text-sm text-muted-foreground">
+              Tell us what you need and we'll be in touch shortly
+            </DrawerDescription>
+          </DrawerHeader>
+          {formContent}
+        </DrawerContent>
+      </Drawer>
+    );
+  }
+
   return (
     <Sheet open={open} onOpenChange={handleOpenChange}>
       <SheetContent
@@ -371,163 +553,7 @@ const ContactUsPanel = ({ open, onOpenChange }: ContactUsPanelProps) => {
             Tell us what you need and we'll be in touch shortly
           </SheetDescription>
         </SheetHeader>
-
-        <ScrollArea className="flex-1">
-          <div className="px-6 py-5">
-            {/* ── Confirmation ──────────────────────────────────── */}
-            {submitted && step1Data ? (
-              <ConfirmationContent
-                step1Data={step1Data}
-                onClose={() => handleOpenChange(false)}
-              />
-            ) : (
-              <>
-                {/* Step indicator */}
-                <div className="flex items-center justify-center gap-3 mb-6">
-                  <div
-                    className={cn(
-                      "w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-colors",
-                      step === 1
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-primary/20 text-primary"
-                    )}
-                  >
-                    1
-                  </div>
-                  <div className="w-10 h-0.5 bg-border" />
-                  <div
-                    className={cn(
-                      "w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-colors",
-                      step === 2
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-muted text-muted-foreground"
-                    )}
-                  >
-                    2
-                  </div>
-                </div>
-
-                {/* ── Step 1 ─────────────────────────────────────── */}
-                {step === 1 && (
-                  <form onSubmit={handleSubmit(onStep1Submit)} className="space-y-5">
-                    <div className="rounded-xl border border-border bg-card p-5 space-y-4 shadow-card">
-                      <h2 className="text-base font-bold font-display border-b border-border pb-2">
-                        Your Information
-                      </h2>
-                      <div className="grid sm:grid-cols-2 gap-3">
-                        <Field label="First Name" required error={errors.firstName?.message}>
-                          <Input
-                            {...register("firstName")}
-                            placeholder="Jane"
-                            className={errors.firstName ? "border-destructive" : ""}
-                          />
-                        </Field>
-                        <Field label="Last Name" required error={errors.lastName?.message}>
-                          <Input
-                            {...register("lastName")}
-                            placeholder="Smith"
-                            className={errors.lastName ? "border-destructive" : ""}
-                          />
-                        </Field>
-                      </div>
-                      <Field label="Business Email" required error={errors.email?.message}>
-                        <EmailInput
-                          {...register("email")}
-                          placeholder="jane@company.com"
-                          externalError={errors.email?.message}
-                          onVerificationChange={setEmailVerification}
-                        />
-                      </Field>
-                    </div>
-                    <div className="flex justify-end">
-                      <Button
-                        type="submit"
-                        disabled={
-                          emailVerification === "verifying" ||
-                          emailVerification === "invalid"
-                        }
-                        className="shadow-btn"
-                      >
-                        Next
-                      </Button>
-                    </div>
-                  </form>
-                )}
-
-                {/* ── Step 2 ─────────────────────────────────────── */}
-                {step === 2 && (
-                  <div className="space-y-5">
-                    <div className="rounded-xl border border-border bg-card p-5 space-y-4 shadow-card">
-                      <h2 className="text-base font-bold font-display border-b border-border pb-2">
-                        What can we help you with?
-                      </h2>
-                      <Field
-                        label="Select the services you're interested in"
-                        required
-                        error={step2Error}
-                      >
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1">
-                          {SERVICE_OFFERINGS.map((service) => (
-                            <label
-                              key={service}
-                              className={cn(
-                                "flex items-center gap-2.5 rounded-lg border px-3 py-2 cursor-pointer transition-colors text-sm",
-                                selectedServices.includes(service)
-                                  ? "border-primary bg-secondary/50"
-                                  : "border-border hover:border-primary/50"
-                              )}
-                            >
-                              <Checkbox
-                                checked={selectedServices.includes(service)}
-                                onCheckedChange={() => toggleService(service)}
-                              />
-                              <span className="font-medium leading-tight">
-                                {service}
-                              </span>
-                            </label>
-                          ))}
-                        </div>
-                      </Field>
-                      <Field label="Additional Information" error={undefined}>
-                        <Textarea
-                          placeholder="Tell us more about your event or requirements…"
-                          value={additionalInfo}
-                          onChange={(e) => handleInfoChange(e.target.value)}
-                          className="min-h-[70px]"
-                          maxLength={2000}
-                        />
-                      </Field>
-                    </div>
-                    <div className="flex flex-col-reverse sm:flex-row justify-between gap-3">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => setStep(1)}
-                        className="gap-2"
-                      >
-                        <ArrowLeft className="w-4 h-4" /> Back
-                      </Button>
-                      <Button
-                        onClick={onFinalSubmit}
-                        disabled={submitting}
-                        className="shadow-btn"
-                      >
-                        {submitting ? (
-                          <>
-                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                            Submitting…
-                          </>
-                        ) : (
-                          "Submit"
-                        )}
-                      </Button>
-                    </div>
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-        </ScrollArea>
+        {formContent}
       </SheetContent>
     </Sheet>
   );
@@ -564,7 +590,7 @@ function ConfirmationContent({
         </h4>
         <a
           href="mailto:sam@launchhouse.events"
-          className="flex items-center gap-3 text-sm hover:text-primary transition-colors"
+          className="flex items-center gap-3 text-sm hover:text-primary transition-colors min-h-[44px]"
         >
           <Mail className="w-4 h-4 text-primary" />
           sam@launchhouse.events
@@ -573,21 +599,21 @@ function ConfirmationContent({
           href={`https://wa.me/919999063734?text=${whatsappText}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-3 text-sm hover:text-primary transition-colors"
+          className="flex items-center gap-3 text-sm hover:text-primary transition-colors min-h-[44px]"
         >
           <MessageCircle className="w-4 h-4 text-green-600" />
           WhatsApp Us
         </a>
         <a
           href="tel:+919999063734"
-          className="flex items-center gap-3 text-sm hover:text-primary transition-colors"
+          className="flex items-center gap-3 text-sm hover:text-primary transition-colors min-h-[44px]"
         >
           <Phone className="w-4 h-4 text-primary" />
           +91 999 906 3734
         </a>
       </div>
 
-      <Button onClick={onClose} variant="outline" className="w-full">
+      <Button onClick={onClose} variant="outline" className="w-full min-h-[44px]">
         Close
       </Button>
     </div>
