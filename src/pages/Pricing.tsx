@@ -15,8 +15,9 @@ import {
   type QuestionOption,
   type Result,
 } from "@/lib/calculator-data";
-import { RotateCcw } from "lucide-react";
+import { RotateCcw, Check, Zap, DollarSign, ArrowUpRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import ctaBanner from "@/assets/banners/pricing-cta-banner.jpg";
 
 interface Message {
   role: "assistant" | "user";
