@@ -1,26 +1,34 @@
 
 
-## Plan: Fix "Schedule Consultation" to Open Demo Panel Directly
+## Fix: Slow First Open of Contact/Demo Panels
 
-**Problem**: The "Schedule Consultation" button in the chat widget currently navigates to `/?book-demo=true` with a full page reload fallback, which is clunky and breaks the user flow.
+### Problem
+The panels use `React.lazy` which only starts downloading the JS chunk **after** the user clicks. This causes a visible delay on first open because the chunk must be fetched, parsed, and rendered before the panel appears.
 
-**Solution**: Use the existing `useContactPanel().openDemoPanel()` context method directly from the widget — no navigation needed.
+### Solution: Prefetch chunks on idle
+Instead of waiting for a click, **preload** both panel chunks during browser idle time (after initial page render). This way the JS is already cached when the user clicks, making the first open instant.
 
-### Change: `src/components/ReceptionistWidget.tsx`
+### Implementation
 
-1. Import `useContactPanel` from `ContactPanelProvider`
-2. Replace the `handleConsultation` function body: instead of navigating/reloading, simply close the chat widget and call `openDemoPanel()`
+**File: `src/components/ContactPanelProvider.tsx`**
 
-```typescript
-const { openDemoPanel } = useContactPanel();
+Add a `useEffect` that triggers dynamic `import()` calls via `requestIdleCallback` (with a setTimeout fallback) shortly after mount. This prefetches the chunks without blocking the initial render. The existing `React.lazy` references continue to work — they resolve instantly from the module cache.
 
-const handleConsultation = () => {
-  setOpen(false);
-  openDemoPanel();
-};
+```tsx
+useEffect(() => {
+  const prefetch = () => {
+    import("./ContactUsPanel");
+    import("./RequestDemoPanel");
+  };
+  if ("requestIdleCallback" in window) {
+    const id = requestIdleCallback(prefetch);
+    return () => cancelIdleCallback(id);
+  } else {
+    const id = setTimeout(prefetch, 2000);
+    return () => clearTimeout(id);
+  }
+}, []);
 ```
 
-3. Remove the now-unused `useNavigate` and `useLocation` imports (if no longer needed by other handlers like `handleCalculator`). Since `handleCalculator` still uses `navigate` and `location`, those stay.
-
-This is a single-file, ~5-line change. All existing functionality remains intact — the `ContactPanelProvider` context and `RequestDemoPanel` component are unchanged.
+One file change, no visual or functional impact. Panels will open instantly on first click.
 

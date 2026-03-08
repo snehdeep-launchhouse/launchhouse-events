@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useNavigate, useLocation } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
+import { useContactPanel } from "@/components/ContactPanelProvider";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
@@ -26,6 +27,7 @@ export function ReceptionistWidget() {
   const isMobile = useIsMobile();
   const navigate = useNavigate();
   const location = useLocation();
+  const { openDemoPanel } = useContactPanel();
 
   const scroll = useCallback(() => {
     setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "smooth" }), 50);
@@ -123,17 +125,7 @@ export function ReceptionistWidget() {
 
   const handleConsultation = () => {
     setOpen(false);
-    // Navigate to home with book-demo param to trigger the demo panel
-    if (location.pathname === "/") {
-      const params = new URLSearchParams(location.search);
-      params.set("book-demo", "true");
-      window.history.replaceState(null, "", `/?${params.toString()}`);
-      window.dispatchEvent(new PopStateEvent("popstate"));
-      // Fallback: just reload with param
-      window.location.href = "/?book-demo=true";
-    } else {
-      navigate("/?book-demo=true");
-    }
+    openDemoPanel();
   };
 
   const handleCalculator = () => {
