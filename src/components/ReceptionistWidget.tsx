@@ -156,12 +156,15 @@ export function ReceptionistWidget() {
         <button
           onClick={() => setOpen(true)}
           className={cn(
-            "fixed z-50 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform hover:scale-105 active:scale-95",
+            "fixed z-50 flex items-center gap-2.5 rounded-full bg-primary text-primary-foreground shadow-lg transition-transform hover:scale-105 active:scale-95 pl-4 pr-2 py-2",
             positionClass
           )}
-          title="Chat with Launchhouse"
+          title="Chat with Chloe"
         >
-          <MessageCircle className="h-6 w-6" />
+          <span className="text-sm font-medium whitespace-nowrap">Ask me anything</span>
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary-foreground/15">
+            <MessageCircle className="h-5 w-5" />
+          </div>
         </button>
       )}
 
