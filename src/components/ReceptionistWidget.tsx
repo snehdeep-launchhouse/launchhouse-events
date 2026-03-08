@@ -176,7 +176,7 @@ export function ReceptionistWidget() {
             </div>
             <button
               onClick={() => setOpen(false)}
-              className="rounded-full p-1 text-primary-foreground/80 hover:bg-primary-foreground/10 hover:text-primary-foreground"
+              className="rounded-full p-2 min-w-[44px] min-h-[44px] flex items-center justify-center text-primary-foreground/80 hover:bg-primary-foreground/10 hover:text-primary-foreground touch-manipulation"
             >
               <X className="h-4 w-4" />
             </button>
@@ -224,14 +224,14 @@ export function ReceptionistWidget() {
           <div className="border-t border-border px-3 py-2 flex gap-2">
             <button
               onClick={handleConsultation}
-              className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-accent px-3 py-1.5 text-xs font-medium text-accent-foreground hover:bg-accent/80 transition-colors"
+              className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-accent px-3 py-2 text-xs font-medium text-accent-foreground hover:bg-accent/80 transition-colors min-h-[44px] touch-manipulation"
             >
               <Calendar className="h-3.5 w-3.5" />
               Schedule Consultation
             </button>
             <button
               onClick={handleCalculator}
-              className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary hover:bg-primary/20 transition-colors"
+              className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-primary/10 px-3 py-2 text-xs font-medium text-primary hover:bg-primary/20 transition-colors min-h-[44px] touch-manipulation"
             >
               <BarChart3 className="h-3.5 w-3.5" />
               Try Calculator
@@ -239,7 +239,7 @@ export function ReceptionistWidget() {
           </div>
 
           {/* Input */}
-          <div className="border-t border-border px-3 py-2">
+          <div className="border-t border-border px-3 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
             <div className="flex items-end gap-2">
               <textarea
                 ref={inputRef}

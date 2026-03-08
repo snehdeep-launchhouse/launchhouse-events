@@ -1,36 +1,34 @@
 
 
-## Plan: Mobile Optimization for Chat Widget and Contact Panels
+## Fix: Slow First Open of Contact/Demo Panels
 
-### Issues Found
+### Problem
+The panels use `React.lazy` which only starts downloading the JS chunk **after** the user clicks. This causes a visible delay on first open because the chunk must be fetched, parsed, and rendered before the panel appears.
 
-1. **ContactUsPanel: No mobile Drawer** — Uses `Sheet` on all devices. `RequestDemoPanel` correctly switches to a bottom `Drawer` on mobile, but `ContactUsPanel` does not. Right-side sheets are awkward on mobile (hard to reach close button, no swipe-to-dismiss).
+### Solution: Prefetch chunks on idle
+Instead of waiting for a click, **preload** both panel chunks during browser idle time (after initial page render). This way the JS is already cached when the user clicks, making the first open instant.
 
-2. **ContactUsPanel: Missing iOS zoom prevention** — Input fields lack `text-base` class, so iOS Safari auto-zooms on focus (font-size < 16px).
+### Implementation
 
-3. **ContactUsPanel: Missing min touch targets** — Buttons don't have `min-h-[44px]` like `RequestDemoPanel` does.
+**File: `src/components/ContactPanelProvider.tsx`**
 
-4. **ReceptionistWidget: Close button too small** — The X button uses `p-1` with a 16px icon = ~24px touch target. Needs 44px minimum.
+Add a `useEffect` that triggers dynamic `import()` calls via `requestIdleCallback` (with a setTimeout fallback) shortly after mount. This prefetches the chunks without blocking the initial render. The existing `React.lazy` references continue to work — they resolve instantly from the module cache.
 
-5. **ReceptionistWidget: No safe-area handling** — On notched iPhones, the input area can be obscured by the home indicator.
+```tsx
+useEffect(() => {
+  const prefetch = () => {
+    import("./ContactUsPanel");
+    import("./RequestDemoPanel");
+  };
+  if ("requestIdleCallback" in window) {
+    const id = requestIdleCallback(prefetch);
+    return () => cancelIdleCallback(id);
+  } else {
+    const id = setTimeout(prefetch, 2000);
+    return () => clearTimeout(id);
+  }
+}, []);
+```
 
-### Changes
-
-#### 1. `src/components/ContactUsPanel.tsx`
-- Import `useIsMobile`, `Drawer`, `DrawerContent`, `DrawerHeader`, `DrawerTitle`, `DrawerDescription`, `DrawerClose`
-- Extract form content into a variable (like `RequestDemoPanel` does)
-- Render `Drawer` on mobile, `Sheet` on desktop
-- Add `text-base md:text-sm` to all `Input` and `EmailInput` fields
-- Add `min-h-[44px]` to all `Button` components
-- Use `flex-col-reverse` for navigation buttons (already present on step 2)
-
-#### 2. `src/components/ReceptionistWidget.tsx`
-- Increase close button touch target: `p-2` instead of `p-1`, icon stays `h-4 w-4` (total ~32px → add `min-w-[44px] min-h-[44px]`)
-- Add `pb-safe` / `env(safe-area-inset-bottom)` padding to the input area for notched devices
-- Add `touch-manipulation` to action buttons to eliminate 300ms tap delay
-
-### No changes needed for:
-- `RequestDemoPanel` — already has Drawer on mobile, `text-base`, `min-h-[44px]`, `flex-col-reverse`
-- Streaming logic — works identically on mobile/desktop
-- `ContactPanelProvider` — context integration is correct
+One file change, no visual or functional impact. Panels will open instantly on first click.
 
