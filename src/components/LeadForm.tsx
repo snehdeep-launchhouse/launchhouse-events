@@ -14,6 +14,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { validateEmail, verifyEmailDomain, type VerificationStatus } from "@/lib/email-validation";
 import type { Result } from "@/lib/calculator-data";
 
 interface LeadFormProps {
@@ -45,12 +46,50 @@ export function LeadForm({ answers = {}, selectedProducts = [], result }: LeadFo
   const [eventDate, setEventDate] = useState<Date>();
   const [submitted, setSubmitted] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [emailError, setEmailError] = useState<string | undefined>();
+  const [emailStatus, setEmailStatus] = useState<VerificationStatus>("idle");
+
+  const handleEmailBlur = async () => {
+    const trimmed = email.trim();
+    if (!trimmed) {
+      setEmailError(undefined);
+      setEmailStatus("idle");
+      return;
+    }
+
+    const formatCheck = validateEmail(trimmed);
+    if (!formatCheck.valid) {
+      setEmailError(formatCheck.message);
+      setEmailStatus("invalid");
+      return;
+    }
+
+    setEmailStatus("verifying");
+    setEmailError(undefined);
+
+    const result = await verifyEmailDomain(trimmed);
+    if (!result.valid) {
+      setEmailError(result.message);
+      setEmailStatus("invalid");
+    } else {
+      setEmailError(undefined);
+      setEmailStatus("valid");
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || !email || !company) {
       toast({
         title: "Please fill in all required fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (emailStatus !== "valid") {
+      toast({
+        title: "Please use a valid company email address",
         variant: "destructive",
       });
       return;
@@ -153,13 +192,32 @@ export function LeadForm({ answers = {}, selectedProducts = [], result }: LeadFo
             <Label htmlFor="email" className="text-xs">
               Email *
             </Label>
-            <Input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@company.com"
-            />
+            <div className="relative">
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (emailError) {
+                    setEmailError(undefined);
+                    setEmailStatus("idle");
+                  }
+                }}
+                onBlur={handleEmailBlur}
+                placeholder="you@company.com"
+                className={cn(
+                  emailError && "border-destructive focus-visible:ring-destructive",
+                  emailStatus === "valid" && "border-success focus-visible:ring-success"
+                )}
+              />
+              {emailStatus === "verifying" && (
+                <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-muted-foreground" />
+              )}
+            </div>
+            {emailError && (
+              <p className="mt-1 text-xs text-destructive">{emailError}</p>
+            )}
           </div>
           <div>
             <Label htmlFor="company" className="text-xs">
@@ -198,7 +256,7 @@ export function LeadForm({ answers = {}, selectedProducts = [], result }: LeadFo
               </PopoverContent>
             </Popover>
           </div>
-          <Button type="submit" className="mt-1 w-full gap-2" disabled={saving}>
+          <Button type="submit" className="mt-1 w-full gap-2" disabled={saving || emailStatus === "verifying" || emailStatus === "invalid"}>
             {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
             {saving ? "Saving…" : "Schedule a Consultation"}
           </Button>
