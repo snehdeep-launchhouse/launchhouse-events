@@ -250,25 +250,21 @@ const BuildRequest = () => {
       const { data, error } = await supabase.functions.invoke("send-build-request", { body: payload });
       if (error) throw error;
 
-      // Mark abandoned form as completed
+      // Mark abandoned form as completed using token-based update
       try {
-        const data1 = form1.getValues();
-        await (supabase
-          .from("abandoned_eb_forms") as any)
-          .upsert(
-            {
-              email: data1.email,
-              first_name: data1.firstName,
-              last_name: data1.lastName,
-              company_name: data1.companyName,
+        if (submissionTokenRef.current) {
+          const data1 = form1.getValues();
+          await supabase
+            .from("abandoned_eb_forms")
+            .update({
               last_page_visited: 3,
               status: "completed",
               completed: true,
-              form_data: { page1: data1, page2: form2.getValues(), page3: data3 },
+              form_data: { page1: data1, page2: form2.getValues(), page3: data3 } as any,
               updated_at: new Date().toISOString(),
-            },
-            { onConflict: "email" }
-          );
+            })
+            .eq("submission_token", submissionTokenRef.current);
+        }
       } catch (e) {
         console.error("Abandoned form tracking error:", e);
       }
