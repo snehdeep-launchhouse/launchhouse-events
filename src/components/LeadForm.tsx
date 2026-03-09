@@ -87,6 +87,14 @@ export function LeadForm({ answers = {}, selectedProducts = [], result }: LeadFo
       return;
     }
 
+    if (emailStatus !== "valid") {
+      toast({
+        title: "Please use a valid company email address",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setSaving(true);
     try {
       // Build the row from calculator answers
