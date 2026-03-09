@@ -1,14 +1,34 @@
 
 
-## Fix: Logo click scrolls to top of home page
+## Fix: Slow First Open of Contact/Demo Panels
 
-The `Logo` component already uses `<Link to="/">` which navigates to the home page. However, React Router's `<Link>` doesn't automatically scroll to the top when you're already on `/`. 
+### Problem
+The panels use `React.lazy` which only starts downloading the JS chunk **after** the user clicks. This causes a visible delay on first open because the chunk must be fetched, parsed, and rendered before the panel appears.
 
-### Change
+### Solution: Prefetch chunks on idle
+Instead of waiting for a click, **preload** both panel chunks during browser idle time (after initial page render). This way the JS is already cached when the user clicks, making the first open instant.
 
-**src/components/Logo.tsx** — Add an `onClick` handler that scrolls to the top of the page. If already on `/`, it just scrolls up; if on another page, React Router navigates to `/` and then we scroll to top.
+### Implementation
 
-Replace the `<Link>` with an `onClick` that calls `window.scrollTo({ top: 0, behavior: 'smooth' })` alongside the navigation. This works on both desktop and mobile since the same `Logo` component is used everywhere via `Navbar`.
+**File: `src/components/ContactPanelProvider.tsx`**
 
-Single file change, affects all pages and both breakpoints.
+Add a `useEffect` that triggers dynamic `import()` calls via `requestIdleCallback` (with a setTimeout fallback) shortly after mount. This prefetches the chunks without blocking the initial render. The existing `React.lazy` references continue to work — they resolve instantly from the module cache.
+
+```tsx
+useEffect(() => {
+  const prefetch = () => {
+    import("./ContactUsPanel");
+    import("./RequestDemoPanel");
+  };
+  if ("requestIdleCallback" in window) {
+    const id = requestIdleCallback(prefetch);
+    return () => cancelIdleCallback(id);
+  } else {
+    const id = setTimeout(prefetch, 2000);
+    return () => clearTimeout(id);
+  }
+}, []);
+```
+
+One file change, no visual or functional impact. Panels will open instantly on first click.
 

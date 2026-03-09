@@ -1,17 +1,32 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 
-const Logo = ({ className = "", size = 40, light = false }: { className?: string; size?: number; light?: boolean }) => (
-  <Link to="/" className={`flex items-center gap-2.5 cursor-pointer ${className}`}>
-    <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect width="48" height="48" rx="10" className="fill-primary" />
-      <path d="M14 34V14h4v16h10v4H14z" fill="white" />
-      <path d="M26 14h4l4 10 4-10h4L36 28l-2 6h-4l-2-6L26 14z" fill="white" opacity="0.85" />
-    </svg>
-    <div className="flex flex-col leading-tight">
-      <span className={`text-lg font-bold font-display tracking-tight ${light ? "text-white" : "text-foreground"}`}>Launch House</span>
-      <span className={`text-xs font-medium tracking-[0.15em] uppercase ${light ? "text-white/70" : "text-muted-foreground"}`}>Events</span>
-    </div>
-  </Link>
-);
+const Logo = ({ className = "", size = 40, light = false }: { className?: string; size?: number; light?: boolean }) => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const handleClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (location.pathname === "/") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } else {
+      navigate("/");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
+
+  return (
+    <Link to="/" onClick={handleClick} className={`flex items-center gap-2.5 cursor-pointer ${className}`}>
+      <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="48" height="48" rx="10" className="fill-primary" />
+        <path d="M14 34V14h4v16h10v4H14z" fill="white" />
+        <path d="M26 14h4l4 10 4-10h4L36 28l-2 6h-4l-2-6L26 14z" fill="white" opacity="0.85" />
+      </svg>
+      <div className="flex flex-col leading-tight">
+        <span className={`text-lg font-bold font-display tracking-tight ${light ? "text-white" : "text-foreground"}`}>Launch House</span>
+        <span className={`text-xs font-medium tracking-[0.15em] uppercase ${light ? "text-white/70" : "text-muted-foreground"}`}>Events</span>
+      </div>
+    </Link>
+  );
+};
 
 export default Logo;
