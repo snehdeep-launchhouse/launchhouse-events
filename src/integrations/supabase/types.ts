@@ -305,6 +305,8 @@ export type Database = {
       event_complexity_leads: {
         Row: {
           appointment_scheduling: string | null
+          attendee_hub_features: string[]
+          attendee_hub_selected: boolean
           branding_level: string | null
           company: string
           complexity_level: string | null
@@ -328,6 +330,8 @@ export type Database = {
         }
         Insert: {
           appointment_scheduling?: string | null
+          attendee_hub_features?: string[]
+          attendee_hub_selected?: boolean
           branding_level?: string | null
           company: string
           complexity_level?: string | null
@@ -351,6 +355,8 @@ export type Database = {
         }
         Update: {
           appointment_scheduling?: string | null
+          attendee_hub_features?: string[]
+          attendee_hub_selected?: boolean
           branding_level?: string | null
           company?: string
           complexity_level?: string | null

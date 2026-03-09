@@ -128,6 +128,17 @@ export const questions: Question[] = [
   },
 ];
 
+/** Attendee Hub feature options — shown as a follow-up when Attendee Hub is selected */
+export const ATTENDEE_HUB_FEATURES = [
+  "Agenda",
+  "Attendee networking",
+  "Push notifications",
+  "Gamification",
+  "Exhibitors",
+] as const;
+
+export type AttendeeHubFeature = (typeof ATTENDEE_HUB_FEATURES)[number];
+
 export type Complexity = "Simple" | "Medium" | "Advanced" | "Complex";
 
 export interface Result {
@@ -239,19 +250,21 @@ export function calculateResultWithTrace(
   }
 
   // Stage 5: Product overrides
+  // IMPORTANT: Attendee Hub / Event App is excluded from product counting and overrides.
+  // It is treated as a separate optional module with its own pricing.
   const allProducts = [
     ...new Set([
       ...inferredProducts,
-      ...selectedProducts.filter((p) => p !== "Not sure / Need help deciding"),
+      ...selectedProducts.filter(
+        (p) => p !== "Not sure / Need help deciding" && p !== "Attendee Hub / Event App"
+      ),
     ]),
   ];
   const productCount = allProducts.length;
 
-  if (allProducts.includes("Attendee Hub / Event App")) {
-    const next = maxComplexity(complexity, "Medium");
-    if (next !== complexity) overridesTriggered.push("Attendee Hub → min Medium");
-    complexity = next;
-  }
+  // NOTE: Attendee Hub no longer triggers minimum Medium complexity
+  // NOTE: Attendee Hub is excluded from product count for tier overrides
+
   if (productCount >= 3) {
     const next = maxComplexity(complexity, "Complex");
     if (next !== complexity) overridesTriggered.push(`${productCount} products → Complex`);
@@ -277,7 +290,7 @@ export function calculateResultWithTrace(
     console.log("Base score:", trace.baseScore);
     console.log("Base tier:", trace.baseTier);
     console.log("Inferred products:", trace.inferredProducts);
-    console.log("All products:", trace.allProducts);
+    console.log("All products (excl. Attendee Hub):", trace.allProducts);
     console.log("Overrides triggered:", trace.overridesTriggered);
     console.log("Final complexity:", trace.finalComplexity);
     console.groupEnd();
