@@ -65,6 +65,8 @@ export function LeadForm({ answers = {}, selectedProducts = [], result }: LeadFo
         if (col) answerColumns[col] = String(value);
       }
 
+      const cventProductsStr = selectedProducts.length > 0 ? selectedProducts.join(", ") : null;
+
       const { error } = await supabase.from("event_complexity_leads").insert({
         name,
         email,
@@ -72,11 +74,29 @@ export function LeadForm({ answers = {}, selectedProducts = [], result }: LeadFo
         event_date: eventDate ? format(eventDate, "yyyy-MM-dd") : null,
         complexity_level: result?.complexity ?? null,
         starting_price: result?.price ?? null,
-        cvent_products: selectedProducts.length > 0 ? selectedProducts.join(", ") : null,
+        cvent_products: cventProductsStr,
         ...answerColumns,
       });
 
       if (error) throw error;
+
+      // Send notification emails
+      try {
+        await supabase.functions.invoke("send-lead-notification", {
+          body: {
+            name,
+            email,
+            company,
+            eventDate: eventDate ? format(eventDate, "PPP") : null,
+            complexityLevel: result?.complexity ?? null,
+            startingPrice: result?.price ?? null,
+            cventProducts: cventProductsStr,
+          },
+        });
+      } catch (emailErr) {
+        console.error("Failed to send notification emails:", emailErr);
+        // Don't fail the submission if email fails
+      }
 
       setSubmitted(true);
       toast({ title: "Thank you! We'll be in touch shortly." });
