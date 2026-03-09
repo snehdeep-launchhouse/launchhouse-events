@@ -250,27 +250,17 @@ const ContactUsPanel = ({ open, onOpenChange }: ContactUsPanelProps) => {
             .update(payload)
             .eq("submission_token", submissionTokenRef.current);
         } else {
-          // Otherwise INSERT and capture the token
-          const { data: insertedRow, error: insertError } = await supabase
+          // Generate token client-side so we don't need SELECT permission after INSERT
+          const clientToken = crypto.randomUUID();
+          const { error: insertError } = await supabase
             .from("abandoned_contact_requests")
-            .insert({ ...payload, status: "partial" })
-            .select("submission_token")
-            .single();
+            .insert({ ...payload, status: "partial", submission_token: clientToken });
 
           if (insertError?.code === "23505") {
-            // Duplicate email — update by email as fallback (legacy rows)
-            const { data: updatedRow } = await supabase
-              .from("abandoned_contact_requests")
-              .update(payload)
-              .eq("business_email", data.business_email)
-              .select("submission_token")
-              .single();
-            if (updatedRow?.submission_token) {
-              submissionTokenRef.current = updatedRow.submission_token;
-            }
-          } else if (insertedRow?.submission_token) {
-            // Successful insert — store the token
-            submissionTokenRef.current = insertedRow.submission_token;
+            // Duplicate email — cannot update without token for legacy rows
+            // Just silently skip
+          } else if (!insertError) {
+            submissionTokenRef.current = clientToken;
           }
         }
       } catch {
