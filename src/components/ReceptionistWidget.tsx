@@ -39,6 +39,7 @@ export function ReceptionistWidget() {
   const [loading, setLoading] = useState(false);
   const [showPulse, setShowPulse] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -46,6 +47,7 @@ export function ReceptionistWidget() {
   const pulseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const autoCloseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const wasAutoOpenedRef = useRef(false);
+  const prevMsgCountRef = useRef(1); // start at 1 for the greeting
 
   const isMobile = useIsMobile();
   const navigate = useNavigate();
