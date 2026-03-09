@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Calculator, CheckCircle, Clock, DollarSign, CalendarCheck } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ArrowLeft, Calculator, CheckCircle, Clock, DollarSign, CalendarCheck, Smartphone } from "lucide-react";
 import { useContactPanel } from "@/components/ContactPanelProvider";
 import { OptionButtons } from "@/components/OptionButtons";
 import { LeadForm } from "@/components/LeadForm";
@@ -11,9 +12,11 @@ import {
   calculateResultWithTrace, 
   getInferredProducts,
   getFilteredCventOptions,
+  ATTENDEE_HUB_FEATURES,
   type QuestionOption,
   type Result,
-  type CalculationTrace
+  type CalculationTrace,
+  type AttendeeHubFeature
 } from "@/lib/calculator-data";
 
 export function EventComplexityCalculator() {
@@ -26,42 +29,74 @@ export function EventComplexityCalculator() {
   const [showResult, setShowResult] = useState(false);
   const [leadSubmitted, setLeadSubmitted] = useState(false);
 
+  // Attendee Hub module state
+  const [attendeeHubSelected, setAttendeeHubSelected] = useState(false);
+  const [attendeeHubFeatures, setAttendeeHubFeatures] = useState<string[]>([]);
+  const [showHubFeaturesStep, setShowHubFeaturesStep] = useState(false);
+
   const totalSteps = questions.length;
-  const progressPercent = (currentStep / totalSteps) * 100;
+  const progressPercent = showHubFeaturesStep
+    ? 100
+    : (currentStep / totalSteps) * 100;
   const currentQuestion = questions[currentStep];
 
   const handleAnswer = (selected: QuestionOption | QuestionOption[]) => {
     if (currentQuestion.id === "cvent_products" && Array.isArray(selected)) {
-      // Handle multi-select Cvent products
       const productNames = selected.map(opt => opt.label);
       setSelectedProducts(productNames);
       setAnswers(prev => ({ ...prev, [currentQuestion.id]: selected.length }));
+
+      const hubSelected = productNames.includes("Attendee Hub / Event App");
+      setAttendeeHubSelected(hubSelected);
+
+      if (hubSelected) {
+        // Show hub features question before results
+        setShowHubFeaturesStep(true);
+        return;
+      }
     } else if (!Array.isArray(selected)) {
-      // Handle single select
       setAnswers(prev => ({ ...prev, [currentQuestion.id]: selected.value }));
     }
 
-    // Move to next step or show result
     if (currentStep < totalSteps - 1) {
       setCurrentStep(prev => prev + 1);
     } else {
-      // Calculate final result
-      const finalAnswers = currentQuestion.id === "cvent_products" && Array.isArray(selected) 
-        ? { ...answers, [currentQuestion.id]: selected.length }
-        : { ...answers, [currentQuestion.id]: (selected as QuestionOption).value };
-      
-      const finalProducts = currentQuestion.id === "cvent_products" && Array.isArray(selected)
-        ? selected.map(opt => opt.label)
-        : selectedProducts;
-
-      const { result: calcResult, trace: calcTrace } = calculateResultWithTrace(finalAnswers, finalProducts);
-      setResult(calcResult);
-      setTrace(calcTrace);
-      setShowResult(true);
+      finishCalculation(
+        currentQuestion.id === "cvent_products" && Array.isArray(selected)
+          ? { ...answers, [currentQuestion.id]: selected.length }
+          : { ...answers, [currentQuestion.id]: (selected as QuestionOption).value },
+        currentQuestion.id === "cvent_products" && Array.isArray(selected)
+          ? selected.map(opt => opt.label)
+          : selectedProducts
+      );
     }
   };
 
+  const finishCalculation = (finalAnswers: Record<string, number>, finalProducts: string[]) => {
+    const { result: calcResult, trace: calcTrace } = calculateResultWithTrace(finalAnswers, finalProducts);
+    setResult(calcResult);
+    setTrace(calcTrace);
+    setShowResult(true);
+    setShowHubFeaturesStep(false);
+  };
+
+  const handleHubFeaturesConfirm = () => {
+    const finalAnswers = { ...answers, cvent_products: selectedProducts.length };
+    finishCalculation(finalAnswers, selectedProducts);
+  };
+
+  const toggleHubFeature = (feature: string) => {
+    setAttendeeHubFeatures(prev =>
+      prev.includes(feature) ? prev.filter(f => f !== feature) : [...prev, feature]
+    );
+  };
+
   const handleBack = () => {
+    if (showHubFeaturesStep) {
+      setShowHubFeaturesStep(false);
+      // Stay on cvent_products step
+      return;
+    }
     if (currentStep > 0) {
       setCurrentStep(prev => prev - 1);
     }
@@ -75,9 +110,11 @@ export function EventComplexityCalculator() {
     setTrace(null);
     setShowResult(false);
     setLeadSubmitted(false);
+    setAttendeeHubSelected(false);
+    setAttendeeHubFeatures([]);
+    setShowHubFeaturesStep(false);
   };
 
-  // Get filtered options for Cvent products question
   const getQuestionOptions = () => {
     if (currentQuestion.id === "cvent_products") {
       return getFilteredCventOptions(answers);
@@ -85,6 +122,77 @@ export function EventComplexityCalculator() {
     return currentQuestion.options;
   };
 
+  // ─── Hub Features Step ─────────────────────────────────────────
+  if (showHubFeaturesStep && !showResult) {
+    return (
+      <div className="min-h-screen bg-background py-8">
+        <div className="container mx-auto px-4 max-w-2xl">
+          <div className="mb-8">
+            <div className="flex items-center justify-between mb-4">
+              <h1 className="text-2xl font-bold text-foreground">
+                Event Complexity Calculator
+              </h1>
+              <Button variant="outline" size="sm" onClick={handleBack} className="flex items-center gap-2">
+                <ArrowLeft className="w-4 h-4" />
+                Back
+              </Button>
+            </div>
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm text-muted-foreground">
+                <span>Attendee Hub Features</span>
+                <span>100%</span>
+              </div>
+              <Progress value={100} className="w-full" />
+            </div>
+          </div>
+
+          <Card className="border-border shadow-sm animate-fade-in">
+            <CardContent className="p-6">
+              <div className="mb-6">
+                <div className="flex items-center gap-3 mb-2">
+                  <Smartphone className="w-5 h-5 text-primary" />
+                  <h2 className="text-xl font-semibold text-foreground">
+                    Which features will your event app include?
+                  </h2>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Select all that apply — these help us scope your project
+                </p>
+              </div>
+
+              <div className="grid gap-2.5">
+                {ATTENDEE_HUB_FEATURES.map((feature) => (
+                  <label
+                    key={feature}
+                    className={`flex items-center gap-3 rounded-lg border px-4 py-3 cursor-pointer transition-colors text-sm ${
+                      attendeeHubFeatures.includes(feature)
+                        ? "border-primary bg-secondary/50"
+                        : "border-border hover:border-primary/50"
+                    }`}
+                  >
+                    <Checkbox
+                      checked={attendeeHubFeatures.includes(feature)}
+                      onCheckedChange={() => toggleHubFeature(feature)}
+                    />
+                    <span className="font-medium">{feature}</span>
+                  </label>
+                ))}
+              </div>
+
+              <Button
+                className="w-full mt-6 gap-2"
+                onClick={handleHubFeaturesConfirm}
+              >
+                See My Results
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  // ─── Results ───────────────────────────────────────────────────
   if (showResult && result) {
     return (
       <div className="min-h-screen bg-background py-8">
@@ -108,6 +216,8 @@ export function EventComplexityCalculator() {
                   answers={answers}
                   selectedProducts={trace?.allProducts || selectedProducts}
                   result={result}
+                  attendeeHubSelected={attendeeHubSelected}
+                  attendeeHubFeatures={attendeeHubFeatures}
                   onSubmitted={() => setLeadSubmitted(true)}
                 />
               </div>
@@ -127,12 +237,16 @@ export function EventComplexityCalculator() {
               </div>
 
               <div className="space-y-6 animate-slide-up">
+                {/* ── Event Build Complexity Card ──────────────── */}
                 <Card className="border-border shadow-sm">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Calculator className="w-5 h-5" />
-                      {result.complexity} Event
+                      {result.complexity} Event Build
                     </CardTitle>
+                    <p className="text-sm text-muted-foreground">
+                      Registration + Website build complexity
+                    </p>
                   </CardHeader>
                   <CardContent>
                     <div className="grid gap-4 md:grid-cols-3">
@@ -185,6 +299,50 @@ export function EventComplexityCalculator() {
                   </CardContent>
                 </Card>
 
+                {/* ── Attendee Hub Module Card ─────────────────── */}
+                {attendeeHubSelected && (
+                  <Card className="border-primary/30 shadow-sm bg-primary/[0.02]">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Smartphone className="w-5 h-5 text-primary" />
+                        Attendee Hub / Event App
+                      </CardTitle>
+                      <p className="text-sm text-muted-foreground">
+                        Optional Event App Module
+                      </p>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="w-10 h-10 bg-primary/10 text-primary rounded-lg flex items-center justify-center">
+                          <DollarSign className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <p className="text-sm text-muted-foreground">Starting Price</p>
+                          <p className="font-semibold text-foreground">$1,999</p>
+                        </div>
+                      </div>
+
+                      {attendeeHubFeatures.length > 0 && (
+                        <div className="p-4 bg-accent/20 rounded-lg">
+                          <p className="text-sm font-medium text-foreground mb-2">
+                            Selected App Features:
+                          </p>
+                          <div className="flex flex-wrap gap-2">
+                            {attendeeHubFeatures.map((feature, idx) => (
+                              <span
+                                key={idx}
+                                className="px-3 py-1 bg-primary/10 text-primary text-sm rounded-full"
+                              >
+                                {feature}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                )}
+
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
                   <Button 
                     onClick={openDemoPanel}
@@ -208,6 +366,7 @@ export function EventComplexityCalculator() {
     );
   }
 
+  // ─── Questions ─────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-background py-8">
       <div className="container mx-auto px-4 max-w-2xl">
