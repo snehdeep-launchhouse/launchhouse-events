@@ -79,13 +79,6 @@ const PricingSection = () => {
                 </li>
               ))}
             </ul>
-            <Button
-              variant="secondary"
-              className="w-full"
-              onClick={(e) => { e.stopPropagation(); window.open("/get-a-quote", "_blank"); }}
-            >
-              Get a Quote <ArrowUpRight className="w-4 h-4 ml-1" />
-            </Button>
           </div>
         ))}
       </div>
