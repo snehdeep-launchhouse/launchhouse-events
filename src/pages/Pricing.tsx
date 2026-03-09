@@ -306,65 +306,7 @@ const Pricing = () => {
         </div>
       </section>
 
-      {/* ── Flexible Payment Options ──────────────────────────────────── */}
-      <section className="py-20 md:py-28 bg-muted/30">
-        <div className="container">
-          <div className="text-center mb-12">
-            <p className="text-sm font-semibold uppercase tracking-widest text-primary mb-3">Payment Terms</p>
-            <h2 className="text-3xl md:text-4xl font-bold font-display tracking-tight">Flexible Payment Options</h2>
-            <p className="text-muted-foreground mt-4 max-w-xl mx-auto">
-              Choose the payment structure that works best for you. Both options are available across all build tiers.
-            </p>
-          </div>
-
-          <div className="grid sm:grid-cols-2 gap-6 max-w-3xl mx-auto">
-            {/* Option 1 — Staged Payment */}
-            <div className="rounded-xl border border-border/50 bg-card p-6 shadow-card">
-              <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-2">Option 1</p>
-              <h4 className="text-lg font-bold font-display mb-1">Staged Payment</h4>
-              <p className="text-2xl font-bold font-display text-primary mb-4">50% + 50%</p>
-              <p className="text-sm text-muted-foreground leading-relaxed mb-5">
-                Pay a minimum booking deposit of <strong className="text-foreground">50%</strong> to kick off your project. The remaining balance is due upon submission of the First Draft.
-              </p>
-              <ul className="space-y-2">
-                <li className="flex items-start gap-2 text-sm text-muted-foreground">
-                  <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0 text-primary" />
-                  <span>50% deposit to secure your build slot</span>
-                </li>
-                <li className="flex items-start gap-2 text-sm text-muted-foreground">
-                  <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0 text-primary" />
-                  <span>Balance due on first draft delivery</span>
-                </li>
-              </ul>
-            </div>
-
-            {/* Option 2 — Full Advance */}
-            <div className="rounded-xl border-2 border-primary/30 bg-primary/5 p-6 shadow-card relative">
-              <span className="absolute top-4 right-4 text-[11px] font-bold uppercase tracking-wider text-primary-foreground bg-primary px-3 py-1 rounded-full">Save 10%</span>
-              <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-2">Option 2</p>
-              <h4 className="text-lg font-bold font-display mb-1">Full Advance</h4>
-              <p className="text-2xl font-bold font-display text-primary mb-4">100% Upfront</p>
-              <p className="text-sm text-muted-foreground leading-relaxed mb-5">
-                Pay the full amount upfront and receive a <strong className="text-foreground">flat 10% discount</strong> applied to your final invoice — the best value for committed clients.
-              </p>
-              <ul className="space-y-2">
-                <li className="flex items-start gap-2 text-sm text-muted-foreground">
-                  <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0 text-primary" />
-                  <span>10% discount on the total invoice</span>
-                </li>
-                <li className="flex items-start gap-2 text-sm text-muted-foreground">
-                  <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0 text-primary" />
-                  <span>Mandatory for Same Day Delivery builds</span>
-                </li>
-              </ul>
-            </div>
-          </div>
-
-          <p className="text-xs text-muted-foreground text-center mt-8 max-w-2xl mx-auto">
-            LaunchHouse Events reserves the right to pause or withhold delivery of work in the event of outstanding payments.
-          </p>
-        </div>
-      </section>
+      {/* Payment Terms section hidden from UI — data retained for AI agent context */}
 
       {/* ── CTA Banner ────────────────────────────────────────────────── */}
       <section className="relative py-20 md:py-28 overflow-hidden">
