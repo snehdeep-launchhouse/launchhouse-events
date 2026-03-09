@@ -83,7 +83,7 @@ const Services = () => (
         <img src={heroBanner} alt="" className="banner-img" loading="eager" fetchPriority="high" decoding="async" width={1920} height={1080} />
         <div className="absolute inset-0 bg-[hsl(220,90%,10%)]/60" />
       </div>
-      <div className="container relative py-16 md:py-22 flex flex-col items-center text-center gap-6 animate-fade-in">
+      <div className="container relative py-24 md:py-36 flex flex-col items-center text-center gap-8 animate-fade-in">
         <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold font-display tracking-tight max-w-3xl leading-[1.1] text-white">
           The "White Glove" Approach to Event Tech
         </h1>
