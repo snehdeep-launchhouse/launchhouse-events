@@ -1,34 +1,38 @@
 
 
-## Fix: Slow First Open of Contact/Demo Panels
+## Plan: Add "Estimated Starting Investment" Section to Calculator Results
 
-### Problem
-The panels use `React.lazy` which only starts downloading the JS chunk **after** the user clicks. This causes a visible delay on first open because the chunk must be fetched, parsed, and rendered before the panel appears.
+### What Changes
 
-### Solution: Prefetch chunks on idle
-Instead of waiting for a click, **preload** both panel chunks during browser idle time (after initial page render). This way the JS is already cached when the user clicks, making the first open instant.
+**Single file edit: `src/components/EventComplexityCalculator.tsx`**
+
+Insert a new "Estimated Starting Investment" card between the Attendee Hub card (line ~344) and the action buttons (line ~346).
 
 ### Implementation
 
-**File: `src/components/ContactPanelProvider.tsx`**
+1. **Extract numeric price** from `result.price` (e.g. `"$2,199"` → `2199`) using a simple parse helper.
 
-Add a `useEffect` that triggers dynamic `import()` calls via `requestIdleCallback` (with a setTimeout fallback) shortly after mount. This prefetches the chunks without blocking the initial render. The existing `React.lazy` references continue to work — they resolve instantly from the module cache.
+2. **Calculate total**: Event build price + ($1,999 if `attendeeHubSelected`).
 
-```tsx
-useEffect(() => {
-  const prefetch = () => {
-    import("./ContactUsPanel");
-    import("./RequestDemoPanel");
-  };
-  if ("requestIdleCallback" in window) {
-    const id = requestIdleCallback(prefetch);
-    return () => cancelIdleCallback(id);
-  } else {
-    const id = setTimeout(prefetch, 2000);
-    return () => clearTimeout(id);
-  }
-}, []);
-```
+3. **Render a new Card** with:
+   - Title: "Estimated Starting Investment" with a DollarSign icon
+   - Line item: "Event Build" — `Starting from {result.price}`
+   - Conditional line item: "Event App Module" — `Starting from $1,999` (only if hub selected)
+   - Separator line
+   - Bold total: "Estimated Total" — formatted with `$` and commas
 
-One file change, no visual or functional impact. Panels will open instantly on first click.
+4. **Styling**: Use existing Card component with a `Separator` between line items and total. Consistent with current design system.
+
+### Price Mapping
+- Simple → $899
+- Medium → $2,199
+- Advanced → $3,499
+- Complex → $4,999
+- Attendee Hub → $1,999 (flat)
+
+### No Changes To
+- Scoring logic (`calculator-data.ts`)
+- Lead submission (`LeadForm.tsx`)
+- Pricing page
+- Database schema
 
