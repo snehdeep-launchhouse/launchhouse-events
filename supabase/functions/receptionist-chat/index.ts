@@ -173,6 +173,19 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
+    // Sanitize messages: only allow user/assistant roles, cap count and length
+    const safeMessages = (Array.isArray(messages) ? messages : [])
+      .filter((m: unknown) => {
+        if (typeof m !== "object" || m === null) return false;
+        const msg = m as Record<string, unknown>;
+        return ["user", "assistant"].includes(msg.role as string) && typeof msg.content === "string";
+      })
+      .slice(0, 50)
+      .map((m: Record<string, unknown>) => ({
+        role: m.role as "user" | "assistant",
+        content: String(m.content).slice(0, 2000),
+      }));
+
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -183,7 +196,7 @@ serve(async (req) => {
         model: "google/gemini-3-flash-preview",
         messages: [
           { role: "system", content: SYSTEM_PROMPT },
-          ...messages,
+          ...safeMessages,
         ],
         stream: true,
       }),
