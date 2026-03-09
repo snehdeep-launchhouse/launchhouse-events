@@ -1,34 +1,40 @@
 
 
-## Fix: Slow First Open of Contact/Demo Panels
+## Plan: Gate Pricing Behind Lead Capture
 
-### Problem
-The panels use `React.lazy` which only starts downloading the JS chunk **after** the user clicks. This causes a visible delay on first open because the chunk must be fetched, parsed, and rendered before the panel appears.
+### What Changes
 
-### Solution: Prefetch chunks on idle
-Instead of waiting for a click, **preload** both panel chunks during browser idle time (after initial page render). This way the JS is already cached when the user clicks, making the first open instant.
+**Current flow:** User completes calculator questions → sees full result card (complexity tier, pricing, timelines, products) → then sees lead capture form below.
 
-### Implementation
+**New flow:** User completes calculator questions → sees lead capture form with a teaser message ("Enter your details to unlock your pricing estimate") → after submitting, the full result card (pricing, timelines, products) is revealed.
 
-**File: `src/components/ContactPanelProvider.tsx`**
+### Implementation Details
 
-Add a `useEffect` that triggers dynamic `import()` calls via `requestIdleCallback` (with a setTimeout fallback) shortly after mount. This prefetches the chunks without blocking the initial render. The existing `React.lazy` references continue to work — they resolve instantly from the module cache.
+#### 1. EventComplexityCalculator.tsx — Restructure the result page
 
-```tsx
-useEffect(() => {
-  const prefetch = () => {
-    import("./ContactUsPanel");
-    import("./RequestDemoPanel");
-  };
-  if ("requestIdleCallback" in window) {
-    const id = requestIdleCallback(prefetch);
-    return () => cancelIdleCallback(id);
-  } else {
-    const id = setTimeout(prefetch, 2000);
-    return () => clearTimeout(id);
-  }
-}, []);
-```
+- Add a `leadSubmitted` state boolean (default `false`).
+- On the result page, **show the lead form first** with a heading like "You're almost there! Enter your details to see your custom pricing."
+- **Hide** the result card (complexity, price, timelines, products) until `leadSubmitted` is `true`.
+- Pass an `onSubmitted` callback to `LeadForm` so the parent knows when submission succeeds.
+- After submission, animate the result card into view and show the "Schedule a Consultation" / "Start Over" buttons.
 
-One file change, no visual or functional impact. Panels will open instantly on first click.
+#### 2. LeadForm.tsx — Add onSubmitted callback
+
+- Accept a new optional prop `onSubmitted?: () => void`.
+- Call `onSubmitted()` after successful save (alongside the existing `setSubmitted(true)`).
+- Update the submitted success state to be more celebratory since it now reveals pricing — e.g. "Your results are ready!"
+
+#### 3. Receptionist Chat Bot — Update system prompt
+
+- Update **RULE 2 (Pricing questions)** in the `receptionist-chat` edge function so instead of giving exact pricing tiers, the bot says something like: "To see your custom pricing, try our **Event Complexity Calculator** — it takes under a minute, and you'll get your personalised estimate after entering your details."
+- Remove the explicit `$899 / $2,199 / $3,499 / $4,999` figures from the pricing rule so the bot doesn't bypass the gate.
+- Keep the general complexity tier names (Simple, Medium, Advanced, Complex) but without dollar amounts.
+
+### Files Modified
+
+| File | Change |
+|------|--------|
+| `src/components/EventComplexityCalculator.tsx` | Add `leadSubmitted` state; reorder result page to show lead form first, reveal pricing after submission |
+| `src/components/LeadForm.tsx` | Add `onSubmitted` prop; update messaging to "enter details to see pricing" |
+| `supabase/functions/receptionist-chat/index.ts` | Remove explicit pricing from RULE 2; direct users to calculator for pricing |
 
