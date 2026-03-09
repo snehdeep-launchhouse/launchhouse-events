@@ -21,6 +21,8 @@ interface LeadFormProps {
   answers?: Record<string, number>;
   selectedProducts?: string[];
   result?: Result | null;
+  attendeeHubSelected?: boolean;
+  attendeeHubFeatures?: string[];
   onSubmitted?: () => void;
 }
 
@@ -40,7 +42,14 @@ const answerToColumnMap: Record<string, string> = {
   branding: "branding_level",
 };
 
-export function LeadForm({ answers = {}, selectedProducts = [], result, onSubmitted }: LeadFormProps) {
+export function LeadForm({
+  answers = {},
+  selectedProducts = [],
+  result,
+  attendeeHubSelected = false,
+  attendeeHubFeatures = [],
+  onSubmitted,
+}: LeadFormProps) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [company, setCompany] = useState("");
@@ -115,8 +124,10 @@ export function LeadForm({ answers = {}, selectedProducts = [], result, onSubmit
         complexity_level: result?.complexity ?? null,
         starting_price: result?.price ?? null,
         cvent_products: cventProductsStr,
+        attendee_hub_selected: attendeeHubSelected,
+        attendee_hub_features: attendeeHubFeatures,
         ...answerColumns,
-      });
+      } as any);
 
       if (error) throw error;
 
@@ -131,11 +142,12 @@ export function LeadForm({ answers = {}, selectedProducts = [], result, onSubmit
             complexityLevel: result?.complexity ?? null,
             startingPrice: result?.price ?? null,
             cventProducts: cventProductsStr,
+            attendeeHubSelected,
+            attendeeHubFeatures: attendeeHubFeatures.length > 0 ? attendeeHubFeatures.join(", ") : null,
           },
         });
       } catch (emailErr) {
         console.error("Failed to send notification emails:", emailErr);
-        // Don't fail the submission if email fails
       }
 
       setSubmitted(true);

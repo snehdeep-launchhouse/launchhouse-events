@@ -49,7 +49,7 @@ describe("getFilteredCventOptions", () => {
   });
 });
 
-describe("calculateResultWithTrace — 24 scenarios", () => {
+describe("calculateResultWithTrace — Attendee Hub decoupled", () => {
   // Case 1: Minimal event → Simple
   it("case 1: minimal event → Simple $899", () => {
     const { result, trace } = calculateResultWithTrace(minimal(), []);
@@ -64,11 +64,35 @@ describe("calculateResultWithTrace — 24 scenarios", () => {
     expect(result.complexity).toBe("Simple");
   });
 
-  // Case 3: Attendee Hub alone → min Medium
-  it("case 3: Attendee Hub alone → Medium", () => {
+  // ── CRITICAL: Attendee Hub no longer affects complexity ──────
+  it("case 3: Attendee Hub alone → still Simple (decoupled)", () => {
     const { result, trace } = calculateResultWithTrace(minimal(), ["Attendee Hub / Event App"]);
-    expect(result.complexity).toBe("Medium");
-    expect(trace.overridesTriggered).toContainEqual(expect.stringContaining("Attendee Hub"));
+    expect(result.complexity).toBe("Simple");
+    // Attendee Hub should NOT appear in allProducts (excluded from scoring)
+    expect(trace.allProducts).not.toContain("Attendee Hub / Event App");
+    // No override triggered
+    expect(trace.overridesTriggered).toHaveLength(0);
+  });
+
+  it("Attendee Hub does not count toward product count overrides", () => {
+    // Reg + Hub should be treated as 1 product (Hub excluded), so stays Simple
+    const { result, trace } = calculateResultWithTrace(minimal(), [
+      "Registration & Event Website",
+      "Attendee Hub / Event App",
+    ]);
+    expect(trace.allProducts).toHaveLength(1);
+    expect(trace.allProducts).toContain("Registration & Event Website");
+    expect(result.complexity).toBe("Simple");
+  });
+
+  it("Attendee Hub + 2 real products = 2 products → Advanced (Hub excluded)", () => {
+    const { result, trace } = calculateResultWithTrace(minimal(), [
+      "Registration & Event Website",
+      "Appointments",
+      "Attendee Hub / Event App",
+    ]);
+    expect(trace.allProducts).toHaveLength(2);
+    expect(result.complexity).toBe("Advanced");
   });
 
   // Case 4: Advanced branding only → min Medium
@@ -87,21 +111,21 @@ describe("calculateResultWithTrace — 24 scenarios", () => {
     expect(trace.overridesTriggered).toContainEqual(expect.stringContaining("reg paths"));
   });
 
-  // Case 6: 2 products selected → min Advanced
-  it("case 6: 2 products → Advanced", () => {
+  // Case 6: 2 real products selected → min Advanced
+  it("case 6: 2 real products → Advanced", () => {
     const { result } = calculateResultWithTrace(minimal(), [
       "Registration & Event Website",
-      "Attendee Hub / Event App",
+      "Appointments",
     ]);
     expect(result.complexity).toBe("Advanced");
   });
 
-  // Case 7: 3+ products → Complex
-  it("case 7: 3 products → Complex", () => {
+  // Case 7: 3+ real products → Complex
+  it("case 7: 3 real products → Complex", () => {
     const { result } = calculateResultWithTrace(minimal(), [
       "Registration & Event Website",
-      "Attendee Hub / Event App",
       "Appointments",
+      "Abstract / Call for Speakers",
     ]);
     expect(result.complexity).toBe("Complex");
     expect(result.price).toBe("$4,999");
@@ -123,12 +147,12 @@ describe("calculateResultWithTrace — 24 scenarios", () => {
     expect(result.complexity).toBe("Complex");
   });
 
-  // Case 12: Hub + inferred speaker = 2 products → Advanced
-  it("case 12: Hub + inferred speaker = 2 → Advanced", () => {
+  // Case 12: Hub + inferred speaker = 1 real product → Simple (Hub excluded)
+  it("case 12: Hub + inferred speaker = 1 real product → Simple", () => {
     const answers = { ...minimal(), speakers: 2 };
     const { result, trace } = calculateResultWithTrace(answers, ["Attendee Hub / Event App"]);
-    expect(trace.allProducts).toHaveLength(2);
-    expect(result.complexity).toBe("Advanced");
+    expect(trace.allProducts).toHaveLength(1); // only Abstract inferred
+    expect(result.complexity).toBe("Simple");
   });
 
   // Case 13: High base score alone → Complex
@@ -154,7 +178,7 @@ describe("calculateResultWithTrace — 24 scenarios", () => {
   });
 
   // Case 14: Medium base score (~15)
-  it("case 14: medium base score ~15 → Medium", () => {
+  it("case 14: medium base score ~15 → Medium (with inferred override to Advanced)", () => {
     // Need sum=15: 2+2+2+2+1+0+0+0+2+2+1+1=15
     const answers: Record<string, number> = {
       event_length: 2, sessions: 2, reg_paths: 2, contact_types: 2,
@@ -164,7 +188,7 @@ describe("calculateResultWithTrace — 24 scenarios", () => {
     const { result, trace } = calculateResultWithTrace(answers, []);
     expect(trace.baseScore).toBe(15);
     expect(trace.baseTier).toBe("Medium");
-    // But speakers=2 and appointments=2 infer 2 products → Advanced override
+    // speakers=2 and appointments=2 infer 2 products → Advanced override
     expect(trace.inferredProducts).toHaveLength(2);
     expect(result.complexity).toBe("Advanced");
   });
@@ -215,20 +239,19 @@ describe("calculateResultWithTrace — 24 scenarios", () => {
     expect(result.complexity).toBe("Simple");
   });
 
-  // Case 19: All overrides stacked
+  // Case 19: All overrides stacked (without Hub affecting score)
   it("case 19: all overrides stacked → Complex", () => {
     const answers = { ...minimal(), reg_paths: 3, branding: 3 };
     const { result } = calculateResultWithTrace(answers, [
       "Registration & Event Website",
-      "Attendee Hub / Event App",
       "Appointments",
+      "Abstract / Call for Speakers",
     ]);
     expect(result.complexity).toBe("Complex");
   });
 
   // Edge cases: exact boundary scores
   it("case 20: score exactly 12 → Simple", () => {
-    // sum=12: 2+2+1+1+0+2+2+0+0+0+1+1=12
     const answers: Record<string, number> = {
       event_length: 2, sessions: 2, reg_paths: 1, contact_types: 1,
       reg_rules: 0, hotel: 2, languages: 2, integrations: 0,
@@ -240,7 +263,6 @@ describe("calculateResultWithTrace — 24 scenarios", () => {
   });
 
   it("case 21: score exactly 13 → Medium", () => {
-    // sum=13: 3+2+1+1+0+2+2+0+0+0+1+1=13
     const answers: Record<string, number> = {
       event_length: 3, sessions: 2, reg_paths: 1, contact_types: 1,
       reg_rules: 0, hotel: 2, languages: 2, integrations: 0,
@@ -252,8 +274,6 @@ describe("calculateResultWithTrace — 24 scenarios", () => {
   });
 
   it("case 22: score exactly 18 → Medium", () => {
-    // sum=18: 3+2+2+2+1+2+2+0+0+0+2+2 wait... let me recalc
-    // 3+3+1+1+0+2+2+3+0+0+2+1=18
     const answers: Record<string, number> = {
       event_length: 3, sessions: 3, reg_paths: 1, contact_types: 1,
       reg_rules: 0, hotel: 2, languages: 2, integrations: 3,
@@ -265,7 +285,6 @@ describe("calculateResultWithTrace — 24 scenarios", () => {
   });
 
   it("case 23: score exactly 25 → Advanced", () => {
-    // sum=25: 4+3+2+2+3+2+2+3+0+0+3+1=25
     const answers: Record<string, number> = {
       event_length: 4, sessions: 3, reg_paths: 2, contact_types: 2,
       reg_rules: 3, hotel: 2, languages: 2, integrations: 3,
@@ -277,9 +296,6 @@ describe("calculateResultWithTrace — 24 scenarios", () => {
   });
 
   it("case 24: score 26 → Complex", () => {
-    // sum=26: 4+3+2+2+3+2+2+3+0+0+3+2 wait = 26? 4+3=7+2=9+2=11+3=14+2=16+2=18+3=21+0+0+3=24+2=26 ✓
-    // branding=2 is not a valid option (1 or 3). Use branding=3 → sum=27
-    // Instead: 4+3+2+3+3+2+2+3+0+0+1+3=26
     const answers: Record<string, number> = {
       event_length: 4, sessions: 3, reg_paths: 2, contact_types: 3,
       reg_rules: 3, hotel: 2, languages: 2, integrations: 3,
@@ -291,21 +307,16 @@ describe("calculateResultWithTrace — 24 scenarios", () => {
   });
 
   // Additional: result properties are correct for each tier
-  it("returns correct SLA for each tier", () => {
+  it("returns correct SLA for Simple tier", () => {
     const simple = calculateResultWithTrace(minimal(), []).result;
     expect(simple.firstDraft).toBe("2 Business Days");
     expect(simple.revisionTurnaround).toBe("1 Business Day");
-
-    const medium = calculateResultWithTrace(minimal(), ["Attendee Hub / Event App"]).result;
-    expect(medium.firstDraft).toBe("2 Business Days");
-    expect(medium.revisionTurnaround).toBe("2 Business Days");
   });
 
   // Dedup: inferred + same selected should not double count
   it("deduplicates inferred and selected products", () => {
     const answers = { ...minimal(), speakers: 2 };
     const { trace } = calculateResultWithTrace(answers, ["Abstract / Call for Speakers"]);
-    // Should only appear once
     const count = trace.allProducts.filter((p) => p === "Abstract / Call for Speakers").length;
     expect(count).toBe(1);
     expect(trace.allProducts).toHaveLength(1);
