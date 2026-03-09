@@ -1,51 +1,34 @@
 
 
-# Plan: Create EventComplexityCalculator on Hidden /calculator Route
+## Fix: Slow First Open of Contact/Demo Panels
 
-## What We're Building
-A standalone `/calculator` page containing the Event Complexity Calculator component. The route will be functional but hidden from all navigation menus — accessible only by direct URL. The Pricing page remains completely untouched.
+### Problem
+The panels use `React.lazy` which only starts downloading the JS chunk **after** the user clicks. This causes a visible delay on first open because the chunk must be fetched, parsed, and rendered before the panel appears.
 
-## Files to Create/Modify
+### Solution: Prefetch chunks on idle
+Instead of waiting for a click, **preload** both panel chunks during browser idle time (after initial page render). This way the JS is already cached when the user clicks, making the first open instant.
 
-### 1. Create `src/components/EventComplexityCalculator.tsx`
-- Multi-step wizard using the existing `questions` array from `calculator-data.ts`
-- Each step shows one question with `OptionButtons` for selection
-- Progress bar via the existing `Progress` component
-- After all questions: compute result via `calculateResultWithTrace()`, display complexity tier + pricing
-- Render the existing `LeadForm` beneath the result for lead capture
-- Auto-infer Cvent products from answers; filter the product multi-select question accordingly
-- Smooth transitions between steps using CSS animations (no new deps needed — project already has `animate-fade-in` / `animate-slide-up` in Tailwind config)
+### Implementation
 
-### 2. Create `src/pages/Calculator.tsx`
-- Minimal page wrapper: Navbar + centered calculator + Footer
-- No SEO meta / no sitemap entry — keeps it hidden from search engines
-- Page title set to generic "Calculator" via `useEffect`
+**File: `src/components/ContactPanelProvider.tsx`**
 
-### 3. Modify `src/App.tsx`
-- Add lazy-loaded route: `<Route path="/calculator" element={<Calculator />} />`
-- No navigation links added anywhere — route is hidden, direct-access only
+Add a `useEffect` that triggers dynamic `import()` calls via `requestIdleCallback` (with a setTimeout fallback) shortly after mount. This prefetches the chunks without blocking the initial render. The existing `React.lazy` references continue to work — they resolve instantly from the module cache.
 
-## Component Architecture
-
-```text
-Calculator (page)
- └── EventComplexityCalculator
-      ├── Progress bar (step X of N)
-      ├── Question text
-      ├── OptionButtons (single or multi-select)
-      ├── Result card (complexity + price + turnaround)
-      └── LeadForm (pre-filled with answers + products)
+```tsx
+useEffect(() => {
+  const prefetch = () => {
+    import("./ContactUsPanel");
+    import("./RequestDemoPanel");
+  };
+  if ("requestIdleCallback" in window) {
+    const id = requestIdleCallback(prefetch);
+    return () => cancelIdleCallback(id);
+  } else {
+    const id = setTimeout(prefetch, 2000);
+    return () => clearTimeout(id);
+  }
+}, []);
 ```
 
-## Calculator Flow
-1. Show questions 0–12 sequentially (from `calculator-data.ts`)
-2. For `cvent_products` question: filter out already-inferred products using `getFilteredCventOptions()`
-3. On completion: call `calculateResultWithTrace()` with all answers + selected products
-4. Display result card with complexity tier, starting price, and turnaround times
-5. Show LeadForm passing `answers`, `selectedProducts`, and `result` as props
-
-## No Changes To
-- Pricing page (`src/pages/Pricing.tsx`) — completely untouched
-- Navigation menus — no links to `/calculator` added
-- Database schema — uses existing `event_complexity_leads` table
+One file change, no visual or functional impact. Panels will open instantly on first click.
 
