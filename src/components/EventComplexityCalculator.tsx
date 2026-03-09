@@ -4,6 +4,7 @@ import { Progress } from "@/components/ui/progress";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ArrowLeft, Calculator, CheckCircle, Clock, DollarSign, CalendarCheck, Smartphone } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
 import { useContactPanel } from "@/components/ContactPanelProvider";
 import { OptionButtons } from "@/components/OptionButtons";
 import { LeadForm } from "@/components/LeadForm";
@@ -342,6 +343,41 @@ export function EventComplexityCalculator() {
                     </CardContent>
                   </Card>
                 )}
+
+                {/* ── Estimated Starting Investment ──────────────── */}
+                {(() => {
+                  const buildPrice = parseInt(result.price.replace(/[$,]/g, ''), 10);
+                  const hubPrice = attendeeHubSelected ? 1999 : 0;
+                  const total = buildPrice + hubPrice;
+                  const fmt = (n: number) => `$${n.toLocaleString()}`;
+                  return (
+                    <Card className="border-border shadow-sm">
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2 text-lg">
+                          <DollarSign className="w-5 h-5" />
+                          Estimated Starting Investment
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
+                        <div className="flex justify-between items-center text-sm">
+                          <span className="text-muted-foreground">Event Build</span>
+                          <span className="font-medium text-foreground">Starting from {result.price}</span>
+                        </div>
+                        {attendeeHubSelected && (
+                          <div className="flex justify-between items-center text-sm">
+                            <span className="text-muted-foreground">Event App Module</span>
+                            <span className="font-medium text-foreground">Starting from $1,999</span>
+                          </div>
+                        )}
+                        <Separator />
+                        <div className="flex justify-between items-center">
+                          <span className="font-semibold text-foreground">Estimated Total</span>
+                          <span className="font-bold text-lg text-primary">{fmt(total)}</span>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })()}
 
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
                   <Button 
