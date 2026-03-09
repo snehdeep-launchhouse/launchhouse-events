@@ -1,55 +1,47 @@
 
-# Console Error Monitoring & React Ref Warning Resolution
 
-## Current Issues Identified
-From the console logs, there are React warnings about function components being given refs:
+# Chat Widget Best Practices & Animation Enhancements
 
-1. **OptionButtons component** - Referenced in EventComplexityCalculator
-2. **Footer component** - Referenced in Calculator page  
-3. **Logo component** - Referenced in Footer
+## Two tasks to implement:
 
-These are warnings (not breaking errors) but should be fixed for clean console output.
+### 1. ReceptionistWidget Best Practices (src/components/ReceptionistWidget.tsx)
 
-## Investigation Steps Needed
+**Auto-open after idle time:**
+- Auto-open the chat pill after **30 seconds** of page idle time (industry standard: 15-60s, 30s balances engagement vs. annoyance)
+- Only trigger once per session using `sessionStorage` flag
+- Do NOT auto-open on mobile (disruptive on small screens)
+- Do NOT auto-open if user previously dismissed the widget in this session
 
-### 1. Examine Component Structure
-- Review `src/components/OptionButtons.tsx` to see if it needs `React.forwardRef()`
-- Check `src/components/Footer.tsx` and `src/components/Logo.tsx` for similar issues
-- Verify how these components are being used and why refs are being passed
+**Auto-collapse if no interaction:**
+- If auto-opened and user takes no action (no typing, no clicking inside) for **15 seconds**, auto-close it back to the pill
+- Reset this timer on any user interaction within the widget
 
-### 2. Console Log Monitoring Strategy
-- Use browser tools to capture real-time console logs
-- Monitor for patterns during different user interactions:
-  - Calculator form submissions
-  - Page navigation
-  - Component state changes
-- Check for any network request failures
-- Look for JavaScript runtime errors beyond the React warnings
+**Pill attention pulse:**
+- Add a subtle pulse/bounce animation to the pill after 10 seconds to draw attention before auto-open
+- Stop pulsing once user has interacted
 
-### 3. Error Categories to Monitor
-- **React Component Warnings** (currently present)
-- **Network Request Failures** (404s, timeouts, CORS)
-- **JavaScript Runtime Errors** (undefined variables, type errors)
-- **Third-party Script Errors** (analytics, tracking)
-- **Database/API Errors** (Supabase connection issues)
+**Session persistence:**
+- Track `hasInteracted`, `hasDismissed`, and `hasAutoOpened` in sessionStorage so the widget doesn't repeatedly nag
 
-## Proposed Solution Plan
+### 2. Animation Enhancements (src/index.css + widget)
 
-### Fix React Ref Warnings
-1. **OptionButtons Component**: Add `React.forwardRef()` if the component needs to accept refs, or modify parent components to not pass refs
-2. **Footer/Logo Components**: Apply same forwardRef pattern or remove unnecessary ref passing
-3. **Test thoroughly**: Ensure calculator functionality remains intact after fixes
+**Pill entrance:** Slide-up + fade-in when pill first appears on page load (delayed 1s after mount)
 
-### Establish Error Monitoring
-1. **Browser Console Monitoring**: Use browser tools to capture logs during user interactions
-2. **Error Categorization**: Group errors by severity (warnings vs breaking errors)
-3. **Usage Pattern Analysis**: Monitor during different user flows (calculator completion, form submission)
-4. **Regular Monitoring Schedule**: Check console during different times to catch intermittent issues
+**Pill pulse:** Gentle scale pulse keyframe (`1 → 1.05 → 1`) applied before auto-open
 
-### Technical Approach
-- Use `React.forwardRef()` wrapper for components that legitimately need ref forwarding
-- Remove unnecessary ref passing where refs aren't needed
-- Add error boundary logging to catch and report runtime errors
-- Implement console monitoring during key user interactions
+**Chat panel open:** Scale-up from bottom-right origin + fade-in (replace current simple fade-in)
 
-The current React ref warnings don't break functionality but create console noise that could mask real errors during peak usage.
+**Chat panel close:** Scale-down + fade-out transition before unmounting
+
+**Message bubbles:** Staggered slide-up animation for each new message
+
+### 3. Hero banner preload fix (index.html)
+
+Remove the `<link rel="preload" as="image" href="/hero-banner.jpg">` from `index.html` head. Instead, add a conditional preload only on the home page route within the `Index.tsx` component using a `useEffect` that dynamically injects the preload link tag.
+
+## Files to modify:
+- `src/components/ReceptionistWidget.tsx` -- all widget logic changes
+- `src/index.css` -- new keyframes for pulse, scale-up-from-corner, message-slide
+- `index.html` -- remove hero-banner preload line
+- `src/pages/Index.tsx` -- add dynamic preload for hero-banner
+
