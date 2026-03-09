@@ -21,6 +21,7 @@ interface LeadFormProps {
   answers?: Record<string, number>;
   selectedProducts?: string[];
   result?: Result | null;
+  onSubmitted?: () => void;
 }
 
 // Map calculator question IDs to database column names
@@ -39,7 +40,7 @@ const answerToColumnMap: Record<string, string> = {
   branding: "branding_level",
 };
 
-export function LeadForm({ answers = {}, selectedProducts = [], result }: LeadFormProps) {
+export function LeadForm({ answers = {}, selectedProducts = [], result, onSubmitted }: LeadFormProps) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [company, setCompany] = useState("");
@@ -138,7 +139,8 @@ export function LeadForm({ answers = {}, selectedProducts = [], result }: LeadFo
       }
 
       setSubmitted(true);
-      toast({ title: "Thank you! We'll be in touch shortly." });
+      onSubmitted?.();
+      toast({ title: "Your results are ready!" });
     } catch (err: any) {
       console.error("Lead save error:", err);
       toast({
@@ -159,11 +161,11 @@ export function LeadForm({ answers = {}, selectedProducts = [], result }: LeadFo
             <Send className="h-5 w-5" />
           </div>
           <p className="text-lg font-semibold text-foreground">
-            Consultation Requested!
+            Your results are ready!
           </p>
           <p className="text-sm text-muted-foreground">
-            We'll reach out to <span className="font-medium">{email}</span>{" "}
-            shortly.
+            We'll also reach out to <span className="font-medium">{email}</span>{" "}
+            with more details shortly.
           </p>
         </CardContent>
       </Card>
@@ -174,7 +176,7 @@ export function LeadForm({ answers = {}, selectedProducts = [], result }: LeadFo
     <Card className="animate-slide-up border-border shadow-sm">
       <CardContent className="p-5">
         <p className="mb-4 text-sm font-semibold text-foreground">
-          Ready to get started? Let us know how to reach you.
+          Enter your details to unlock your personalised pricing estimate.
         </p>
         <form onSubmit={handleSubmit} className="grid gap-3">
           <div>
