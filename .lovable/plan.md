@@ -1,51 +1,51 @@
 
-# Investigation & Fix Plan for Internal Errors
 
-## Problem Analysis
-Based on the uploaded console logs, there are two types of errors:
+# Plan: Create EventComplexityCalculator on Hidden /calculator Route
 
-1. **TikTok Ads SDK Errors**: "Event name (plan_interacted/details_view_toggled) is not valid, must be mapped to one of standard events"
-2. **TrajectoryEvent Unknown Errors**: Repeated unknown trajectory events
+## What We're Building
+A standalone `/calculator` page containing the Event Complexity Calculator component. The route will be functional but hidden from all navigation menus — accessible only by direct URL. The Pricing page remains completely untouched.
 
-## Current State Investigation Needed
-1. **Check Pricing Page Current State**: Verify what calculator integration exists
-2. **Identify TikTok Ads Integration**: Find where TikTok tracking code is implemented
-3. **Review Console Logs**: Get full error context from live site
-4. **Check Calculator Implementation**: Verify if EventComplexityCalculator is properly integrated
+## Files to Create/Modify
 
-## Root Cause Analysis
-The errors suggest:
-- TikTok Ads tracking is firing invalid event names
-- There may be tracking/analytics conflicts
-- Calculator integration might be triggering unwanted events
+### 1. Create `src/components/EventComplexityCalculator.tsx`
+- Multi-step wizard using the existing `questions` array from `calculator-data.ts`
+- Each step shows one question with `OptionButtons` for selection
+- Progress bar via the existing `Progress` component
+- After all questions: compute result via `calculateResultWithTrace()`, display complexity tier + pricing
+- Render the existing `LeadForm` beneath the result for lead capture
+- Auto-infer Cvent products from answers; filter the product multi-select question accordingly
+- Smooth transitions between steps using CSS animations (no new deps needed — project already has `animate-fade-in` / `animate-slide-up` in Tailwind config)
 
-## Solution Strategy
-1. **TikTok Ads Fix**: 
-   - Locate TikTok tracking implementation
-   - Remove or fix invalid event mappings (plan_interacted, details_view_toggled)
-   - Use standard TikTok event names only
+### 2. Create `src/pages/Calculator.tsx`
+- Minimal page wrapper: Navbar + centered calculator + Footer
+- No SEO meta / no sitemap entry — keeps it hidden from search engines
+- Page title set to generic "Calculator" via `useEffect`
 
-2. **Calculator Integration Options**:
-   - **Option A**: Hide calculator on pricing page but keep functionality available via direct route
-   - **Option B**: Remove calculator from pricing page entirely and create separate calculator page
-   - **Option C**: Keep calculator but disable all tracking events
+### 3. Modify `src/App.tsx`
+- Add lazy-loaded route: `<Route path="/calculator" element={<Calculator />} />`
+- No navigation links added anywhere — route is hidden, direct-access only
 
-3. **Error Cleanup**:
-   - Remove or fix trajectory event tracking
-   - Ensure no conflicting analytics implementations
-   - Test that core functionality works without tracking errors
+## Component Architecture
 
-## Implementation Plan
-1. **Locate and Fix TikTok Integration** - Find tracking code causing invalid events
-2. **Handle Calculator Visibility** - Hide calculator section on pricing page while preserving functionality
-3. **Clean Up Analytics** - Remove problematic event tracking
-4. **Verify Core Functions** - Ensure lead capture and AI assistant still work
-5. **Test Error Resolution** - Confirm console is clean
+```text
+Calculator (page)
+ └── EventComplexityCalculator
+      ├── Progress bar (step X of N)
+      ├── Question text
+      ├── OptionButtons (single or multi-select)
+      ├── Result card (complexity + price + turnaround)
+      └── LeadForm (pre-filled with answers + products)
+```
 
-## Technical Approach
-- Use CSS `display: none` or conditional rendering to hide calculator
-- Remove invalid TikTok event mappings
-- Preserve database and lead capture functionality
-- Maintain AI assistant integration without tracking conflicts
+## Calculator Flow
+1. Show questions 0–12 sequentially (from `calculator-data.ts`)
+2. For `cvent_products` question: filter out already-inferred products using `getFilteredCventOptions()`
+3. On completion: call `calculateResultWithTrace()` with all answers + selected products
+4. Display result card with complexity tier, starting price, and turnaround times
+5. Show LeadForm passing `answers`, `selectedProducts`, and `result` as props
 
-This approach will resolve the internal errors while respecting the user's requirement to not modify the pricing page visibly.
+## No Changes To
+- Pricing page (`src/pages/Pricing.tsx`) — completely untouched
+- Navigation menus — no links to `/calculator` added
+- Database schema — uses existing `event_complexity_leads` table
+
