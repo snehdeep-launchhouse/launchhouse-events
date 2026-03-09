@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Calculator, CheckCircle, Clock, DollarSign } from "lucide-react";
+import { ArrowLeft, Calculator, CheckCircle, Clock, DollarSign, CalendarCheck } from "lucide-react";
+import { useContactPanel } from "@/components/ContactPanelProvider";
 import { OptionButtons } from "@/components/OptionButtons";
 import { LeadForm } from "@/components/LeadForm";
 import { 
@@ -16,6 +17,7 @@ import {
 } from "@/lib/calculator-data";
 
 export function EventComplexityCalculator() {
+  const { openDemoPanel } = useContactPanel();
   const [currentStep, setCurrentStep] = useState(0);
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
@@ -164,11 +166,17 @@ export function EventComplexityCalculator() {
               result={result}
             />
 
-            <div className="text-center">
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Button 
+                onClick={openDemoPanel}
+                className="gap-2"
+              >
+                <CalendarCheck className="w-4 h-4" />
+                Schedule a Consultation
+              </Button>
               <Button 
                 variant="outline" 
                 onClick={handleRestart}
-                className="w-full md:w-auto"
               >
                 Start Over
               </Button>
