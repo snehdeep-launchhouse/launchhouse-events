@@ -339,8 +339,8 @@ export function ReceptionistWidget() {
                 </div>
               </div>
             ))}
-            {loading && (
-              <div className="flex justify-start">
+            {loading && messages[messages.length - 1]?.role === "user" && (
+              <div className="flex justify-start animate-widget-message-slide">
                 <div className="flex items-center gap-1.5 rounded-xl bg-muted px-3 py-2" role="status" aria-label="Chloe is typing">
                   <span className="h-2 w-2 rounded-full bg-muted-foreground/70 animate-typing-dot" />
                   <span className="h-2 w-2 rounded-full bg-muted-foreground/70 animate-typing-dot [animation-delay:0.2s]" />
