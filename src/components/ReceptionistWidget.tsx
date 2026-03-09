@@ -123,10 +123,22 @@ export function ReceptionistWidget() {
 
   useEffect(scroll, [messages, scroll]);
 
+  // Track new assistant messages that arrive while the widget is closed
+  useEffect(() => {
+    const newCount = messages.length;
+    if (!open && newCount > prevMsgCountRef.current) {
+      const newMsgs = messages.slice(prevMsgCountRef.current);
+      const newAssistant = newMsgs.filter(m => m.role === "assistant").length;
+      if (newAssistant > 0) setUnreadCount(prev => prev + newAssistant);
+    }
+    prevMsgCountRef.current = newCount;
+  }, [messages, open]);
+
   useEffect(() => {
     if (open) {
       inputRef.current?.focus();
       handleUserInteraction();
+      setUnreadCount(0);
     }
   }, [open, handleUserInteraction]);
 
