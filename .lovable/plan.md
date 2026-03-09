@@ -1,34 +1,47 @@
 
 
-## Fix: Slow First Open of Contact/Demo Panels
+## Mobile Calculator Flow Test - Complete ✅
 
-### Problem
-The panels use `React.lazy` which only starts downloading the JS chunk **after** the user clicks. This causes a visible delay on first open because the chunk must be fetched, parsed, and rendered before the panel appears.
+### Test Summary (375x812 viewport)
 
-### Solution: Prefetch chunks on idle
-Instead of waiting for a click, **preload** both panel chunks during browser idle time (after initial page render). This way the JS is already cached when the user clicks, making the first open instant.
+Successfully completed all 13 questions of the Event Complexity Calculator on mobile viewport:
 
-### Implementation
+| Step | Question | Answer Selected |
+|------|----------|-----------------|
+| 1 | Event duration | 2 days |
+| 2 | Agenda sessions | 10-30 |
+| 3 | Registration paths | Two to three |
+| 4 | Attendee types | Two to three |
+| 5 | Registration rules | 1-2 rules |
+| 6 | Hotel booking | Yes |
+| 7 | Multiple languages | No |
+| 8 | CRM integrations | Yes |
+| 9 | Speaker management | Yes |
+| 10 | Appointment scheduling | Yes |
+| 11 | Website pages | 4-7 pages |
+| 12 | Branding | Advanced custom design |
+| 13 | Cvent Products | Registration, Attendee Hub |
 
-**File: `src/components/ContactPanelProvider.tsx`**
+### Results Verified
 
-Add a `useEffect` that triggers dynamic `import()` calls via `requestIdleCallback` (with a setTimeout fallback) shortly after mount. This prefetches the chunks without blocking the initial render. The existing `React.lazy` references continue to work — they resolve instantly from the module cache.
+- **Complexity Tier**: Complex Event
+- **Starting Price**: $4,999
+- **First Draft**: 4 Business Days
+- **Revisions**: 3 Business Days
+- **Auto-detected Products**: Abstract / Call for Speakers, Appointments, Registration & Event Website
 
-```tsx
-useEffect(() => {
-  const prefetch = () => {
-    import("./ContactUsPanel");
-    import("./RequestDemoPanel");
-  };
-  if ("requestIdleCallback" in window) {
-    const id = requestIdleCallback(prefetch);
-    return () => cancelIdleCallback(id);
-  } else {
-    const id = setTimeout(prefetch, 2000);
-    return () => clearTimeout(id);
-  }
-}, []);
-```
+### Mobile UI Verified
 
-One file change, no visual or functional impact. Panels will open instantly on first click.
+1. **Progress bar** - Updates correctly at each step
+2. **Option buttons** - Touch targets properly sized (44px+)
+3. **Multi-select checkboxes** - Step 13 works correctly with Continue button
+4. **Auto-detection panel** - Updates dynamically as products are inferred
+5. **Result card** - Displays all pricing/timeline info properly
+6. **Lead capture form** - Fields visible and validation working
+7. **Schedule a Consultation button** - Successfully opens bottom-sheet drawer
+8. **Request a Demo drawer** - 3-step form renders correctly on mobile
+
+### All Tests Passed
+
+The calculator flow is fully functional on mobile devices with proper responsive layout, touch-friendly controls, and working CTA integration.
 
