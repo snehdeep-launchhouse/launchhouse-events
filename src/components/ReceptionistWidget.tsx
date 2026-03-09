@@ -39,6 +39,7 @@ export function ReceptionistWidget() {
   const [loading, setLoading] = useState(false);
   const [showPulse, setShowPulse] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -46,6 +47,7 @@ export function ReceptionistWidget() {
   const pulseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const autoCloseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const wasAutoOpenedRef = useRef(false);
+  const prevMsgCountRef = useRef(1); // start at 1 for the greeting
 
   const isMobile = useIsMobile();
   const navigate = useNavigate();
@@ -121,10 +123,22 @@ export function ReceptionistWidget() {
 
   useEffect(scroll, [messages, scroll]);
 
+  // Track new assistant messages that arrive while the widget is closed
+  useEffect(() => {
+    const newCount = messages.length;
+    if (!open && newCount > prevMsgCountRef.current) {
+      const newMsgs = messages.slice(prevMsgCountRef.current);
+      const newAssistant = newMsgs.filter(m => m.role === "assistant").length;
+      if (newAssistant > 0) setUnreadCount(prev => prev + newAssistant);
+    }
+    prevMsgCountRef.current = newCount;
+  }, [messages, open]);
+
   useEffect(() => {
     if (open) {
       inputRef.current?.focus();
       handleUserInteraction();
+      setUnreadCount(0);
     }
   }, [open, handleUserInteraction]);
 
@@ -258,8 +272,13 @@ export function ReceptionistWidget() {
           title="Chat with Chloe"
         >
           <span className="text-sm font-medium whitespace-nowrap">Ask me anything</span>
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary-foreground/15">
+          <div className="relative flex h-10 w-10 items-center justify-center rounded-full bg-primary-foreground/15">
             <MessageCircle className="h-5 w-5" />
+            {unreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground shadow-md animate-widget-pill-entrance">
+                {unreadCount > 9 ? "9+" : unreadCount}
+              </span>
+            )}
           </div>
         </button>
       )}
