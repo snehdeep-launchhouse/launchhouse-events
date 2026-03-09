@@ -61,6 +61,7 @@ export function ReceptionistWidget() {
     if (idleTimerRef.current) { clearTimeout(idleTimerRef.current); idleTimerRef.current = null; }
     if (pulseTimerRef.current) { clearTimeout(pulseTimerRef.current); pulseTimerRef.current = null; }
     if (autoCloseTimerRef.current) { clearTimeout(autoCloseTimerRef.current); autoCloseTimerRef.current = null; }
+    if (typingTimerRef.current) { clearTimeout(typingTimerRef.current); typingTimerRef.current = null; }
   }, []);
 
   const scroll = useCallback(() => {
@@ -136,6 +137,26 @@ export function ReceptionistWidget() {
     }
     prevMsgCountRef.current = newCount;
   }, [messages, open]);
+
+  // Minimum typing indicator display time (300ms)
+  const MIN_TYPING_DISPLAY = 300;
+  useEffect(() => {
+    if (loading && messages[messages.length - 1]?.role === "user") {
+      loadingStartRef.current = Date.now();
+      setShowTypingIndicator(true);
+    } else if (!loading || messages[messages.length - 1]?.role === "assistant") {
+      const elapsed = Date.now() - loadingStartRef.current;
+      const remaining = MIN_TYPING_DISPLAY - elapsed;
+      if (remaining > 0) {
+        typingTimerRef.current = setTimeout(() => setShowTypingIndicator(false), remaining);
+      } else {
+        setShowTypingIndicator(false);
+      }
+    }
+    return () => {
+      if (typingTimerRef.current) { clearTimeout(typingTimerRef.current); typingTimerRef.current = null; }
+    };
+  }, [loading, messages]);
 
   useEffect(() => {
     if (open) {
@@ -342,7 +363,7 @@ export function ReceptionistWidget() {
                 </div>
               </div>
             ))}
-            {loading && messages[messages.length - 1]?.role === "user" && (
+            {showTypingIndicator && (
               <div className="flex justify-start animate-widget-message-slide">
                 <div className="flex items-center gap-1.5 rounded-xl bg-muted px-3 py-2" role="status" aria-label="Chloe is typing">
                   <span className="h-2 w-2 rounded-full bg-muted-foreground/70 animate-typing-dot" />
