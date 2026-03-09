@@ -14,6 +14,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { validateEmail, verifyEmailDomain, type VerificationStatus } from "@/lib/email-validation";
 import type { Result } from "@/lib/calculator-data";
 
 interface LeadFormProps {
