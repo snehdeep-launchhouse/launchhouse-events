@@ -24,6 +24,7 @@ export function EventComplexityCalculator() {
   const [result, setResult] = useState<Result | null>(null);
   const [trace, setTrace] = useState<CalculationTrace | null>(null);
   const [showResult, setShowResult] = useState(false);
+  const [leadSubmitted, setLeadSubmitted] = useState(false);
 
   const totalSteps = questions.length;
   const progressPercent = (currentStep / totalSteps) * 100;
@@ -73,6 +74,7 @@ export function EventComplexityCalculator() {
     setResult(null);
     setTrace(null);
     setShowResult(false);
+    setLeadSubmitted(false);
   };
 
   // Get filtered options for Cvent products question
@@ -87,101 +89,120 @@ export function EventComplexityCalculator() {
     return (
       <div className="min-h-screen bg-background py-8">
         <div className="container mx-auto px-4 max-w-2xl">
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-success/10 text-success rounded-full mb-4">
-              <CheckCircle className="w-8 h-8" />
-            </div>
-            <h1 className="text-3xl font-bold text-foreground mb-2">
-              Your Event Complexity Analysis
-            </h1>
-            <p className="text-muted-foreground">
-              Based on your answers, here's our recommended approach
-            </p>
-          </div>
-
-          <div className="space-y-6 animate-slide-up">
-            {/* Result Card */}
-            <Card className="border-border shadow-sm">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Calculator className="w-5 h-5" />
-                  {result.complexity} Event
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid gap-4 md:grid-cols-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-primary/10 text-primary rounded-lg flex items-center justify-center">
-                      <DollarSign className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Starting Price</p>
-                      <p className="font-semibold text-foreground">{result.price}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-accent/50 text-accent-foreground rounded-lg flex items-center justify-center">
-                      <Clock className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">First Draft</p>
-                      <p className="font-semibold text-foreground">{result.firstDraft}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-secondary/50 text-secondary-foreground rounded-lg flex items-center justify-center">
-                      <Clock className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Revisions</p>
-                      <p className="font-semibold text-foreground">{result.revisionTurnaround}</p>
-                    </div>
-                  </div>
+          {!leadSubmitted ? (
+            <>
+              <div className="text-center mb-8">
+                <div className="inline-flex items-center justify-center w-16 h-16 bg-primary/10 text-primary rounded-full mb-4">
+                  <Calculator className="w-8 h-8" />
                 </div>
+                <h1 className="text-3xl font-bold text-foreground mb-2">
+                  You're almost there!
+                </h1>
+                <p className="text-muted-foreground">
+                  Enter your details to unlock your personalised pricing estimate
+                </p>
+              </div>
 
-                {trace?.allProducts && trace.allProducts.length > 0 && (
-                  <div className="mt-6 p-4 bg-accent/20 rounded-lg">
-                    <p className="text-sm font-medium text-foreground mb-2">
-                      Recommended Cvent Products:
-                    </p>
-                    <div className="flex flex-wrap gap-2">
-                      {trace.allProducts.map((product, idx) => (
-                        <span 
-                          key={idx}
-                          className="px-3 py-1 bg-primary/10 text-primary text-sm rounded-full"
-                        >
-                          {product}
-                        </span>
-                      ))}
+              <div className="animate-slide-up">
+                <LeadForm 
+                  answers={answers}
+                  selectedProducts={trace?.allProducts || selectedProducts}
+                  result={result}
+                  onSubmitted={() => setLeadSubmitted(true)}
+                />
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="text-center mb-8">
+                <div className="inline-flex items-center justify-center w-16 h-16 bg-success/10 text-success rounded-full mb-4">
+                  <CheckCircle className="w-8 h-8" />
+                </div>
+                <h1 className="text-3xl font-bold text-foreground mb-2">
+                  Your Event Complexity Analysis
+                </h1>
+                <p className="text-muted-foreground">
+                  Based on your answers, here's our recommended approach
+                </p>
+              </div>
+
+              <div className="space-y-6 animate-slide-up">
+                <Card className="border-border shadow-sm">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Calculator className="w-5 h-5" />
+                      {result.complexity} Event
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid gap-4 md:grid-cols-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-primary/10 text-primary rounded-lg flex items-center justify-center">
+                          <DollarSign className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <p className="text-sm text-muted-foreground">Starting Price</p>
+                          <p className="font-semibold text-foreground">{result.price}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-accent/50 text-accent-foreground rounded-lg flex items-center justify-center">
+                          <Clock className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <p className="text-sm text-muted-foreground">First Draft</p>
+                          <p className="font-semibold text-foreground">{result.firstDraft}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-secondary/50 text-secondary-foreground rounded-lg flex items-center justify-center">
+                          <Clock className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <p className="text-sm text-muted-foreground">Revisions</p>
+                          <p className="font-semibold text-foreground">{result.revisionTurnaround}</p>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
 
-            {/* Lead Form */}
-            <LeadForm 
-              answers={answers}
-              selectedProducts={trace?.allProducts || selectedProducts}
-              result={result}
-            />
+                    {trace?.allProducts && trace.allProducts.length > 0 && (
+                      <div className="mt-6 p-4 bg-accent/20 rounded-lg">
+                        <p className="text-sm font-medium text-foreground mb-2">
+                          Recommended Cvent Products:
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          {trace.allProducts.map((product, idx) => (
+                            <span 
+                              key={idx}
+                              className="px-3 py-1 bg-primary/10 text-primary text-sm rounded-full"
+                            >
+                              {product}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
 
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Button 
-                onClick={openDemoPanel}
-                className="gap-2"
-              >
-                <CalendarCheck className="w-4 h-4" />
-                Schedule a Consultation
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={handleRestart}
-              >
-                Start Over
-              </Button>
-            </div>
-          </div>
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  <Button 
+                    onClick={openDemoPanel}
+                    className="gap-2"
+                  >
+                    <CalendarCheck className="w-4 h-4" />
+                    Schedule a Consultation
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={handleRestart}
+                  >
+                    Start Over
+                  </Button>
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </div>
     );
