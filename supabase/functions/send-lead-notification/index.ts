@@ -170,6 +170,26 @@ serve(async (req) => {
           </tr>
         </table>
       </div>
+      ${attendeeHubSelected ? `
+      <div style="background:#f0f9ff;border:1px solid #bfdbfe;border-radius:8px;padding:20px;margin-bottom:24px;">
+        <p style="margin:0 0 12px;font-size:15px;font-weight:600;color:#111827;">📱 Attendee Hub / Event App</p>
+        <table style="width:100%;border-collapse:collapse;">
+          <tr>
+            <td style="padding:4px 0;font-size:14px;color:#6b7280;">Module Price:</td>
+            <td style="padding:4px 0;font-size:14px;font-weight:600;color:#006AE1;">$1,999</td>
+          </tr>
+          ${attendeeHubFeatures.length > 0 ? `<tr>
+            <td style="padding:4px 0;font-size:14px;color:#6b7280;">Selected Features:</td>
+            <td style="padding:4px 0;font-size:14px;color:#111827;">${attendeeHubFeatures.join(", ")}</td>
+          </tr>` : ""}
+          <tr><td colspan="2" style="border-top:1px solid #d1d5db;padding-top:8px;"></td></tr>
+          <tr>
+            <td style="padding:4px 0;font-size:14px;font-weight:700;color:#111827;">Estimated Total:</td>
+            <td style="padding:4px 0;font-size:14px;font-weight:700;color:#006AE1;">${fmtPrice(estimatedTotal)}</td>
+          </tr>
+        </table>
+      </div>
+      ` : ""}
       
       <p style="margin:0 0 16px;font-size:15px;color:#374151;">
         A member of our team will reach out to you within <strong>24 hours</strong> to discuss your event needs and provide a customized proposal.
