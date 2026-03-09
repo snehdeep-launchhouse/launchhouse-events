@@ -1,64 +1,34 @@
 
 
-## Security Analysis & Fix: `abandoned_contact_requests` RLS Policy
+## Fix: Slow First Open of Contact/Demo Panels
 
-### Current Security Issue
+### Problem
+The panels use `React.lazy` which only starts downloading the JS chunk **after** the user clicks. This causes a visible delay on first open because the chunk must be fetched, parsed, and rendered before the panel appears.
 
-**The Problem:** The UPDATE policy `Public can upsert by email` uses:
-```sql
-USING (status = 'partial')
-WITH CHECK (status IN ('partial', 'completed'))
+### Solution: Prefetch chunks on idle
+Instead of waiting for a click, **preload** both panel chunks during browser idle time (after initial page render). This way the JS is already cached when the user clicks, making the first open instant.
+
+### Implementation
+
+**File: `src/components/ContactPanelProvider.tsx`**
+
+Add a `useEffect` that triggers dynamic `import()` calls via `requestIdleCallback` (with a setTimeout fallback) shortly after mount. This prefetches the chunks without blocking the initial render. The existing `React.lazy` references continue to work — they resolve instantly from the module cache.
+
+```tsx
+useEffect(() => {
+  const prefetch = () => {
+    import("./ContactUsPanel");
+    import("./RequestDemoPanel");
+  };
+  if ("requestIdleCallback" in window) {
+    const id = requestIdleCallback(prefetch);
+    return () => cancelIdleCallback(id);
+  } else {
+    const id = setTimeout(prefetch, 2000);
+    return () => clearTimeout(id);
+  }
+}, []);
 ```
 
-This allows **any anonymous user** to:
-1. Update any row where `status = 'partial'` without proving ownership
-2. Use `UPDATE ... RETURNING *` to read other users' data (first_name, last_name, business_email, captured_data)
-3. Overwrite legitimate submissions with attacker-controlled data
-
-### Solution: Token-Based Ownership Model
-
-Add a `submission_token` column that:
-- Auto-generates a UUID on INSERT
-- Must match for UPDATE operations
-- Never exposed via SELECT (anonymous users have no SELECT access)
-
-### Implementation Plan
-
-**1. Database Migration**
-- Add `submission_token UUID DEFAULT gen_random_uuid()` column
-- Drop the insecure UPDATE policy
-- Create new UPDATE policy requiring token match:
-  ```sql
-  USING (status = 'partial' AND submission_token = current_setting('request.headers', true)::json->>'x-submission-token')
-  ```
-
-**2. Code Changes (ContactUsPanel.tsx & GetAQuote.tsx)**
-- After INSERT, retrieve the generated token via `.select('submission_token').single()`
-- Store token in component ref/state
-- Include token in all UPDATE calls via header or filter
-
-**3. Technical Details**
-```
-┌─────────────────────────────────────────────────────────────┐
-│  Client (Browser)                                           │
-│  ┌─────────────┐    ┌──────────────────┐                   │
-│  │ INSERT row  │───>│ Get token back   │                   │
-│  └─────────────┘    └──────────────────┘                   │
-│         │                   │                               │
-│         v                   v                               │
-│  ┌─────────────────────────────────────┐                   │
-│  │ Store token in sessionRef           │                   │
-│  └─────────────────────────────────────┘                   │
-│         │                                                   │
-│         v                                                   │
-│  ┌─────────────────────────────────────┐                   │
-│  │ UPDATE with .eq('submission_token') │                   │
-│  └─────────────────────────────────────┘                   │
-└─────────────────────────────────────────────────────────────┘
-```
-
-**Files to modify:**
-- `src/components/ContactUsPanel.tsx` — track token, use in updates
-- `src/pages/GetAQuote.tsx` — same pattern
-- Database migration for column + policy
+One file change, no visual or functional impact. Panels will open instantly on first click.
 

@@ -24,6 +24,7 @@ export type Database = {
           last_active_step: number
           last_name: string
           status: string
+          submission_token: string
           updated_at: string
         }
         Insert: {
@@ -35,6 +36,7 @@ export type Database = {
           last_active_step?: number
           last_name?: string
           status?: string
+          submission_token?: string
           updated_at?: string
         }
         Update: {
@@ -46,6 +48,7 @@ export type Database = {
           last_active_step?: number
           last_name?: string
           status?: string
+          submission_token?: string
           updated_at?: string
         }
         Relationships: []
