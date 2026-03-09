@@ -282,7 +282,13 @@ const ContactUsPanel = ({ open, onOpenChange }: ContactUsPanelProps) => {
 
   const deleteAbandoned = useCallback(async (email: string) => {
     try {
-      await supabase.from("abandoned_contact_requests").update({ status: "completed" }).eq("business_email", email);
+      if (submissionTokenRef.current) {
+        // Use token-based update (secure)
+        await supabase.from("abandoned_contact_requests").update({ status: "completed" }).eq("submission_token", submissionTokenRef.current);
+      } else {
+        // Fallback to email-based update (legacy rows)
+        await supabase.from("abandoned_contact_requests").update({ status: "completed" }).eq("business_email", email);
+      }
     } catch {
       // silent
     }
