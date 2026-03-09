@@ -51,6 +51,10 @@ serve(async (req) => {
     const startingPrice = sanitize(payload.startingPrice) || "Contact for pricing";
     const eventDate = payload.eventDate ? sanitize(payload.eventDate) : "Not specified";
     const cventProducts = payload.cventProducts ? sanitize(payload.cventProducts) : "None selected";
+    const attendeeHubSelected = payload.attendeeHubSelected === true;
+    const attendeeHubFeatures: string[] = Array.isArray(payload.attendeeHubFeatures)
+      ? payload.attendeeHubFeatures.map((f: unknown) => sanitize(f as string))
+      : [];
 
     // ── Build internal notification email for admins ──
     const internalRows: [string, string][] = [
@@ -63,6 +67,13 @@ serve(async (req) => {
       ["Cvent Products", cventProducts],
     ];
 
+    if (attendeeHubSelected) {
+      internalRows.push(["Attendee Hub", "✅ Selected"]);
+      if (attendeeHubFeatures.length > 0) {
+        internalRows.push(["App Features", attendeeHubFeatures.join(", ")]);
+      }
+    }
+
     const tableRowsHtml = internalRows
       .map(
         ([field, value]) => `
@@ -72,6 +83,24 @@ serve(async (req) => {
         </tr>`
       )
       .join("");
+
+    // Calculate estimated total for emails
+    const buildPriceNum = parseInt(startingPrice.replace(/[$,]/g, ''), 10) || 0;
+    const hubPriceNum = attendeeHubSelected ? 1999 : 0;
+    const estimatedTotal = buildPriceNum + hubPriceNum;
+    const fmtPrice = (n: number) => `$${n.toLocaleString()}`;
+
+    const investmentSummaryHtml = attendeeHubSelected
+      ? `<div style="background:#f0f9ff;border:1px solid #bfdbfe;border-radius:8px;padding:16px 20px;margin-top:16px;">
+           <p style="margin:0 0 8px;font-size:14px;font-weight:600;color:#374151;">💰 Estimated Starting Investment</p>
+           <table style="width:100%;border-collapse:collapse;">
+             <tr><td style="padding:4px 0;font-size:14px;color:#6b7280;">Event Build</td><td style="padding:4px 0;font-size:14px;text-align:right;">${startingPrice}</td></tr>
+             <tr><td style="padding:4px 0;font-size:14px;color:#6b7280;">Event App Module</td><td style="padding:4px 0;font-size:14px;text-align:right;">$1,999</td></tr>
+             <tr><td colspan="2" style="border-top:1px solid #d1d5db;padding-top:8px;"></td></tr>
+             <tr><td style="padding:4px 0;font-size:14px;font-weight:700;color:#111827;">Estimated Total</td><td style="padding:4px 0;font-size:14px;font-weight:700;color:#006AE1;text-align:right;">${fmtPrice(estimatedTotal)}</td></tr>
+           </table>
+         </div>`
+      : "";
 
     const internalHtml = `
 <!DOCTYPE html>
@@ -84,12 +113,13 @@ serve(async (req) => {
         🎯 New Calculator Lead Capture
       </h1>
       <p style="margin:6px 0 0;color:rgba(255,255,255,0.85);font-size:14px;">
-        ${sanitize(name)} from ${sanitize(company)} · ${complexityLevel} Event
+        ${sanitize(name)} from ${sanitize(company)} · ${complexityLevel} Event${attendeeHubSelected ? " + Event App" : ""}
       </p>
     </div>
     <table style="width:100%;border-collapse:collapse;border:1px solid #d1d5db;border-top:none;">
       ${tableRowsHtml}
     </table>
+    ${investmentSummaryHtml}
     <div style="padding:20px;background:#f0f9ff;border:1px solid #d1d5db;border-top:none;border-radius:0 0 8px 8px;">
       <p style="margin:0;font-size:14px;color:#374151;">
         <strong>Action Required:</strong> Follow up with this lead within 24 hours.
