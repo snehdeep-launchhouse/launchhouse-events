@@ -1,26 +1,66 @@
 
-## Plan: Auto-collapse Chat Widget Pill
+# Plan: Complete Event Complexity Calculator Implementation & QA Audit
 
-### Objective
-Reduce visual clutter by automatically collapsing the "Ask me anything" button to just the icon after 5 seconds on the page, while maintaining accessibility by re-expanding it on hover.
+## Current State Analysis
+- Core systems (AI assistant, edge functions, database) are working correctly
+- Calculator data/logic exists in `src/lib/calculator-data.ts`
+- LeadForm component exists but calculator UI component is missing entirely
+- Error ID `0401a75e93f50f7991f9942f2d5d5ad2` appears to be non-critical console noise
 
-### Changes to `src/components/ReceptionistWidget.tsx`
+## Implementation Plan
 
-1. **Add Collapse State**
-   - Introduce an `isExpanded` state variable initialized to `true`.
-   - Add a `useEffect` hook to automatically set `isExpanded` to `false` after a 5000ms delay.
+### Phase 1: Build Missing Calculator Component
+1. **Create EventComplexityCalculator Component**
+   - Multi-step question flow using calculator-data.ts questions
+   - Progress indicator and smooth transitions
+   - Mobile-responsive design matching existing style
+   - Result display with complexity tier and pricing
 
-2. **Update Button Layout & Styling**
-   - Attach `onMouseEnter={() => setIsExpanded(true)}` and `onMouseLeave={() => setIsExpanded(false)}` to the floating button so it intuitively expands when the user hovers over it.
-   - Conditionally apply padding and gap classes based on the state:
-     - Expanded: `gap-2.5 pl-4 pr-2 py-2` (Current design)
-     - Collapsed: `gap-0 p-2` (Creates a perfectly circular 56x56px button)
-   
-3. **Smooth Width Transition**
-   - Wrap the "Ask me anything" text span in a new `div` that handles the transition.
-   - Expanded state classes: `max-w-[200px] opacity-100`
-   - Collapsed state classes: `max-w-0 opacity-0`
-   - Apply `overflow-hidden`, `whitespace-nowrap`, and `transition-all duration-300` to the wrapper to create a smooth, layout-stable slide-and-fade effect.
+2. **Integrate Calculator into Pricing Page**
+   - Add calculator section before pricing packages
+   - Connect to existing LeadForm component
+   - Ensure proper data flow to analyze-event edge function
 
-### Impact
-The button will draw attention on initial page load for 5 seconds to educate the user that the AI assistant is available, then quietly tuck itself away to a minimal floating chat icon. It remains easily discoverable via hover interaction on desktop.
+3. **Calculator Logic Implementation**
+   - Use existing calculation engine from calculator-data.ts
+   - Implement all complexity rules and overrides
+   - Connect Cvent product inference logic
+   - Add debug tracing for testing
+
+### Phase 2: Comprehensive QA Testing
+4. **Calculator Logic Validation**
+   - Test all 10+ question scenarios
+   - Verify complexity tier calculations
+   - Test product inference rules
+   - Validate minimum complexity overrides
+
+5. **User Experience Testing**
+   - Complete user flow testing
+   - Mobile responsiveness validation
+   - Form submission to database verification
+   - Lead capture confirmation workflow
+
+6. **AI Assistant Integration**
+   - Test calculator guidance from chatbot
+   - Verify consultation redirects
+   - Validate cross-component communication
+
+7. **Database & Security Validation**
+   - Test lead storage to event_complexity_leads table
+   - Verify all field mappings work correctly
+   - Validate error handling for edge cases
+
+## Technical Approach
+- Build calculator as self-contained component with internal state management
+- Use existing UI patterns from project (shadcn components)
+- Implement smooth animations and transitions
+- Connect to existing edge functions and database schema
+- Maintain accessibility and mobile-first design
+
+## Success Criteria
+- Calculator displays properly on /pricing page
+- All complexity calculation rules work as specified
+- Complete user journey from questions → result → lead capture
+- AI assistant properly guides users to calculator
+- Database captures all lead information correctly
+- No console errors or functional issues
