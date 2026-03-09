@@ -184,13 +184,6 @@ const Pricing = () => {
                       </li>
                     ))}
                   </ul>
-                  <Button
-                    variant={p.ctaVariant}
-                    className="w-full"
-                    onClick={() => window.open(GET_A_QUOTE_URL, "_blank")}
-                  >
-                    {p.cta} <ArrowUpRight className="w-4 h-4 ml-1" />
-                  </Button>
                 </div>
               );
             })}
