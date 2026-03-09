@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { MessageCircle, X, Send, Loader2, Calendar, BarChart3 } from "lucide-react";
+import { MessageCircle, X, Send, Calendar, BarChart3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -320,10 +320,12 @@ export function ReceptionistWidget() {
                 </div>
               </div>
             ))}
-            {loading && !messages[messages.length - 1]?.content && (
+            {loading && (
               <div className="flex justify-start">
-                <div className="rounded-xl bg-muted px-3 py-2">
-                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                <div className="flex items-center gap-1.5 rounded-xl bg-muted px-3 py-2" role="status" aria-label="Chloe is typing">
+                  <span className="h-2 w-2 rounded-full bg-muted-foreground/70 animate-typing-dot" />
+                  <span className="h-2 w-2 rounded-full bg-muted-foreground/70 animate-typing-dot [animation-delay:0.2s]" />
+                  <span className="h-2 w-2 rounded-full bg-muted-foreground/70 animate-typing-dot [animation-delay:0.4s]" />
                 </div>
               </div>
             )}
@@ -383,3 +385,4 @@ export function ReceptionistWidget() {
 }
 
 export default ReceptionistWidget;
+
