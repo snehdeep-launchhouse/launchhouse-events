@@ -105,6 +105,7 @@ export type Database = {
           last_name: string
           last_page_visited: number
           status: string | null
+          submission_token: string
           updated_at: string
         }
         Insert: {
@@ -119,6 +120,7 @@ export type Database = {
           last_name: string
           last_page_visited?: number
           status?: string | null
+          submission_token?: string
           updated_at?: string
         }
         Update: {
@@ -133,6 +135,7 @@ export type Database = {
           last_name?: string
           last_page_visited?: number
           status?: string | null
+          submission_token?: string
           updated_at?: string
         }
         Relationships: []
