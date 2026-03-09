@@ -165,29 +165,45 @@ const BuildRequest = () => {
 
   const progress = step === 1 ? 33 : step === 2 ? 67 : 100;
 
-  /* ── Abandoned form tracking ─────────────────────────────────── */
-  const upsertAbandonedForm = async (page: number, extraData?: Record<string, unknown>) => {
+  /* ── Abandoned form tracking (token-based ownership) ──────────── */
+  const upsertAbandonedForm = useCallback(async (page: number, extraData?: Record<string, unknown>) => {
     try {
       const data1 = form1.getValues();
-      await (supabase
-        .from("abandoned_eb_forms") as any)
-        .upsert(
-          {
-            email: data1.email,
-            first_name: data1.firstName,
-            last_name: data1.lastName,
-            company_name: data1.companyName,
-            last_page_visited: page,
-            status: "partial",
-            form_data: { page1: data1, ...extraData },
-            updated_at: new Date().toISOString(),
-          },
-          { onConflict: "email" }
-        );
+      const payload = {
+        email: data1.email,
+        first_name: data1.firstName,
+        last_name: data1.lastName,
+        company_name: data1.companyName,
+        last_page_visited: page,
+        status: "partial" as const,
+        form_data: { page1: data1, ...extraData },
+        updated_at: new Date().toISOString(),
+      };
+
+      // If we already have a token, UPDATE by token (secure)
+      if (submissionTokenRef.current) {
+        await supabase
+          .from("abandoned_eb_forms")
+          .update(payload)
+          .eq("submission_token", submissionTokenRef.current);
+      } else {
+        // Generate token client-side so we don't need SELECT permission after INSERT
+        const clientToken = crypto.randomUUID();
+        const { error: insertError } = await supabase
+          .from("abandoned_eb_forms")
+          .insert({ ...payload, submission_token: clientToken } as any);
+
+        if (insertError?.code === "23505") {
+          // Duplicate email — cannot update without token for legacy rows
+          // Just silently skip
+        } else if (!insertError) {
+          submissionTokenRef.current = clientToken;
+        }
+      }
     } catch (e) {
       console.error("Abandoned form tracking error:", e);
     }
-  };
+  }, [form1]);
 
   // Track abandoned form on email blur (decoupled from MX validation)
   const handleEmailBlurTracking = useCallback(() => {
