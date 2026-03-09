@@ -134,7 +134,7 @@ CVENT PRODUCTS SUPPORTED
 ═══════════════════════════════════════════
 EVENT COMPLEXITY CALCULATOR
 ═══════════════════════════════════════════
-The website features an interactive **Event Complexity Calculator** on the Pricing page. It helps users estimate the build complexity of their event in under a minute by asking questions about event length, sessions, registration paths, branding, languages, integrations, and Cvent products needed.
+The website features an interactive **Event Complexity Calculator** at **/calculator**. It helps users estimate the build complexity of their event in under a minute by asking questions about event length, sessions, registration paths, branding, languages, integrations, and Cvent products needed.
 
 The calculator determines complexity tiers:
 - **Simple** → Starting at $899

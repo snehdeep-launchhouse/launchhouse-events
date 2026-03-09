@@ -268,10 +268,10 @@ export function ReceptionistWidget() {
   const handleCalculator = () => {
     handleUserInteraction();
     setOpen(false);
-    if (location.pathname === "/pricing") {
+    if (location.pathname === "/calculator") {
       window.scrollTo({ top: 0, behavior: "smooth" });
     } else {
-      navigate("/pricing");
+      navigate("/calculator");
     }
   };
 
