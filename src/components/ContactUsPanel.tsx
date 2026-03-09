@@ -100,6 +100,8 @@ const ContactUsPanel = ({ open, onOpenChange }: ContactUsPanelProps) => {
 
   // Abandoned contact tracking
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Token returned by INSERT — used for token-bound UPDATEs (security fix)
+  const submissionTokenRef = useRef<string | null>(null);
 
   // Abandoned demo form tracking (new unified table)
   const sessionIdRef = useRef<string>(crypto.randomUUID());
