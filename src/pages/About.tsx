@@ -82,7 +82,7 @@ const About = () => {
           <img src={heroBanner} alt="" className="banner-img" loading="eager" fetchPriority="high" decoding="async" width={1920} height={1080} />
           <div className="absolute inset-0 bg-[hsl(220,90%,10%)]/60" />
         </div>
-        <div className="container relative py-16 md:py-22 flex flex-col items-center text-center gap-6 animate-fade-in">
+        <div className="container relative py-24 md:py-36 flex flex-col items-center text-center gap-8 animate-fade-in">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 text-white text-sm font-medium backdrop-blur-sm">
             <Users className="w-4 h-4" />
             Our Story · Our People · Our Promise
