@@ -184,13 +184,32 @@ export function LeadForm({ answers = {}, selectedProducts = [], result }: LeadFo
             <Label htmlFor="email" className="text-xs">
               Email *
             </Label>
-            <Input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@company.com"
-            />
+            <div className="relative">
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (emailError) {
+                    setEmailError(undefined);
+                    setEmailStatus("idle");
+                  }
+                }}
+                onBlur={handleEmailBlur}
+                placeholder="you@company.com"
+                className={cn(
+                  emailError && "border-destructive focus-visible:ring-destructive",
+                  emailStatus === "valid" && "border-success focus-visible:ring-success"
+                )}
+              />
+              {emailStatus === "verifying" && (
+                <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-muted-foreground" />
+              )}
+            </div>
+            {emailError && (
+              <p className="mt-1 text-xs text-destructive">{emailError}</p>
+            )}
           </div>
           <div>
             <Label htmlFor="company" className="text-xs">
@@ -229,7 +248,7 @@ export function LeadForm({ answers = {}, selectedProducts = [], result }: LeadFo
               </PopoverContent>
             </Popover>
           </div>
-          <Button type="submit" className="mt-1 w-full gap-2" disabled={saving}>
+          <Button type="submit" className="mt-1 w-full gap-2" disabled={saving || emailStatus === "verifying" || emailStatus === "invalid"}>
             {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
             {saving ? "Saving…" : "Schedule a Consultation"}
           </Button>
