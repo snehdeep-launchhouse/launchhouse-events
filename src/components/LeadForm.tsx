@@ -46,6 +46,36 @@ export function LeadForm({ answers = {}, selectedProducts = [], result }: LeadFo
   const [eventDate, setEventDate] = useState<Date>();
   const [submitted, setSubmitted] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [emailError, setEmailError] = useState<string | undefined>();
+  const [emailStatus, setEmailStatus] = useState<VerificationStatus>("idle");
+
+  const handleEmailBlur = async () => {
+    const trimmed = email.trim();
+    if (!trimmed) {
+      setEmailError(undefined);
+      setEmailStatus("idle");
+      return;
+    }
+
+    const formatCheck = validateEmail(trimmed);
+    if (!formatCheck.valid) {
+      setEmailError(formatCheck.message);
+      setEmailStatus("invalid");
+      return;
+    }
+
+    setEmailStatus("verifying");
+    setEmailError(undefined);
+
+    const result = await verifyEmailDomain(trimmed);
+    if (!result.valid) {
+      setEmailError(result.message);
+      setEmailStatus("invalid");
+    } else {
+      setEmailError(undefined);
+      setEmailStatus("valid");
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
