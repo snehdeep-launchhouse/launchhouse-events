@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { MessageCircle, X, Send, Loader2, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/use-mobile";
 import ReactMarkdown from "react-markdown";
 
 type Msg = { role: "user" | "assistant"; content: string };
@@ -12,6 +13,26 @@ const GREETING =
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
+// Session storage keys
+const SESSION_KEYS = {
+  hasInteracted: 'widget_has_interacted',
+  hasDismissed: 'widget_has_dismissed', 
+  hasAutoOpened: 'widget_has_auto_opened'
+} as const;
+
+// Helper functions for session storage
+const getSessionFlag = (key: string): boolean => {
+  return sessionStorage.getItem(key) === 'true';
+};
+
+const setSessionFlag = (key: string, value: boolean): void => {
+  if (value) {
+    sessionStorage.setItem(key, 'true');
+  } else {
+    sessionStorage.removeItem(key);
+  }
+};
+
 export function ReceptionistWidget() {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Msg[]>([
@@ -19,17 +40,103 @@ export function ReceptionistWidget() {
   ]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPulse, setShowPulse] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const idleTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const pulseTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const autoCloseTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const wasAutoOpenedRef = useRef(false);
+  
+  const isMobile = useIsMobile();
+
+  // Helper function to clear all timers
+  const clearAllTimers = useCallback(() => {
+    if (idleTimerRef.current) {
+      clearTimeout(idleTimerRef.current);
+      idleTimerRef.current = null;
+    }
+    if (pulseTimerRef.current) {
+      clearTimeout(pulseTimerRef.current);
+      pulseTimerRef.current = null;
+    }
+    if (autoCloseTimerRef.current) {
+      clearTimeout(autoCloseTimerRef.current);
+      autoCloseTimerRef.current = null;
+    }
+  }, []);
 
   const scroll = useCallback(() => {
     setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "smooth" }), 50);
   }, []);
 
+  // Mark as mounted after 1s to show entrance animation
+  useEffect(() => {
+    const timer = setTimeout(() => setMounted(true), 1000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Auto-open logic: trigger after 30s idle (not on mobile, not if dismissed/interacted)
+  useEffect(() => {
+    if (isMobile || getSessionFlag(SESSION_KEYS.hasInteracted) || getSessionFlag(SESSION_KEYS.hasDismissed)) {
+      return;
+    }
+
+    // Start pulse animation after 10s
+    pulseTimerRef.current = setTimeout(() => {
+      setShowPulse(true);
+    }, 10000);
+
+    // Auto-open after 30s
+    idleTimerRef.current = setTimeout(() => {
+      if (!getSessionFlag(SESSION_KEYS.hasInteracted) && !getSessionFlag(SESSION_KEYS.hasDismissed)) {
+        setOpen(true);
+        wasAutoOpenedRef.current = true;
+        setSessionFlag(SESSION_KEYS.hasAutoOpened, true);
+        setShowPulse(false);
+      }
+    }, 30000);
+
+    return clearAllTimers;
+  }, [isMobile, clearAllTimers]);
+
+  // Auto-close if no interaction (only for auto-opened widgets)
+  useEffect(() => {
+    if (!open || !wasAutoOpenedRef.current) return;
+
+    autoCloseTimerRef.current = setTimeout(() => {
+      setOpen(false);
+      wasAutoOpenedRef.current = false;
+    }, 15000);
+
+    return () => {
+      if (autoCloseTimerRef.current) {
+        clearTimeout(autoCloseTimerRef.current);
+        autoCloseTimerRef.current = null;
+      }
+    };
+  }, [open]);
+
+  // Reset auto-close timer on user interaction
+  const handleUserInteraction = useCallback(() => {
+    setSessionFlag(SESSION_KEYS.hasInteracted, true);
+    setShowPulse(false);
+    
+    if (autoCloseTimerRef.current) {
+      clearTimeout(autoCloseTimerRef.current);
+      autoCloseTimerRef.current = null;
+    }
+  }, []);
+
   useEffect(scroll, [messages, scroll]);
   useEffect(() => {
-    if (open) inputRef.current?.focus();
-  }, [open]);
+    if (open) {
+      inputRef.current?.focus();
+      handleUserInteraction();
+    }
+  }, [open, handleUserInteraction]);
 
   const send = async () => {
     const text = input.trim();
@@ -114,15 +221,30 @@ export function ReceptionistWidget() {
       e.preventDefault();
       send();
     }
+    handleUserInteraction();
   };
+
+  const handleClose = useCallback(() => {
+    setOpen(false);
+    setSessionFlag(SESSION_KEYS.hasDismissed, true);
+    wasAutoOpenedRef.current = false;
+    clearAllTimers();
+  }, [clearAllTimers]);
 
   return (
     <>
       {/* Floating button */}
-      {!open && (
+      {!open && mounted && (
         <button
-          onClick={() => setOpen(true)}
-          className="fixed bottom-5 right-5 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform hover:scale-105 active:scale-95"
+          onClick={() => {
+            setOpen(true);
+            handleUserInteraction();
+          }}
+          className={cn(
+            "fixed bottom-5 right-5 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform hover:scale-105 active:scale-95",
+            "animate-widget-pill-entrance",
+            showPulse && "animate-widget-pill-pulse"
+          )}
           title="Chat with Launchhouse"
         >
           <MessageCircle className="h-6 w-6" />
@@ -131,7 +253,11 @@ export function ReceptionistWidget() {
 
       {/* Chat panel */}
       {open && (
-        <div className="fixed bottom-5 right-5 z-50 flex h-[32rem] w-[22rem] max-w-[calc(100vw-2.5rem)] flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-xl">
+        <div 
+          className="fixed bottom-5 right-5 z-50 flex h-[32rem] w-[22rem] max-w-[calc(100vw-2.5rem)] flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-xl animate-widget-panel-enter"
+          onMouseEnter={handleUserInteraction}
+          onClick={handleUserInteraction}
+        >
           {/* Header */}
           <div className="flex items-center justify-between bg-primary px-4 py-3">
             <div>
@@ -143,7 +269,7 @@ export function ReceptionistWidget() {
               </p>
             </div>
             <button
-              onClick={() => setOpen(false)}
+              onClick={handleClose}
               className="rounded-full p-1 text-primary-foreground/80 hover:bg-primary-foreground/10 hover:text-primary-foreground"
             >
               <X className="h-5 w-5" />
@@ -156,9 +282,13 @@ export function ReceptionistWidget() {
               <div
                 key={i}
                 className={cn(
-                  "flex",
+                  "flex animate-widget-message-slide",
                   msg.role === "user" ? "justify-end" : "justify-start"
                 )}
+                style={{ 
+                  animationDelay: `${i * 50}ms`,
+                  animationFillMode: 'both'
+                }}
               >
                 <div
                   className={cn(
@@ -192,6 +322,7 @@ export function ReceptionistWidget() {
           <div className="px-4 pb-2">
             <button
               onClick={() => {
+                handleUserInteraction();
                 setOpen(false);
                 document.getElementById("lead-form")?.scrollIntoView({ behavior: "smooth" });
               }}
@@ -208,8 +339,12 @@ export function ReceptionistWidget() {
               <textarea
                 ref={inputRef}
                 value={input}
-                onChange={(e) => setInput(e.target.value)}
+                onChange={(e) => {
+                  setInput(e.target.value);
+                  handleUserInteraction();
+                }}
                 onKeyDown={handleKeyDown}
+                onFocus={handleUserInteraction}
                 placeholder="Ask a question..."
                 rows={1}
                 className="flex-1 resize-none rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"

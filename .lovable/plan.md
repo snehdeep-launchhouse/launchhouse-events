@@ -1,47 +1,34 @@
 
 
-# Chat Widget Best Practices & Animation Enhancements
+## Fix: Slow First Open of Contact/Demo Panels
 
-## Two tasks to implement:
+### Problem
+The panels use `React.lazy` which only starts downloading the JS chunk **after** the user clicks. This causes a visible delay on first open because the chunk must be fetched, parsed, and rendered before the panel appears.
 
-### 1. ReceptionistWidget Best Practices (src/components/ReceptionistWidget.tsx)
+### Solution: Prefetch chunks on idle
+Instead of waiting for a click, **preload** both panel chunks during browser idle time (after initial page render). This way the JS is already cached when the user clicks, making the first open instant.
 
-**Auto-open after idle time:**
-- Auto-open the chat pill after **30 seconds** of page idle time (industry standard: 15-60s, 30s balances engagement vs. annoyance)
-- Only trigger once per session using `sessionStorage` flag
-- Do NOT auto-open on mobile (disruptive on small screens)
-- Do NOT auto-open if user previously dismissed the widget in this session
+### Implementation
 
-**Auto-collapse if no interaction:**
-- If auto-opened and user takes no action (no typing, no clicking inside) for **15 seconds**, auto-close it back to the pill
-- Reset this timer on any user interaction within the widget
+**File: `src/components/ContactPanelProvider.tsx`**
 
-**Pill attention pulse:**
-- Add a subtle pulse/bounce animation to the pill after 10 seconds to draw attention before auto-open
-- Stop pulsing once user has interacted
+Add a `useEffect` that triggers dynamic `import()` calls via `requestIdleCallback` (with a setTimeout fallback) shortly after mount. This prefetches the chunks without blocking the initial render. The existing `React.lazy` references continue to work — they resolve instantly from the module cache.
 
-**Session persistence:**
-- Track `hasInteracted`, `hasDismissed`, and `hasAutoOpened` in sessionStorage so the widget doesn't repeatedly nag
+```tsx
+useEffect(() => {
+  const prefetch = () => {
+    import("./ContactUsPanel");
+    import("./RequestDemoPanel");
+  };
+  if ("requestIdleCallback" in window) {
+    const id = requestIdleCallback(prefetch);
+    return () => cancelIdleCallback(id);
+  } else {
+    const id = setTimeout(prefetch, 2000);
+    return () => clearTimeout(id);
+  }
+}, []);
+```
 
-### 2. Animation Enhancements (src/index.css + widget)
-
-**Pill entrance:** Slide-up + fade-in when pill first appears on page load (delayed 1s after mount)
-
-**Pill pulse:** Gentle scale pulse keyframe (`1 → 1.05 → 1`) applied before auto-open
-
-**Chat panel open:** Scale-up from bottom-right origin + fade-in (replace current simple fade-in)
-
-**Chat panel close:** Scale-down + fade-out transition before unmounting
-
-**Message bubbles:** Staggered slide-up animation for each new message
-
-### 3. Hero banner preload fix (index.html)
-
-Remove the `<link rel="preload" as="image" href="/hero-banner.jpg">` from `index.html` head. Instead, add a conditional preload only on the home page route within the `Index.tsx` component using a `useEffect` that dynamically injects the preload link tag.
-
-## Files to modify:
-- `src/components/ReceptionistWidget.tsx` -- all widget logic changes
-- `src/index.css` -- new keyframes for pulse, scale-up-from-corner, message-slide
-- `index.html` -- remove hero-banner preload line
-- `src/pages/Index.tsx` -- add dynamic preload for hero-banner
+One file change, no visual or functional impact. Panels will open instantly on first click.
 
