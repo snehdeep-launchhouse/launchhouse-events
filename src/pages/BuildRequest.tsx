@@ -138,6 +138,9 @@ const BuildRequest = () => {
   const [submitted, setSubmitted] = useState(false);
   const [emailVerification, setEmailVerification] = useState<VerificationStatus>("idle");
   const [isPlanner, setIsPlanner] = useState(false);
+  
+  // Token for secure abandoned form tracking (token-based ownership)
+  const submissionTokenRef = useRef<string | null>(null);
   const [plannerVerifications, setPlannerVerifications] = useState<Record<number, VerificationStatus>>({});
 
   // Step 1
