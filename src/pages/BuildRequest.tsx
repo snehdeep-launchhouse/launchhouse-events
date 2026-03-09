@@ -212,7 +212,7 @@ const BuildRequest = () => {
     if (data1.email && emailRegex.test(data1.email) && data1.firstName && data1.lastName) {
       upsertAbandonedForm(1);
     }
-  }, []);
+  }, [form1, upsertAbandonedForm]);
 
   const handleNext1 = form1.handleSubmit(async (data) => {
     if (isPlanner) {
