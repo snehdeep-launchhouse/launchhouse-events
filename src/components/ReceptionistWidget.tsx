@@ -272,8 +272,13 @@ export function ReceptionistWidget() {
           title="Chat with Chloe"
         >
           <span className="text-sm font-medium whitespace-nowrap">Ask me anything</span>
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary-foreground/15">
+          <div className="relative flex h-10 w-10 items-center justify-center rounded-full bg-primary-foreground/15">
             <MessageCircle className="h-5 w-5" />
+            {unreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground shadow-md animate-widget-pill-entrance">
+                {unreadCount > 9 ? "9+" : unreadCount}
+              </span>
+            )}
           </div>
         </button>
       )}
