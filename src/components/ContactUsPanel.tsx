@@ -215,6 +215,7 @@ const ContactUsPanel = ({ open, onOpenChange }: ContactUsPanelProps) => {
         setEmailVerification("idle");
         sessionIdRef.current = crypto.randomUUID();
         abandonedDemoRowCreatedRef.current = false;
+        submissionTokenRef.current = null; // Clear token on reset
         resetForm();
       }, 300);
     }
@@ -242,15 +243,35 @@ const ContactUsPanel = ({ open, onOpenChange }: ContactUsPanelProps) => {
             : {}),
         };
 
-        const { error: insertError } = await supabase
-          .from("abandoned_contact_requests")
-          .insert({ ...payload, status: "partial" });
-
-        if (insertError?.code === "23505") {
+        // If we already have a token, UPDATE by token (secure)
+        if (submissionTokenRef.current) {
           await supabase
             .from("abandoned_contact_requests")
             .update(payload)
-            .eq("business_email", data.business_email);
+            .eq("submission_token", submissionTokenRef.current);
+        } else {
+          // Otherwise INSERT and capture the token
+          const { data: insertedRow, error: insertError } = await supabase
+            .from("abandoned_contact_requests")
+            .insert({ ...payload, status: "partial" })
+            .select("submission_token")
+            .single();
+
+          if (insertError?.code === "23505") {
+            // Duplicate email — update by email as fallback (legacy rows)
+            const { data: updatedRow } = await supabase
+              .from("abandoned_contact_requests")
+              .update(payload)
+              .eq("business_email", data.business_email)
+              .select("submission_token")
+              .single();
+            if (updatedRow?.submission_token) {
+              submissionTokenRef.current = updatedRow.submission_token;
+            }
+          } else if (insertedRow?.submission_token) {
+            // Successful insert — store the token
+            submissionTokenRef.current = insertedRow.submission_token;
+          }
         }
       } catch {
         // silent
