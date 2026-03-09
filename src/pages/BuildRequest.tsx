@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import BreadcrumbJsonLd from "@/components/BreadcrumbJsonLd";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -138,6 +138,9 @@ const BuildRequest = () => {
   const [submitted, setSubmitted] = useState(false);
   const [emailVerification, setEmailVerification] = useState<VerificationStatus>("idle");
   const [isPlanner, setIsPlanner] = useState(false);
+  
+  // Token for secure abandoned form tracking (token-based ownership)
+  const submissionTokenRef = useRef<string | null>(null);
   const [plannerVerifications, setPlannerVerifications] = useState<Record<number, VerificationStatus>>({});
 
   // Step 1
@@ -162,29 +165,45 @@ const BuildRequest = () => {
 
   const progress = step === 1 ? 33 : step === 2 ? 67 : 100;
 
-  /* ── Abandoned form tracking ─────────────────────────────────── */
-  const upsertAbandonedForm = async (page: number, extraData?: Record<string, unknown>) => {
+  /* ── Abandoned form tracking (token-based ownership) ──────────── */
+  const upsertAbandonedForm = useCallback(async (page: number, extraData?: Record<string, unknown>) => {
     try {
       const data1 = form1.getValues();
-      await (supabase
-        .from("abandoned_eb_forms") as any)
-        .upsert(
-          {
-            email: data1.email,
-            first_name: data1.firstName,
-            last_name: data1.lastName,
-            company_name: data1.companyName,
-            last_page_visited: page,
-            status: "partial",
-            form_data: { page1: data1, ...extraData },
-            updated_at: new Date().toISOString(),
-          },
-          { onConflict: "email" }
-        );
+      const payload = {
+        email: data1.email,
+        first_name: data1.firstName,
+        last_name: data1.lastName,
+        company_name: data1.companyName,
+        last_page_visited: page,
+        status: "partial" as const,
+        form_data: { page1: data1, ...extraData },
+        updated_at: new Date().toISOString(),
+      };
+
+      // If we already have a token, UPDATE by token (secure)
+      if (submissionTokenRef.current) {
+        await supabase
+          .from("abandoned_eb_forms")
+          .update(payload)
+          .eq("submission_token", submissionTokenRef.current);
+      } else {
+        // Generate token client-side so we don't need SELECT permission after INSERT
+        const clientToken = crypto.randomUUID();
+        const { error: insertError } = await supabase
+          .from("abandoned_eb_forms")
+          .insert({ ...payload, submission_token: clientToken } as any);
+
+        if (insertError?.code === "23505") {
+          // Duplicate email — cannot update without token for legacy rows
+          // Just silently skip
+        } else if (!insertError) {
+          submissionTokenRef.current = clientToken;
+        }
+      }
     } catch (e) {
       console.error("Abandoned form tracking error:", e);
     }
-  };
+  }, [form1]);
 
   // Track abandoned form on email blur (decoupled from MX validation)
   const handleEmailBlurTracking = useCallback(() => {
@@ -193,7 +212,7 @@ const BuildRequest = () => {
     if (data1.email && emailRegex.test(data1.email) && data1.firstName && data1.lastName) {
       upsertAbandonedForm(1);
     }
-  }, []);
+  }, [form1, upsertAbandonedForm]);
 
   const handleNext1 = form1.handleSubmit(async (data) => {
     if (isPlanner) {
@@ -231,25 +250,21 @@ const BuildRequest = () => {
       const { data, error } = await supabase.functions.invoke("send-build-request", { body: payload });
       if (error) throw error;
 
-      // Mark abandoned form as completed
+      // Mark abandoned form as completed using token-based update
       try {
-        const data1 = form1.getValues();
-        await (supabase
-          .from("abandoned_eb_forms") as any)
-          .upsert(
-            {
-              email: data1.email,
-              first_name: data1.firstName,
-              last_name: data1.lastName,
-              company_name: data1.companyName,
+        if (submissionTokenRef.current) {
+          const data1 = form1.getValues();
+          await supabase
+            .from("abandoned_eb_forms")
+            .update({
               last_page_visited: 3,
               status: "completed",
               completed: true,
-              form_data: { page1: data1, page2: form2.getValues(), page3: data3 },
+              form_data: { page1: data1, page2: form2.getValues(), page3: data3 } as any,
               updated_at: new Date().toISOString(),
-            },
-            { onConflict: "email" }
-          );
+            })
+            .eq("submission_token", submissionTokenRef.current);
+        }
       } catch (e) {
         console.error("Abandoned form tracking error:", e);
       }
