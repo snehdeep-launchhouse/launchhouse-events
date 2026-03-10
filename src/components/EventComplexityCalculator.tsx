@@ -3,11 +3,12 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ArrowLeft, Calculator, CheckCircle, Clock, DollarSign, CalendarCheck, Smartphone } from "lucide-react";
+import { ArrowLeft, Calculator, CheckCircle, Clock, DollarSign, CalendarCheck, Smartphone, Download } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { useContactPanel } from "@/components/ContactPanelProvider";
 import { OptionButtons } from "@/components/OptionButtons";
 import { LeadForm } from "@/components/LeadForm";
+import { downloadResultsPdf } from "@/lib/generate-results-pdf";
 import { 
   questions, 
   calculateResultWithTrace, 
@@ -386,6 +387,21 @@ export function EventComplexityCalculator() {
                   >
                     <CalendarCheck className="w-4 h-4" />
                     Schedule a Consultation
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="gap-2"
+                    onClick={() =>
+                      downloadResultsPdf({
+                        result,
+                        allProducts: trace?.allProducts || selectedProducts,
+                        attendeeHubSelected,
+                        attendeeHubFeatures,
+                      })
+                    }
+                  >
+                    <Download className="w-4 h-4" />
+                    Download PDF
                   </Button>
                   <Button 
                     variant="outline" 
