@@ -388,6 +388,21 @@ export function EventComplexityCalculator() {
                     <CalendarCheck className="w-4 h-4" />
                     Schedule a Consultation
                   </Button>
+                  <Button
+                    variant="outline"
+                    className="gap-2"
+                    onClick={() =>
+                      downloadResultsPdf({
+                        result,
+                        allProducts: trace?.allProducts || selectedProducts,
+                        attendeeHubSelected,
+                        attendeeHubFeatures,
+                      })
+                    }
+                  >
+                    <Download className="w-4 h-4" />
+                    Download PDF
+                  </Button>
                   <Button 
                     variant="outline" 
                     onClick={handleRestart}
