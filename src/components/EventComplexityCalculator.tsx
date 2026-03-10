@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ArrowLeft, Calculator, CheckCircle, Clock, DollarSign, CalendarCheck, Smartphone } from "lucide-react";
+import { ArrowLeft, Calculator, CheckCircle, Clock, DollarSign, CalendarCheck, Smartphone, Download } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { useContactPanel } from "@/components/ContactPanelProvider";
 import { OptionButtons } from "@/components/OptionButtons";
