@@ -8,6 +8,7 @@ import { Separator } from "@/components/ui/separator";
 import { useContactPanel } from "@/components/ContactPanelProvider";
 import { OptionButtons } from "@/components/OptionButtons";
 import { LeadForm } from "@/components/LeadForm";
+import { downloadResultsPdf } from "@/lib/generate-results-pdf";
 import { 
   questions, 
   calculateResultWithTrace, 
