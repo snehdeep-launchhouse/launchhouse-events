@@ -446,6 +446,7 @@ export type Database = {
           status: string
         }[]
       }
+      is_active_admin: { Args: never; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
