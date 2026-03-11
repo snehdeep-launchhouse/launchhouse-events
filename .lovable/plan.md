@@ -1,34 +1,17 @@
 
 
-## Fix: Slow First Open of Contact/Demo Panels
+## Analysis: Already Implemented
 
-### Problem
-The panels use `React.lazy` which only starts downloading the JS chunk **after** the user clicks. This causes a visible delay on first open because the chunk must be fetched, parsed, and rendered before the panel appears.
+After reviewing the current code in `src/components/EventComplexityCalculator.tsx`, this feature is **already fully implemented**. The "Estimated Starting Investment" section exists at lines ~297-340 and includes:
 
-### Solution: Prefetch chunks on idle
-Instead of waiting for a click, **preload** both panel chunks during browser idle time (after initial page render). This way the JS is already cached when the user clicks, making the first open instant.
+- Price extraction from `result.price` via `parseInt(result.price.replace(/[$,]/g, ''), 10)`
+- Conditional Attendee Hub line item ($1,999) when `attendeeHubSelected` is true
+- Correct total calculation (`buildPrice + hubPrice`)
+- Currency formatting with `$` and comma separators
+- Separator between line items and total
+- Consistent Card/CardHeader/CardContent styling matching the rest of the results page
 
-### Implementation
+No changes are needed. The implementation matches all requirements in the request exactly.
 
-**File: `src/components/ContactPanelProvider.tsx`**
-
-Add a `useEffect` that triggers dynamic `import()` calls via `requestIdleCallback` (with a setTimeout fallback) shortly after mount. This prefetches the chunks without blocking the initial render. The existing `React.lazy` references continue to work — they resolve instantly from the module cache.
-
-```tsx
-useEffect(() => {
-  const prefetch = () => {
-    import("./ContactUsPanel");
-    import("./RequestDemoPanel");
-  };
-  if ("requestIdleCallback" in window) {
-    const id = requestIdleCallback(prefetch);
-    return () => cancelIdleCallback(id);
-  } else {
-    const id = setTimeout(prefetch, 2000);
-    return () => clearTimeout(id);
-  }
-}, []);
-```
-
-One file change, no visual or functional impact. Panels will open instantly on first click.
+To confirm it works, you can run through the calculator in the preview with and without Attendee Hub selected and verify the totals on the results screen.
 
