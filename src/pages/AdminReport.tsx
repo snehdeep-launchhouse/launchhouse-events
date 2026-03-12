@@ -117,12 +117,14 @@ const fetchReportData = async (type: ReportType): Promise<Record<string, unknown
 };
 
 const fetchRecordCounts = async (): Promise<Record<string, number | null>> => {
-  const [ab, ac, ad, br, qr] = await Promise.all([
+  const [ab, ac, ad, br, qr, dr, ecl] = await Promise.all([
     supabase.from("abandoned_eb_forms").select("id", { count: "exact", head: true }).eq("status", "partial"),
     supabase.from("abandoned_contact_requests").select("id", { count: "exact", head: true }).eq("status", "partial"),
     supabase.from("abandoned_demo_form" as any).select("id", { count: "exact", head: true }).eq("status", "abandoned"),
     supabase.from("build_requests").select("id", { count: "exact", head: true }),
     supabase.from("quote_requests").select("id", { count: "exact", head: true }),
+    supabase.from("demo_requests").select("id", { count: "exact", head: true }),
+    supabase.from("event_complexity_leads").select("id", { count: "exact", head: true }),
   ]);
   return {
     abandoned: ab.count ?? null,
@@ -130,6 +132,8 @@ const fetchRecordCounts = async (): Promise<Record<string, number | null>> => {
     abandoned_demo: (ad as any).count ?? null,
     build_requests: br.count ?? null,
     quote_requests: qr.count ?? null,
+    demo_requests: dr.count ?? null,
+    event_complexity_leads: ecl.count ?? null,
   };
 };
 
