@@ -238,14 +238,13 @@ export function downloadResultsPdf({
   );
 
   // ── Watermark ──────────────────────────────────────────────
-  const pageH = doc.internal.pageSize.getHeight();
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8);
   doc.setTextColor(TEXT_MUTED);
   doc.text(
-    "LaunchHouse Events · launchhouse.events",
+    "LaunchHouse Events  ·  launchhouse.events",
     pageW / 2,
-    pageH - 10,
+    y + 36,
     { align: "center" },
   );
 
