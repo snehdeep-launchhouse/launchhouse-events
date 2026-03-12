@@ -223,6 +223,7 @@ export function EventComplexityCalculator() {
                   result={result}
                   attendeeHubSelected={attendeeHubSelected}
                   attendeeHubFeatures={attendeeHubFeatures}
+                  scopeSummary={scopeBullets.join("\n")}
                   onSubmitted={() => setLeadSubmitted(true)}
                 />
               </div>
