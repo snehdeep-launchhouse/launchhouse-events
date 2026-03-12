@@ -56,6 +56,7 @@ export function LeadForm({
   const [email, setEmail] = useState("");
   const [company, setCompany] = useState("");
   const [eventDate, setEventDate] = useState<Date>();
+  const [calendarOpen, setCalendarOpen] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [saving, setSaving] = useState(false);
   const [emailError, setEmailError] = useState<string | undefined>();
