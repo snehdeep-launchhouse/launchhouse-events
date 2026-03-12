@@ -33,6 +33,8 @@ const BASE_REPORT_CARDS: { key: ReportType; title: string; description: string; 
   { key: "abandoned_demo", title: "Abandoned Demo Forms", description: "Demo & Contact form leads that were abandoned", icon: <CalendarX2 className="w-7 h-7" /> },
   { key: "build_requests", title: "Build Requests", description: "All submitted event build requests", icon: <FileText className="w-7 h-7" /> },
   { key: "quote_requests", title: "Contact Requests", description: "All submitted contact requests", icon: <Users className="w-7 h-7" /> },
+  { key: "demo_requests", title: "Demo Requests", description: "All scheduled demo requests", icon: <CalendarCheck className="w-7 h-7" /> },
+  { key: "event_complexity_leads", title: "Event Builder Leads", description: "Leads from the Event Complexity Calculator", icon: <Calculator className="w-7 h-7" /> },
   { key: "manage_admins", title: "Manage System Admins", description: "Add, remove, or reset passwords for admin users", icon: <ShieldCheck className="w-7 h-7" />, superOnly: true },
 ];
 
