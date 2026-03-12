@@ -147,6 +147,7 @@ export function LeadForm({
             cventProducts: cventProductsStr,
             attendeeHubSelected,
             attendeeHubFeatures: attendeeHubFeatures.length > 0 ? attendeeHubFeatures.join(", ") : null,
+            scopeSummary: scopeSummary || null,
           },
         });
       } catch (emailErr) {
