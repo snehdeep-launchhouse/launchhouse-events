@@ -170,7 +170,7 @@ export function EventComplexityCalculator() {
                 {ATTENDEE_HUB_FEATURES.map((feature) => (
                   <label
                     key={feature}
-                    className={`flex items-center gap-3 rounded-lg border px-4 py-3 cursor-pointer transition-colors text-sm ${
+                    className={`flex items-center gap-3 rounded-lg border px-3 sm:px-4 py-3.5 sm:py-3 cursor-pointer transition-colors text-sm min-h-[44px] ${
                       attendeeHubFeatures.includes(feature)
                         ? "border-primary bg-secondary/50"
                         : "border-border hover:border-primary/50"
@@ -179,8 +179,9 @@ export function EventComplexityCalculator() {
                     <Checkbox
                       checked={attendeeHubFeatures.includes(feature)}
                       onCheckedChange={() => toggleHubFeature(feature)}
+                      className="h-5 w-5 sm:h-4 sm:w-4"
                     />
-                    <span className="font-medium">{feature}</span>
+                    <span className="font-medium text-[15px] sm:text-sm">{feature}</span>
                   </label>
                 ))}
               </div>
@@ -319,9 +320,9 @@ export function EventComplexityCalculator() {
                       </p>
                     </CardHeader>
                     <CardContent>
-                      <ul className="grid gap-2">
+                      <ul className="grid gap-2.5 sm:gap-2">
                         {scopeBullets.map((bullet, idx) => (
-                          <li key={idx} className="flex items-start gap-2 text-sm text-muted-foreground">
+                          <li key={idx} className="flex items-start gap-2.5 sm:gap-2 text-[15px] sm:text-sm text-muted-foreground">
                             <CheckCircle className="h-4 w-4 mt-0.5 shrink-0 text-success" />
                             <span>{bullet}</span>
                           </li>
@@ -411,14 +412,14 @@ export function EventComplexityCalculator() {
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
                   <Button 
                     onClick={openDemoPanel}
-                    className="gap-2"
+                    className="gap-2 min-h-[44px] text-[15px] sm:text-sm"
                   >
                     <CalendarCheck className="w-4 h-4" />
                     Schedule a Consultation
                   </Button>
                   <Button
                     variant="outline"
-                    className="gap-2"
+                    className="gap-2 min-h-[44px] text-[15px] sm:text-sm"
                     onClick={() =>
                       downloadResultsPdf({
                         result,
@@ -435,6 +436,7 @@ export function EventComplexityCalculator() {
                   <Button 
                     variant="outline" 
                     onClick={handleRestart}
+                    className="min-h-[44px] text-[15px] sm:text-sm"
                   >
                     Start Over
                   </Button>
