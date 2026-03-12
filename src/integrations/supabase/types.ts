@@ -323,6 +323,7 @@ export type Database = {
           name: string
           registration_paths: string | null
           registration_rules: string | null
+          scope_summary: string | null
           sessions: string | null
           speaker_management: string | null
           starting_price: string | null
@@ -348,6 +349,7 @@ export type Database = {
           name: string
           registration_paths?: string | null
           registration_rules?: string | null
+          scope_summary?: string | null
           sessions?: string | null
           speaker_management?: string | null
           starting_price?: string | null
@@ -373,6 +375,7 @@ export type Database = {
           name?: string
           registration_paths?: string | null
           registration_rules?: string | null
+          scope_summary?: string | null
           sessions?: string | null
           speaker_management?: string | null
           starting_price?: string | null
