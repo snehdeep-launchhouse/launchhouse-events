@@ -263,6 +263,12 @@ const AdminReport = () => {
       .on("postgres_changes", { event: "*", schema: "public", table: "quote_requests" }, () => {
         queryClient.invalidateQueries({ queryKey: ["ignition"] });
       })
+      .on("postgres_changes", { event: "*", schema: "public", table: "demo_requests" }, () => {
+        queryClient.invalidateQueries({ queryKey: ["ignition"] });
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "event_complexity_leads" }, () => {
+        queryClient.invalidateQueries({ queryKey: ["ignition"] });
+      })
       .subscribe();
 
     return () => {
