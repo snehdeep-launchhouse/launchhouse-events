@@ -20,6 +20,7 @@ import {
   type CalculationTrace,
   type AttendeeHubFeature
 } from "@/lib/calculator-data";
+import { generateScopeSummary } from "@/lib/generate-scope-summary";
 
 export function EventComplexityCalculator() {
   const { openDemoPanel } = useContactPanel();
