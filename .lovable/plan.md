@@ -1,34 +1,31 @@
 
 
-## Fix: Slow First Open of Contact/Demo Panels
+# Include Scope Summary in PDF and Lead Notification Emails
 
-### Problem
-The panels use `React.lazy` which only starts downloading the JS chunk **after** the user clicks. This causes a visible delay on first open because the chunk must be fetched, parsed, and rendered before the panel appears.
+## Changes Required
 
-### Solution: Prefetch chunks on idle
-Instead of waiting for a click, **preload** both panel chunks during browser idle time (after initial page render). This way the JS is already cached when the user clicks, making the first open instant.
+### 1. PDF Generator (`src/lib/generate-results-pdf.ts`)
 
-### Implementation
+- Add `scopeBullets: string[]` to the `PdfData` interface
+- Insert a new "Event Build Scope" card between the complexity card (section 1) and the Attendee Hub card (section 2)
+- Render each bullet as a line item with a checkmark character
+- Dynamically calculate card height based on bullet count
 
-**File: `src/components/ContactPanelProvider.tsx`**
+### 2. Calculator — pass scope bullets to PDF (`src/components/EventComplexityCalculator.tsx`)
 
-Add a `useEffect` that triggers dynamic `import()` calls via `requestIdleCallback` (with a setTimeout fallback) shortly after mount. This prefetches the chunks without blocking the initial render. The existing `React.lazy` references continue to work — they resolve instantly from the module cache.
+- Line ~423: Add `scopeBullets` to the `downloadResultsPdf()` call (currently only passes result, allProducts, attendeeHubSelected, attendeeHubFeatures)
 
-```tsx
-useEffect(() => {
-  const prefetch = () => {
-    import("./ContactUsPanel");
-    import("./RequestDemoPanel");
-  };
-  if ("requestIdleCallback" in window) {
-    const id = requestIdleCallback(prefetch);
-    return () => cancelIdleCallback(id);
-  } else {
-    const id = setTimeout(prefetch, 2000);
-    return () => clearTimeout(id);
-  }
-}, []);
-```
+### 3. LeadForm — pass scope summary to email function (`src/components/LeadForm.tsx`)
 
-One file change, no visual or functional impact. Panels will open instantly on first click.
+- Line ~140: Add `scopeSummary` to the `send-lead-notification` invocation body
+
+### 4. Edge Function (`supabase/functions/send-lead-notification/index.ts`)
+
+- Parse `scopeSummary` from the payload
+- Add a "Event Build Scope" section to the **admin internal email** (after the table rows, before or alongside the investment summary) — render as an HTML bulleted list
+- Add a "Your Event Build Scope" section to the **lead confirmation email** (after the results summary card) — render as a styled bulleted list
+
+## No Database Changes
+
+The `scope_summary` column already exists and is already being written by LeadForm. Only the PDF and email templates need updating.
 
