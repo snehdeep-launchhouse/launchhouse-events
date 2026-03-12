@@ -170,7 +170,7 @@ export function EventComplexityCalculator() {
                 {ATTENDEE_HUB_FEATURES.map((feature) => (
                   <label
                     key={feature}
-                    className={`flex items-center gap-3 rounded-lg border px-4 py-3 cursor-pointer transition-colors text-sm ${
+                    className={`flex items-center gap-3 rounded-lg border px-3 sm:px-4 py-3.5 sm:py-3 cursor-pointer transition-colors text-sm min-h-[44px] ${
                       attendeeHubFeatures.includes(feature)
                         ? "border-primary bg-secondary/50"
                         : "border-border hover:border-primary/50"
@@ -179,8 +179,9 @@ export function EventComplexityCalculator() {
                     <Checkbox
                       checked={attendeeHubFeatures.includes(feature)}
                       onCheckedChange={() => toggleHubFeature(feature)}
+                      className="h-5 w-5 sm:h-4 sm:w-4"
                     />
-                    <span className="font-medium">{feature}</span>
+                    <span className="font-medium text-[15px] sm:text-sm">{feature}</span>
                   </label>
                 ))}
               </div>
