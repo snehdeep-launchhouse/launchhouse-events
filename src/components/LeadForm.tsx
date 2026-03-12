@@ -49,6 +49,7 @@ export function LeadForm({
   result,
   attendeeHubSelected = false,
   attendeeHubFeatures = [],
+  scopeSummary,
   onSubmitted,
 }: LeadFormProps) {
   const [name, setName] = useState("");
