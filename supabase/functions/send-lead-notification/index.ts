@@ -55,6 +55,7 @@ serve(async (req) => {
     const attendeeHubFeatures: string[] = Array.isArray(payload.attendeeHubFeatures)
       ? payload.attendeeHubFeatures.map((f: unknown) => sanitize(f as string))
       : [];
+    const scopeSummary = typeof payload.scopeSummary === "string" ? sanitize(payload.scopeSummary, 2000) : "";
 
     // ── Build internal notification email for admins ──
     const internalRows: [string, string][] = [
