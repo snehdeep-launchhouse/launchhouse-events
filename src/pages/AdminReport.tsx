@@ -105,6 +105,10 @@ const fetchReportData = async (type: ReportType): Promise<Record<string, unknown
     query = supabase.from("abandoned_demo_form" as any).select("*").eq("status", "abandoned").order("updated_at", { ascending: false });
   } else if (type === "build_requests") {
     query = supabase.from("build_requests").select("*").order("submitted_at", { ascending: false });
+  } else if (type === "demo_requests") {
+    query = supabase.from("demo_requests").select("*").order("created_at", { ascending: false });
+  } else if (type === "event_complexity_leads") {
+    query = supabase.from("event_complexity_leads").select("*").order("created_at", { ascending: false });
   } else {
     query = supabase.from("quote_requests").select("*").order("submitted_at", { ascending: false });
   }
