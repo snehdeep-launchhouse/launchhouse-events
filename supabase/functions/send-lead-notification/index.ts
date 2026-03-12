@@ -121,6 +121,13 @@ serve(async (req) => {
       ${tableRowsHtml}
     </table>
     ${investmentSummaryHtml}
+    ${scopeSummary ? `
+    <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:16px 20px;margin-top:16px;">
+      <p style="margin:0 0 10px;font-size:14px;font-weight:600;color:#374151;">📋 Event Build Scope</p>
+      <ul style="margin:0;padding-left:20px;">
+        ${scopeSummary.split("\n").filter(Boolean).map(b => `<li style="font-size:13px;color:#374151;padding:2px 0;">${b.replace(/^[•·]\s*/, "")}</li>`).join("")}
+      </ul>
+    </div>` : ""}
     <div style="padding:20px;background:#f0f9ff;border:1px solid #d1d5db;border-top:none;border-radius:0 0 8px 8px;">
       <p style="margin:0;font-size:14px;color:#374151;">
         <strong>Action Required:</strong> Follow up with this lead within 24 hours.
