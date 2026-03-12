@@ -425,6 +425,7 @@ export function EventComplexityCalculator() {
                         allProducts: trace?.allProducts || selectedProducts,
                         attendeeHubSelected,
                         attendeeHubFeatures,
+                        scopeBullets,
                       })
                     }
                   >

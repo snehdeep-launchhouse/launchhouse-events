@@ -23,6 +23,7 @@ export function downloadResultsPdf({
   allProducts,
   attendeeHubSelected,
   attendeeHubFeatures,
+  scopeBullets,
 }: PdfData) {
   const doc = new jsPDF({ unit: "mm", format: "a4" });
   const pageW = doc.internal.pageSize.getWidth();
