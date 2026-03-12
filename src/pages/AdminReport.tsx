@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Loader2, Lock, RefreshCw, Download, ArrowLeft, FileText, Users, ClipboardList, ShieldCheck, Flame, Search, UserX, Trash2, CalendarX2 } from "lucide-react";
+import { Loader2, Lock, RefreshCw, Download, ArrowLeft, FileText, Users, ClipboardList, ShieldCheck, Flame, Search, UserX, Trash2, CalendarX2, CalendarCheck, Calculator } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import ManageAdmins from "@/components/ManageAdmins";
 import IgnitionHeader from "@/components/IgnitionHeader";
@@ -13,7 +13,7 @@ import IgnitionFooter from "@/components/IgnitionFooter";
 import IgnitionLogo from "@/components/IgnitionLogo";
 import { toast } from "sonner";
 
-type ReportType = "abandoned" | "abandoned_contact" | "abandoned_demo" | "build_requests" | "quote_requests" | "manage_admins" | null;
+type ReportType = "abandoned" | "abandoned_contact" | "abandoned_demo" | "build_requests" | "quote_requests" | "demo_requests" | "event_complexity_leads" | "manage_admins" | null;
 
 const MASTER_ADMIN_EMAIL = "snehdeep@launchhouse.events";
 
@@ -23,6 +23,8 @@ const HIDDEN_COLUMNS: Record<string, string[]> = {
   abandoned_demo: ["id", "created_at", "updated_at", "session_id"],
   build_requests: ["id", "submitted_at", "email_sent_at"],
   quote_requests: ["id", "submitted_at", "email_sent_at"],
+  demo_requests: ["id", "created_at", "google_event_id"],
+  event_complexity_leads: ["id", "created_at"],
 };
 
 const BASE_REPORT_CARDS: { key: ReportType; title: string; description: string; icon: React.ReactNode; superOnly?: boolean }[] = [
@@ -31,6 +33,8 @@ const BASE_REPORT_CARDS: { key: ReportType; title: string; description: string; 
   { key: "abandoned_demo", title: "Abandoned Demo Forms", description: "Demo & Contact form leads that were abandoned", icon: <CalendarX2 className="w-7 h-7" /> },
   { key: "build_requests", title: "Build Requests", description: "All submitted event build requests", icon: <FileText className="w-7 h-7" /> },
   { key: "quote_requests", title: "Contact Requests", description: "All submitted contact requests", icon: <Users className="w-7 h-7" /> },
+  { key: "demo_requests", title: "Demo Requests", description: "All scheduled demo requests", icon: <CalendarCheck className="w-7 h-7" /> },
+  { key: "event_complexity_leads", title: "Event Builder Leads", description: "Leads from the Event Complexity Calculator", icon: <Calculator className="w-7 h-7" /> },
   { key: "manage_admins", title: "Manage System Admins", description: "Add, remove, or reset passwords for admin users", icon: <ShieldCheck className="w-7 h-7" />, superOnly: true },
 ];
 
@@ -101,6 +105,10 @@ const fetchReportData = async (type: ReportType): Promise<Record<string, unknown
     query = supabase.from("abandoned_demo_form" as any).select("*").eq("status", "abandoned").order("updated_at", { ascending: false });
   } else if (type === "build_requests") {
     query = supabase.from("build_requests").select("*").order("submitted_at", { ascending: false });
+  } else if (type === "demo_requests") {
+    query = supabase.from("demo_requests").select("*").order("created_at", { ascending: false });
+  } else if (type === "event_complexity_leads") {
+    query = supabase.from("event_complexity_leads").select("*").order("created_at", { ascending: false });
   } else {
     query = supabase.from("quote_requests").select("*").order("submitted_at", { ascending: false });
   }
@@ -109,12 +117,14 @@ const fetchReportData = async (type: ReportType): Promise<Record<string, unknown
 };
 
 const fetchRecordCounts = async (): Promise<Record<string, number | null>> => {
-  const [ab, ac, ad, br, qr] = await Promise.all([
+  const [ab, ac, ad, br, qr, dr, ecl] = await Promise.all([
     supabase.from("abandoned_eb_forms").select("id", { count: "exact", head: true }).eq("status", "partial"),
     supabase.from("abandoned_contact_requests").select("id", { count: "exact", head: true }).eq("status", "partial"),
     supabase.from("abandoned_demo_form" as any).select("id", { count: "exact", head: true }).eq("status", "abandoned"),
     supabase.from("build_requests").select("id", { count: "exact", head: true }),
     supabase.from("quote_requests").select("id", { count: "exact", head: true }),
+    supabase.from("demo_requests").select("id", { count: "exact", head: true }),
+    supabase.from("event_complexity_leads").select("id", { count: "exact", head: true }),
   ]);
   return {
     abandoned: ab.count ?? null,
@@ -122,6 +132,8 @@ const fetchRecordCounts = async (): Promise<Record<string, number | null>> => {
     abandoned_demo: (ad as any).count ?? null,
     build_requests: br.count ?? null,
     quote_requests: qr.count ?? null,
+    demo_requests: dr.count ?? null,
+    event_complexity_leads: ecl.count ?? null,
   };
 };
 
@@ -249,6 +261,12 @@ const AdminReport = () => {
         queryClient.invalidateQueries({ queryKey: ["ignition"] });
       })
       .on("postgres_changes", { event: "*", schema: "public", table: "quote_requests" }, () => {
+        queryClient.invalidateQueries({ queryKey: ["ignition"] });
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "demo_requests" }, () => {
+        queryClient.invalidateQueries({ queryKey: ["ignition"] });
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "event_complexity_leads" }, () => {
         queryClient.invalidateQueries({ queryKey: ["ignition"] });
       })
       .subscribe();
