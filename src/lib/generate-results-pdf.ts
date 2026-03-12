@@ -110,6 +110,27 @@ export function downloadResultsPdf({
 
   y += card1H + 8;
 
+  // ── 1b. Scope summary card (conditional) ───────────────────
+  if (scopeBullets && scopeBullets.length > 0) {
+    const lineH = 6;
+    const scopeH = 20 + scopeBullets.length * lineH + 4;
+    drawCard(y, scopeH);
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(12);
+    doc.setTextColor(BRAND_DARK);
+    doc.text("Event Build Scope", margin + 6, y + 12);
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.setTextColor(TEXT_DEFAULT);
+    scopeBullets.forEach((bullet, i) => {
+      doc.text(`✓  ${bullet}`, margin + 8, y + 20 + i * lineH);
+    });
+
+    y += scopeH + 8;
+  }
+
   // ── 2. Attendee Hub card (conditional) ─────────────────────
   if (attendeeHubSelected) {
     const featuresText =
