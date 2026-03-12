@@ -412,14 +412,14 @@ export function EventComplexityCalculator() {
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
                   <Button 
                     onClick={openDemoPanel}
-                    className="gap-2"
+                    className="gap-2 min-h-[44px] text-[15px] sm:text-sm"
                   >
                     <CalendarCheck className="w-4 h-4" />
                     Schedule a Consultation
                   </Button>
                   <Button
                     variant="outline"
-                    className="gap-2"
+                    className="gap-2 min-h-[44px] text-[15px] sm:text-sm"
                     onClick={() =>
                       downloadResultsPdf({
                         result,
@@ -436,6 +436,7 @@ export function EventComplexityCalculator() {
                   <Button 
                     variant="outline" 
                     onClick={handleRestart}
+                    className="min-h-[44px] text-[15px] sm:text-sm"
                   >
                     Start Over
                   </Button>
