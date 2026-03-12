@@ -80,6 +80,7 @@ export function EventComplexityCalculator() {
     const { result: calcResult, trace: calcTrace } = calculateResultWithTrace(finalAnswers, finalProducts);
     setResult(calcResult);
     setTrace(calcTrace);
+    setScopeBullets(generateScopeSummary(finalAnswers, calcTrace.allProducts, attendeeHubSelected, attendeeHubFeatures));
     setShowResult(true);
     setShowHubFeaturesStep(false);
   };
