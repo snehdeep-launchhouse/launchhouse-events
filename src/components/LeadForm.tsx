@@ -23,6 +23,7 @@ interface LeadFormProps {
   result?: Result | null;
   attendeeHubSelected?: boolean;
   attendeeHubFeatures?: string[];
+  scopeSummary?: string;
   onSubmitted?: () => void;
 }
 
