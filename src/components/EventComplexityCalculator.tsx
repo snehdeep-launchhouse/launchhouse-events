@@ -36,6 +36,7 @@ export function EventComplexityCalculator() {
   const [attendeeHubSelected, setAttendeeHubSelected] = useState(false);
   const [attendeeHubFeatures, setAttendeeHubFeatures] = useState<string[]>([]);
   const [showHubFeaturesStep, setShowHubFeaturesStep] = useState(false);
+  const [scopeBullets, setScopeBullets] = useState<string[]>([]);
 
   const totalSteps = questions.length;
   const progressPercent = showHubFeaturesStep
