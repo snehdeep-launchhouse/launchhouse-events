@@ -118,6 +118,7 @@ export function EventComplexityCalculator() {
     setAttendeeHubSelected(false);
     setAttendeeHubFeatures([]);
     setShowHubFeaturesStep(false);
+    setScopeBullets([]);
   };
 
   const getQuestionOptions = () => {
