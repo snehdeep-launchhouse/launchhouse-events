@@ -198,6 +198,14 @@ serve(async (req) => {
         </table>
       </div>
       ` : ""}
+      ${scopeSummary ? `
+      <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:20px;margin-bottom:24px;">
+        <p style="margin:0 0 12px;font-size:15px;font-weight:600;color:#111827;">📋 Your Event Build Scope</p>
+        <ul style="margin:0;padding-left:20px;">
+          ${scopeSummary.split("\\n").filter(Boolean).map(b => `<li style="font-size:14px;color:#374151;padding:3px 0;">${b.replace(/^[•·]\s*/, "")}</li>`).join("")}
+        </ul>
+      </div>
+      ` : ""}
       
       <p style="margin:0 0 16px;font-size:15px;color:#374151;">
         A member of our team will reach out to you within <strong>24 hours</strong> to discuss your event needs and provide a customized proposal.
