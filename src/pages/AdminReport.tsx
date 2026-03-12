@@ -23,6 +23,8 @@ const HIDDEN_COLUMNS: Record<string, string[]> = {
   abandoned_demo: ["id", "created_at", "updated_at", "session_id"],
   build_requests: ["id", "submitted_at", "email_sent_at"],
   quote_requests: ["id", "submitted_at", "email_sent_at"],
+  demo_requests: ["id", "created_at", "google_event_id"],
+  event_complexity_leads: ["id", "created_at"],
 };
 
 const BASE_REPORT_CARDS: { key: ReportType; title: string; description: string; icon: React.ReactNode; superOnly?: boolean }[] = [
