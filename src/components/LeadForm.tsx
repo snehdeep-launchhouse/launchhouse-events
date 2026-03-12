@@ -23,6 +23,7 @@ interface LeadFormProps {
   result?: Result | null;
   attendeeHubSelected?: boolean;
   attendeeHubFeatures?: string[];
+  scopeSummary?: string;
   onSubmitted?: () => void;
 }
 
@@ -48,6 +49,7 @@ export function LeadForm({
   result,
   attendeeHubSelected = false,
   attendeeHubFeatures = [],
+  scopeSummary,
   onSubmitted,
 }: LeadFormProps) {
   const [name, setName] = useState("");
@@ -126,6 +128,7 @@ export function LeadForm({
         cvent_products: cventProductsStr,
         attendee_hub_selected: attendeeHubSelected,
         attendee_hub_features: attendeeHubFeatures,
+        scope_summary: scopeSummary || null,
         ...answerColumns,
       } as any);
 

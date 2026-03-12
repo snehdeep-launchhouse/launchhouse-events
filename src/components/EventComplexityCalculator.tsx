@@ -20,6 +20,7 @@ import {
   type CalculationTrace,
   type AttendeeHubFeature
 } from "@/lib/calculator-data";
+import { generateScopeSummary } from "@/lib/generate-scope-summary";
 
 export function EventComplexityCalculator() {
   const { openDemoPanel } = useContactPanel();
@@ -35,6 +36,7 @@ export function EventComplexityCalculator() {
   const [attendeeHubSelected, setAttendeeHubSelected] = useState(false);
   const [attendeeHubFeatures, setAttendeeHubFeatures] = useState<string[]>([]);
   const [showHubFeaturesStep, setShowHubFeaturesStep] = useState(false);
+  const [scopeBullets, setScopeBullets] = useState<string[]>([]);
 
   const totalSteps = questions.length;
   const progressPercent = showHubFeaturesStep
@@ -78,6 +80,7 @@ export function EventComplexityCalculator() {
     const { result: calcResult, trace: calcTrace } = calculateResultWithTrace(finalAnswers, finalProducts);
     setResult(calcResult);
     setTrace(calcTrace);
+    setScopeBullets(generateScopeSummary(finalAnswers, calcTrace.allProducts, attendeeHubSelected, attendeeHubFeatures));
     setShowResult(true);
     setShowHubFeaturesStep(false);
   };
@@ -115,6 +118,7 @@ export function EventComplexityCalculator() {
     setAttendeeHubSelected(false);
     setAttendeeHubFeatures([]);
     setShowHubFeaturesStep(false);
+    setScopeBullets([]);
   };
 
   const getQuestionOptions = () => {
@@ -220,6 +224,7 @@ export function EventComplexityCalculator() {
                   result={result}
                   attendeeHubSelected={attendeeHubSelected}
                   attendeeHubFeatures={attendeeHubFeatures}
+                  scopeSummary={scopeBullets.join("\n")}
                   onSubmitted={() => setLeadSubmitted(true)}
                 />
               </div>
@@ -301,7 +306,30 @@ export function EventComplexityCalculator() {
                   </CardContent>
                 </Card>
 
-                {/* ── Attendee Hub Module Card ─────────────────── */}
+                {/* ── Event Build Scope ────────────────────────── */}
+                {scopeBullets.length > 0 && (
+                  <Card className="border-border shadow-sm">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-lg">
+                        <CheckCircle className="w-5 h-5" />
+                        Event Build Scope
+                      </CardTitle>
+                      <p className="text-sm text-muted-foreground">
+                        Based on your answers, your build includes
+                      </p>
+                    </CardHeader>
+                    <CardContent>
+                      <ul className="grid gap-2">
+                        {scopeBullets.map((bullet, idx) => (
+                          <li key={idx} className="flex items-start gap-2 text-sm text-muted-foreground">
+                            <CheckCircle className="h-4 w-4 mt-0.5 shrink-0 text-success" />
+                            <span>{bullet}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </CardContent>
+                  </Card>
+                )}
                 {attendeeHubSelected && (
                   <Card className="border-primary/30 shadow-sm bg-primary/[0.02]">
                     <CardHeader>
