@@ -6,6 +6,7 @@ interface PdfData {
   allProducts: string[];
   attendeeHubSelected: boolean;
   attendeeHubFeatures: string[];
+  scopeBullets?: string[];
 }
 
 // Brand colours (HSL → hex)
