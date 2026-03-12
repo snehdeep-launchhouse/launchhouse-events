@@ -13,7 +13,7 @@ import IgnitionFooter from "@/components/IgnitionFooter";
 import IgnitionLogo from "@/components/IgnitionLogo";
 import { toast } from "sonner";
 
-type ReportType = "abandoned" | "abandoned_contact" | "abandoned_demo" | "build_requests" | "quote_requests" | "manage_admins" | null;
+type ReportType = "abandoned" | "abandoned_contact" | "abandoned_demo" | "build_requests" | "quote_requests" | "demo_requests" | "event_complexity_leads" | "manage_admins" | null;
 
 const MASTER_ADMIN_EMAIL = "snehdeep@launchhouse.events";
 
