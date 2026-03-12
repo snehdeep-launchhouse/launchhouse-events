@@ -320,9 +320,9 @@ export function EventComplexityCalculator() {
                       </p>
                     </CardHeader>
                     <CardContent>
-                      <ul className="grid gap-2">
+                      <ul className="grid gap-2.5 sm:gap-2">
                         {scopeBullets.map((bullet, idx) => (
-                          <li key={idx} className="flex items-start gap-2 text-sm text-muted-foreground">
+                          <li key={idx} className="flex items-start gap-2.5 sm:gap-2 text-[15px] sm:text-sm text-muted-foreground">
                             <CheckCircle className="h-4 w-4 mt-0.5 shrink-0 text-success" />
                             <span>{bullet}</span>
                           </li>
