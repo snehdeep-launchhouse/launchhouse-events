@@ -56,6 +56,7 @@ export function LeadForm({
   const [email, setEmail] = useState("");
   const [company, setCompany] = useState("");
   const [eventDate, setEventDate] = useState<Date>();
+  const [calendarOpen, setCalendarOpen] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [saving, setSaving] = useState(false);
   const [emailError, setEmailError] = useState<string | undefined>();
@@ -250,7 +251,7 @@ export function LeadForm({
           </div>
           <div>
             <Label className="text-xs">Event Date</Label>
-            <Popover>
+            <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
@@ -267,7 +268,10 @@ export function LeadForm({
                 <Calendar
                   mode="single"
                   selected={eventDate}
-                  onSelect={setEventDate}
+                  onSelect={(day) => {
+                    setEventDate(day);
+                    setCalendarOpen(false);
+                  }}
                   initialFocus
                   className="p-3 pointer-events-auto"
                 />

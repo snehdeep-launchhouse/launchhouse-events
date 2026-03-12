@@ -1,28 +1,34 @@
 
 
-# Fix Plan: Date Picker Auto-Close & PDF Scope Formatting
+## Fix: Slow First Open of Contact/Demo Panels
 
-## 1. Date Picker — Auto-close on selection (`src/components/LeadForm.tsx`)
+### Problem
+The panels use `React.lazy` which only starts downloading the JS chunk **after** the user clicks. This causes a visible delay on first open because the chunk must be fetched, parsed, and rendered before the panel appears.
 
-**Problem**: The `<Popover>` wrapping the Calendar is uncontrolled, so selecting a date does not close the popup.
+### Solution: Prefetch chunks on idle
+Instead of waiting for a click, **preload** both panel chunks during browser idle time (after initial page render). This way the JS is already cached when the user clicks, making the first open instant.
 
-**Fix**: Add controlled `open` state to the Popover, and close it when a date is selected.
+### Implementation
 
-- Add `const [calendarOpen, setCalendarOpen] = useState(false)` state
-- Change `<Popover>` to `<Popover open={calendarOpen} onOpenChange={setCalendarOpen}>`
-- Wrap `onSelect` to call `setEventDate(day)` then `setCalendarOpen(false)`
+**File: `src/components/ContactPanelProvider.tsx`**
 
-This follows the same pattern already used in `TnCTooltip.tsx`.
+Add a `useEffect` that triggers dynamic `import()` calls via `requestIdleCallback` (with a setTimeout fallback) shortly after mount. This prefetches the chunks without blocking the initial render. The existing `React.lazy` references continue to work — they resolve instantly from the module cache.
 
-## 2. PDF Scope Section Formatting (`src/lib/generate-results-pdf.ts`)
+```tsx
+useEffect(() => {
+  const prefetch = () => {
+    import("./ContactUsPanel");
+    import("./RequestDemoPanel");
+  };
+  if ("requestIdleCallback" in window) {
+    const id = requestIdleCallback(prefetch);
+    return () => cancelIdleCallback(id);
+  } else {
+    const id = setTimeout(prefetch, 2000);
+    return () => clearTimeout(id);
+  }
+}, []);
+```
 
-**Problem**: The `✓` character may not render correctly in jsPDF's built-in helvetica font (it lacks many Unicode glyphs), causing missing or garbled bullets. Spacing between the heading and items also needs refinement.
-
-**Fix**:
-- Replace `✓` with a simple bullet character like `•` or a dash `–` which are supported by the standard PDF fonts
-- Increase `lineH` from 6 to 6.5 for better readability
-- Add more padding between the "Event Build Scope" heading and the first bullet (change y offset from `y + 20` to `y + 22`)
-- Adjust card height calculation to account for the extra padding: `24 + scopeBullets.length * lineH + 4`
-
-These changes match the clean formatting shown in the reference screenshot.
+One file change, no visual or functional impact. Panels will open instantly on first click.
 

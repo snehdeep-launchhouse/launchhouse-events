@@ -113,8 +113,8 @@ export function downloadResultsPdf({
 
   // ── 1b. Scope summary card (conditional) ───────────────────
   if (scopeBullets && scopeBullets.length > 0) {
-    const lineH = 6;
-    const scopeH = 20 + scopeBullets.length * lineH + 4;
+    const lineH = 6.5;
+    const scopeH = 24 + scopeBullets.length * lineH + 4;
     drawCard(y, scopeH);
 
     doc.setFont("helvetica", "bold");
@@ -126,7 +126,7 @@ export function downloadResultsPdf({
     doc.setFontSize(9);
     doc.setTextColor(TEXT_DEFAULT);
     scopeBullets.forEach((bullet, i) => {
-      doc.text(`✓  ${bullet}`, margin + 8, y + 20 + i * lineH);
+      doc.text(`-  ${bullet}`, margin + 8, y + 22 + i * lineH);
     });
 
     y += scopeH + 8;
