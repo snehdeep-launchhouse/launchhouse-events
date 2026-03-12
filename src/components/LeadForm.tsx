@@ -128,6 +128,7 @@ export function LeadForm({
         cvent_products: cventProductsStr,
         attendee_hub_selected: attendeeHubSelected,
         attendee_hub_features: attendeeHubFeatures,
+        scope_summary: scopeSummary || null,
         ...answerColumns,
       } as any);
 
