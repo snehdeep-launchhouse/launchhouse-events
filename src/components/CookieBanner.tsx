@@ -126,9 +126,9 @@ export default function CookieBanner() {
           <div className="container mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 px-4 py-4 sm:py-5">
             <p className="text-sm text-muted-foreground leading-relaxed max-w-2xl">
               We use cookies to improve your experience on our site, analyse traffic, and for marketing purposes. For more details, see our{" "}
-              <Link to="/privacy-policy" className="text-primary underline hover:text-primary/80">
+              <a href="/privacy-policy" className="text-primary underline hover:text-primary/80">
                 Privacy Policy
-              </Link>.
+              </a>.
             </p>
             <div className="flex items-center gap-2 shrink-0">
               <Button
