@@ -177,13 +177,13 @@ export default function CookieBanner() {
               When you visit any website, it may store or retrieve information on your browser, mostly in the form of cookies. This information might be about you, your preferences, or your device and is mostly used to make the site work as you expect it to. The information does not usually directly identify you, but it can give you a more personalised web experience.
             </p>
             <p className="text-sm text-muted-foreground mt-2">
-              <Link
-                to="/privacy-policy"
+              <a
+                href="/privacy-policy"
                 className="text-primary underline hover:text-primary/80"
                 onClick={() => setSettingsOpen(false)}
               >
                 More Information
-              </Link>
+              </a>
             </p>
           </DialogHeader>
 
