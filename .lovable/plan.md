@@ -1,34 +1,59 @@
 
 
-## Fix: Slow First Open of Contact/Demo Panels
+# Cookie Consent Banner — Make.com Style with LaunchHouse Branding
 
-### Problem
-The panels use `React.lazy` which only starts downloading the JS chunk **after** the user clicks. This causes a visible delay on first open because the chunk must be fetched, parsed, and rendered before the panel appears.
+## Overview
 
-### Solution: Prefetch chunks on idle
-Instead of waiting for a click, **preload** both panel chunks during browser idle time (after initial page render). This way the JS is already cached when the user clicks, making the first open instant.
+Replace the current simple cookie banner with a two-layer consent system:
 
-### Implementation
+1. **Bottom Banner** (initial state) — slim bar with privacy text, "Cookie Settings" button, and "Accept All" button
+2. **Settings Modal** (on click "Cookie Settings") — centered dialog with privacy explanation, "More Information" link to Privacy Policy, and toggleable cookie categories
 
-**File: `src/components/ContactPanelProvider.tsx`**
+## Cookie Categories
 
-Add a `useEffect` that triggers dynamic `import()` calls via `requestIdleCallback` (with a setTimeout fallback) shortly after mount. This prefetches the chunks without blocking the initial render. The existing `React.lazy` references continue to work — they resolve instantly from the module cache.
+| Category | Toggleable | Description |
+|---|---|---|
+| Necessary Cookies | No (Always Active) | Essential for site functionality |
+| Functional Cookies | Yes (default on) | Remember preferences and settings |
+| Marketing Cookies | Yes (default on) | Google Analytics tracking |
+| Performance Cookies | Yes (default on) | Site performance monitoring |
 
-```tsx
-useEffect(() => {
-  const prefetch = () => {
-    import("./ContactUsPanel");
-    import("./RequestDemoPanel");
-  };
-  if ("requestIdleCallback" in window) {
-    const id = requestIdleCallback(prefetch);
-    return () => cancelIdleCallback(id);
-  } else {
-    const id = setTimeout(prefetch, 2000);
-    return () => clearTimeout(id);
-  }
-}, []);
-```
+Since we only have Google Analytics currently, the Marketing toggle will control GA. Functional and Performance toggles will be stored for future use but currently only Marketing triggers `enableGA()`.
 
-One file change, no visual or functional impact. Panels will open instantly on first click.
+## File Changes
+
+### `src/components/CookieBanner.tsx` — Full rewrite
+
+**Bottom Banner:**
+- Fixed bottom bar, white/light background with border-top
+- Left: privacy text paragraph mentioning cookies, third-party transfers, linking to Privacy Policy
+- Right: "Cookie Settings" outline button + "Accept All" primary (blue) button + X close button
+- Matches LaunchHouse brand colors (primary blue for Accept All)
+
+**Settings Modal (Dialog):**
+- Opens when "Cookie Settings" clicked
+- LaunchHouse logo at top left, X close at top right
+- Title: "Privacy Preference Center"
+- Description paragraph about cookies
+- "More Information" link → `/privacy-policy`
+- Section: "Manage Consent Preferences" with 4 accordion-style rows:
+  - Necessary Cookies — "Always Active" label (no toggle)
+  - Functional Cookies — Switch toggle
+  - Marketing Cookies — Switch toggle
+  - Performance Cookies — Switch toggle
+- Footer: "Reject All" button + "Confirm My Choices" primary button
+
+**Storage:**
+- Store granular preferences as JSON in `localStorage("cookie-consent")`:
+  ```json
+  { "necessary": true, "functional": true, "marketing": true, "performance": true }
+  ```
+- `enableGA()` only when `marketing: true`
+- `disableGA()` when `marketing: false`
+
+**Components used:** Dialog, Switch, Button, Separator (all existing shadcn components), plus Link from react-router-dom for privacy policy link.
+
+### No other files changed
+- App.tsx already lazy-loads CookieBanner via `DeferredCookieBanner`
+- Privacy Policy page already exists at `/privacy-policy`
 
