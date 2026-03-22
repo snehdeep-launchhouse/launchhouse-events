@@ -9,7 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import Logo from "@/components/Logo";
+
 
 const GA_ID = "G-JDM9N7HJD3";
 
