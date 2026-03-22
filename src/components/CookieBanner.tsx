@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
@@ -10,7 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import Logo from "@/components/Logo";
+
 
 const GA_ID = "G-JDM9N7HJD3";
 
@@ -127,9 +126,9 @@ export default function CookieBanner() {
           <div className="container mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 px-4 py-4 sm:py-5">
             <p className="text-sm text-muted-foreground leading-relaxed max-w-2xl">
               We use cookies to improve your experience on our site, analyse traffic, and for marketing purposes. For more details, see our{" "}
-              <Link to="/privacy-policy" className="text-primary underline hover:text-primary/80">
+              <a href="/privacy-policy" className="text-primary underline hover:text-primary/80">
                 Privacy Policy
-              </Link>.
+              </a>.
             </p>
             <div className="flex items-center gap-2 shrink-0">
               <Button
@@ -178,13 +177,13 @@ export default function CookieBanner() {
               When you visit any website, it may store or retrieve information on your browser, mostly in the form of cookies. This information might be about you, your preferences, or your device and is mostly used to make the site work as you expect it to. The information does not usually directly identify you, but it can give you a more personalised web experience.
             </p>
             <p className="text-sm text-muted-foreground mt-2">
-              <Link
-                to="/privacy-policy"
+              <a
+                href="/privacy-policy"
                 className="text-primary underline hover:text-primary/80"
                 onClick={() => setSettingsOpen(false)}
               >
                 More Information
-              </Link>
+              </a>
             </p>
           </DialogHeader>
 
