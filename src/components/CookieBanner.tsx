@@ -86,15 +86,28 @@ export default function CookieBanner() {
     if (stored) {
       try {
         const parsed = JSON.parse(stored) as CookiePreferences;
+        setPrefs(parsed);
         if (parsed.marketing) enableGA(); else disableGA();
       } catch {
-        // Legacy format — treat as accepted
         if (stored === "accepted") enableGA();
         else disableGA();
       }
     } else {
       setVisible(true);
     }
+  }, []);
+
+  useEffect(() => {
+    const handleReopen = () => {
+      const stored = localStorage.getItem("cookie-consent");
+      if (stored) {
+        try { setPrefs(JSON.parse(stored)); } catch {}
+      }
+      setVisible(true);
+      setSettingsOpen(true);
+    };
+    window.addEventListener("open-cookie-settings", handleReopen);
+    return () => window.removeEventListener("open-cookie-settings", handleReopen);
   }, []);
 
   const saveAndClose = (preferences: CookiePreferences) => {

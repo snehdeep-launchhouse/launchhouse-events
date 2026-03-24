@@ -8,7 +8,7 @@ const Footer = () => (
         <p>© {new Date().getFullYear()} LaunchHouse Events. A division of Rina Event Tech</p>
         <p>All rights reserved.</p>
       </div>
-      <div className="flex gap-6 text-sm text-muted-foreground">
+      <div className="flex flex-wrap gap-6 text-sm text-muted-foreground">
         <a href="/privacy-policy" className="hover:text-primary transition-colors" target="_blank" rel="noopener noreferrer">
           Privacy Policy
         </a>
@@ -18,6 +18,12 @@ const Footer = () => (
         <a href="mailto:snehdeep@launchhouse.events" className="hover:text-primary transition-colors" target="_blank" rel="noopener noreferrer">
           Contact
         </a>
+        <button
+          onClick={() => window.dispatchEvent(new Event("open-cookie-settings"))}
+          className="hover:text-primary transition-colors"
+        >
+          Cookie Settings
+        </button>
       </div>
     </div>
   </footer>
