@@ -135,7 +135,7 @@ export default function CookieBanner() {
     <>
       {/* Bottom Banner */}
       {!settingsOpen && (
-        <div className="fixed bottom-0 inset-x-0 z-50 border-t border-border bg-background shadow-lg">
+        <div className="fixed bottom-0 inset-x-0 z-[60] border-t border-border bg-background shadow-lg">
           <div className="container mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 px-4 py-4 sm:py-5">
             <p className="text-sm text-muted-foreground leading-relaxed max-w-2xl">
               We use cookies to improve your experience on our site, analyse traffic, and for marketing purposes. For more details, see our{" "}
