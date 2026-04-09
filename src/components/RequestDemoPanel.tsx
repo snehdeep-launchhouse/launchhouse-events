@@ -141,18 +141,15 @@ const RequestDemoPanel = ({ open, onOpenChange }: RequestDemoPanelProps) => {
   const upsertAbandonedDemo = useCallback(async (data: { first_name: string; last_name: string; email: string; last_step_reached: number; status?: string }) => {
     try {
       if (abandonedRowCreatedRef.current) {
-        await supabase
-          .from("abandoned_demo_form" as any)
-          .update({
-            first_name: data.first_name,
-            last_name: data.last_name,
-            email: data.email,
-            last_step_reached: data.last_step_reached,
-            form_type: "demo",
-            status: data.status || "partial",
-            updated_at: new Date().toISOString(),
-          } as any)
-          .eq("session_id", sessionIdRef.current);
+        await supabase.rpc("update_abandoned_demo_by_session" as any, {
+          p_session_id: sessionIdRef.current,
+          p_first_name: data.first_name,
+          p_last_name: data.last_name,
+          p_email: data.email,
+          p_last_step_reached: data.last_step_reached,
+          p_form_type: "demo",
+          p_status: data.status || "partial",
+        });
       } else {
         await supabase
           .from("abandoned_demo_form" as any)
