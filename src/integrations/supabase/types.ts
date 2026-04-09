@@ -462,6 +462,18 @@ export type Database = {
         }
         Returns: undefined
       }
+      update_abandoned_demo_by_session: {
+        Args: {
+          p_email?: string
+          p_first_name?: string
+          p_form_type?: string
+          p_last_name?: string
+          p_last_step_reached?: number
+          p_session_id: string
+          p_status?: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
