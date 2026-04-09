@@ -121,12 +121,18 @@ const GetAQuote = () => {
           ...(data.captured_data ? { captured_data: data.captured_data as unknown as import("@/integrations/supabase/types").Json } : {}),
         };
 
-        // If we already have a token, UPDATE by token (secure)
+        // If we already have a token, UPDATE by token via secure RPC
         if (submissionTokenRef.current) {
-          await supabase
-            .from("abandoned_contact_requests")
-            .update(payload)
-            .eq("submission_token", submissionTokenRef.current);
+          await supabase.rpc("update_abandoned_contact_by_token", {
+            p_token: submissionTokenRef.current,
+            p_first_name: data.first_name,
+            p_last_name: data.last_name,
+            p_business_email: data.business_email,
+            p_last_active_step: data.last_active_step,
+            ...(data.captured_data
+              ? { p_captured_data: data.captured_data as unknown as import("@/integrations/supabase/types").Json }
+              : {}),
+          });
         } else {
           // Generate token client-side so we don't need SELECT permission after INSERT
           const clientToken = crypto.randomUUID();
@@ -148,21 +154,15 @@ const GetAQuote = () => {
     []
   );
 
-  const markAbandonedCompleted = useCallback(async (email: string) => {
+  const markAbandonedCompleted = useCallback(async (_email: string) => {
     try {
       if (submissionTokenRef.current) {
-        // Use token-based update (secure)
-        await supabase
-          .from("abandoned_contact_requests")
-          .update({ status: "completed" })
-          .eq("submission_token", submissionTokenRef.current);
-      } else {
-        // Fallback to email-based update (legacy rows)
-        await supabase
-          .from("abandoned_contact_requests")
-          .update({ status: "completed" })
-          .eq("business_email", email);
+        await supabase.rpc("update_abandoned_contact_by_token", {
+          p_token: submissionTokenRef.current,
+          p_status: "completed",
+        });
       }
+      // Legacy rows without token can no longer be updated (more secure)
     } catch {
       // silent
     }
