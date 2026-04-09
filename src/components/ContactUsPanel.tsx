@@ -130,18 +130,15 @@ const ContactUsPanel = ({ open, onOpenChange }: ContactUsPanelProps) => {
   const upsertAbandonedDemo = useCallback(async (data: { first_name: string; last_name: string; email: string; last_step_reached: number; status?: string }) => {
     try {
       if (abandonedDemoRowCreatedRef.current) {
-        await supabase
-          .from("abandoned_demo_form" as any)
-          .update({
-            first_name: data.first_name,
-            last_name: data.last_name,
-            email: data.email,
-            last_step_reached: data.last_step_reached,
-            form_type: "contact",
-            status: data.status || "partial",
-            updated_at: new Date().toISOString(),
-          } as any)
-          .eq("session_id", sessionIdRef.current);
+        await supabase.rpc("update_abandoned_demo_by_session" as any, {
+          p_session_id: sessionIdRef.current,
+          p_first_name: data.first_name,
+          p_last_name: data.last_name,
+          p_email: data.email,
+          p_last_step_reached: data.last_step_reached,
+          p_form_type: "contact",
+          p_status: data.status || "partial",
+        });
       } else {
         await supabase
           .from("abandoned_demo_form" as any)
@@ -180,8 +177,11 @@ const ContactUsPanel = ({ open, onOpenChange }: ContactUsPanelProps) => {
   useEffect(() => {
     const handler = () => {
       if (step1DataRef.current && !submittedRef.current && abandonedDemoRowCreatedRef.current) {
-        const url = `${import.meta.env.VITE_SUPABASE_URL}/rest/v1/abandoned_demo_form?session_id=eq.${sessionIdRef.current}`;
-        const body = JSON.stringify({ status: "abandoned", updated_at: new Date().toISOString() });
+        const url = `${import.meta.env.VITE_SUPABASE_URL}/rest/v1/rpc/update_abandoned_demo_by_session`;
+        const body = JSON.stringify({
+          p_session_id: sessionIdRef.current,
+          p_status: "abandoned",
+        });
         navigator.sendBeacon(
           url,
           new Blob([body], { type: "application/json" })
