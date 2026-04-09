@@ -450,6 +450,18 @@ export type Database = {
         }[]
       }
       is_active_admin: { Args: never; Returns: boolean }
+      update_abandoned_contact_by_token: {
+        Args: {
+          p_business_email?: string
+          p_captured_data?: Json
+          p_first_name?: string
+          p_last_active_step?: number
+          p_last_name?: string
+          p_status?: string
+          p_token: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
