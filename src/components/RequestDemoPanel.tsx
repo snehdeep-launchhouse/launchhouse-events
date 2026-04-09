@@ -190,8 +190,11 @@ const RequestDemoPanel = ({ open, onOpenChange }: RequestDemoPanelProps) => {
   useEffect(() => {
     const handler = () => {
       if (step1DataRef.current && !submittedRef.current && abandonedRowCreatedRef.current) {
-        const url = `${import.meta.env.VITE_SUPABASE_URL}/rest/v1/abandoned_demo_form?session_id=eq.${sessionIdRef.current}`;
-        const body = JSON.stringify({ status: "abandoned", updated_at: new Date().toISOString() });
+        const url = `${import.meta.env.VITE_SUPABASE_URL}/rest/v1/rpc/update_abandoned_demo_by_session`;
+        const body = JSON.stringify({
+          p_session_id: sessionIdRef.current,
+          p_status: "abandoned",
+        });
         navigator.sendBeacon(
           url,
           new Blob([body], { type: "application/json" })
@@ -384,10 +387,10 @@ const RequestDemoPanel = ({ open, onOpenChange }: RequestDemoPanelProps) => {
       // Mark abandoned row as completed
       if (abandonedRowCreatedRef.current) {
         try {
-          await supabase
-            .from("abandoned_demo_form" as any)
-            .update({ status: "completed", updated_at: new Date().toISOString() } as any)
-            .eq("session_id", sessionIdRef.current);
+          await supabase.rpc("update_abandoned_demo_by_session" as any, {
+            p_session_id: sessionIdRef.current,
+            p_status: "completed",
+          });
         } catch { /* silent */ }
       }
 
