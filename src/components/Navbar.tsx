@@ -64,7 +64,7 @@ const Navbar = () => {
               Contact Us
             </Button>
             <Button onClick={handleDemo} size="sm" className="hidden md:inline-flex">
-              Request a Demo
+              Book a Free Consultation
             </Button>
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
@@ -91,7 +91,7 @@ const Navbar = () => {
                 </a>
               ))}
               <Button onClick={handleDemo} size="sm" className="w-full mt-2">
-                Request a Demo
+                Book a Free Consultation
               </Button>
               <Button onClick={handleContact} size="sm" variant="outline" className="w-full">
                 Contact Us
@@ -105,7 +105,7 @@ const Navbar = () => {
       {!mobileOpen && (
         <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 p-3 pb-safe bg-background/95 backdrop-blur-lg border-t border-border/50">
           <Button onClick={handleDemo} className="w-full shadow-btn min-h-[44px]">
-            Request a Demo
+            Book a Free Consultation
           </Button>
         </div>
       )}

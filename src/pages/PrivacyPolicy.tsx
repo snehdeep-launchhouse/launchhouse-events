@@ -38,7 +38,7 @@ const PrivacyPolicy = () => (
             <li>First and last name</li>
             <li>Business email address</li>
             <li>Phone number</li>
-            <li>Company or organisation name</li>
+            <li>Company or organization name</li>
             <li>Event details (title, dates, timezone, session and registration type information)</li>
             <li>Preferred kickoff dates and go-live date</li>
             <li>Additional information you choose to provide</li>
@@ -85,7 +85,7 @@ const PrivacyPolicy = () => (
 
         <Section title="6. Data Security">
           <p>
-            We implement appropriate technical and organisational measures to protect your personal information against unauthorised access, alteration, disclosure, or destruction. Access to your data is restricted to personnel who need it to provide our services.
+            We implement appropriate technical and organizational measures to protect your personal information against unauthorized access, alteration, disclosure, or destruction. Access to your data is restricted to personnel who need it to provide our services.
           </p>
         </Section>
 

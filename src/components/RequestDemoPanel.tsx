@@ -766,9 +766,9 @@ const RequestDemoPanel = ({ open, onOpenChange }: RequestDemoPanelProps) => {
       <Drawer open={open} onOpenChange={handleOpenChange}>
         <DrawerContent className="max-h-[95vh] flex flex-col">
           <DrawerHeader className="px-6 pt-4 pb-3 border-b border-border flex-shrink-0 relative">
-            <DrawerTitle className="text-xl font-bold font-display">Request a Demo</DrawerTitle>
+            <DrawerTitle className="text-xl font-bold font-display">Book a Free Consultation</DrawerTitle>
             <DrawerDescription className="text-sm text-muted-foreground">
-              Schedule a personalized demo with our team
+              Talk to a member of our team about your event build. We will ask the right questions, understand your timeline and requirements, and let you know exactly how we can help. No sales pitch. No commitment.
             </DrawerDescription>
             <DrawerClose className="absolute right-4 top-4 rounded-full bg-muted p-2 hover:bg-muted/80 transition-colors">
               <X className="w-5 h-5" />
@@ -790,9 +790,9 @@ const RequestDemoPanel = ({ open, onOpenChange }: RequestDemoPanelProps) => {
         className="w-full sm:max-w-md md:max-w-lg p-0 flex flex-col"
       >
         <SheetHeader className="px-6 pt-6 pb-4 border-b border-border flex-shrink-0">
-          <SheetTitle className="text-xl font-bold font-display">Request a Demo</SheetTitle>
+          <SheetTitle className="text-xl font-bold font-display">Book a Free Consultation</SheetTitle>
           <SheetDescription className="text-sm text-muted-foreground">
-            Schedule a personalized demo with our team
+            Tell us about your event needs and pick a time that works for you
           </SheetDescription>
         </SheetHeader>
 

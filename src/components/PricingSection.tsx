@@ -53,7 +53,7 @@ const PricingSection = () => {
           Four Packages. One Goal.
         </h2>
         <p className="text-muted-foreground mt-4 max-w-xl mx-auto">
-          Starting at $1,199 for a same-day Simple build. <TnCTooltip /> Request a custom quote for your specific needs.
+          Simple builds from $899. Same-day delivery from $1,199. <TnCTooltip /> Request a custom quote for your specific needs.
         </p>
       </div>
 

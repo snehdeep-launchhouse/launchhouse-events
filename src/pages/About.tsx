@@ -14,7 +14,7 @@ const BUILD_REQUEST_URL = "/build-request";
 
 /* ── Stats strip ─────────────────────────────────────────────────── */
 const stats = [
-  { icon: Award, value: "30+", label: "Years Collective Experience" },
+  { icon: Award, value: "15+", label: "Years of Combined Experience" },
   { icon: MapPin, value: "2025", label: "Founded in Bengaluru" },
   { icon: Clock, value: "24hr", label: "Response Time" },
   { icon: ShieldCheck, value: "Certified", label: "Cvent Experts" },
@@ -60,14 +60,14 @@ const philosophy = [
     icon: ShieldCheck,
     title: "Better",
     description:
-      "Cvent certified. Thirty-plus years of collective event tech expertise. White-glove service standards borrowed from luxury hospitality. The result? Registrations that convert and experiences that delight.",
+      "Cvent certified. 15+ years of combined event tech expertise. White-glove service standards applied to every build. The result? Registrations that launch on time and experiences that work.",
   },
 ];
 
 /* ── Page ─────────────────────────────────────────────────────────── */
 const About = () => {
   useEffect(() => {
-    document.title = "About Us — LaunchHouse Events | Built by Event People";
+    document.title = "About Us | LaunchHouse Events";
     return () => { document.title = "LaunchHouse Events"; };
   }, []);
 
@@ -88,11 +88,11 @@ const About = () => {
             Our Story · Our People · Our Promise
           </div>
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold font-display tracking-tight max-w-3xl leading-[1.1] text-white">
-            Built by Event People,{" "}
-            <span className="text-white/80">for Event People</span>
+            Practical Cvent and Event Technology Support for{" "}
+            <span className="text-white/80">Lean Event Teams</span>
           </h1>
           <p className="text-lg md:text-xl text-white/80 max-w-2xl leading-relaxed">
-            Where passion for live experiences meets deep expertise in event technology — delivering registrations that just work.
+            We are practitioners who build, configure, and manage Cvent-powered event experiences on behalf of teams that need expert execution support — not a software pitch.
           </p>
         </div>
       </section>
@@ -103,20 +103,20 @@ const About = () => {
           <div className="max-w-3xl mx-auto text-center">
             <p className="text-sm font-semibold uppercase tracking-widest text-primary mb-3">Our Story</p>
             <h2 className="text-3xl md:text-4xl font-bold font-display tracking-tight mb-6">
-              From the Event Floor to the Tech Stack
+              Who We Are
             </h2>
             <div className="space-y-4 text-muted-foreground leading-relaxed text-left md:text-center">
               <p>
-                LaunchHouse Events was born in early 2025 from Bengaluru, India — the country's undisputed tech capital. But our roots stretch back much further. Our founder cut his teeth in the event industry, working as part of a well-known event management company where large-scale productions and attendee logistics were part of everyday life.
+                LaunchHouse Events is a B2B professional services company specializing in Cvent event build support, event registration, Attendee Hub configuration, mobile app readiness, OnArrival preparation, event tech QA, reporting, and ongoing event support.
               </p>
               <p>
-                Everything changed in 2016. That was the year he first experienced <strong className="text-foreground">Cvent</strong> — and was immediately captivated by the sheer power of event automation. What once required spreadsheets, manual follow-ups, and last-minute fire drills could suddenly be orchestrated with precision, at scale, and in real time. It wasn't just software; it was a paradigm shift.
+                We work with lean SMB and commercial event teams — the kind of teams that have a Cvent license, a tight event timeline, and not enough internal bandwidth to build and test event technology properly.
               </p>
               <p>
-                What followed was years of deep immersion — learning every module, mastering every workflow, and eventually building a team of specialists who shared the same obsession. Today, LaunchHouse Events brings together <strong className="text-foreground">over 30 years of collective experience</strong> across event consulting, sales strategy, and hands-on service delivery. We're not a faceless agency; we're practitioners who understand the chaos of event week because we've lived it.
+                Our team brings 15+ years of combined experience working across registration workflows, attendee apps, onsite check-in operations, and live event support. We do not offer generic consulting. We do the work.
               </p>
               <p>
-                Our mission is simple: make every event planner's life <strong className="text-foreground">easier and painless</strong>. Every registration we build, every workflow we configure, and every client we serve is guided by one principle — deliver high-performance events <strong className="text-foreground">faster, cheaper, and better</strong>.
+                We built LaunchHouse Events because too many event teams are spending their most limited resource — time — fighting with platform setup instead of running great events. We exist to fix that.
               </p>
             </div>
           </div>
@@ -217,13 +217,13 @@ const About = () => {
         </div>
         <div className="container relative text-center">
           <h2 className="text-3xl md:text-4xl font-bold font-display tracking-tight mb-4 text-white">
-            Let's Build Something Remarkable
+            Ready to Talk About Your Next Event Build?
           </h2>
           <p className="text-white/80 max-w-lg mx-auto mb-8">
-            Whether you're planning your first Cvent event or your fiftieth, we'd love to hear about it. Start a conversation — no pressure, no obligations.
+            One of our team members will reach out within 24 hours. No commitment required.
           </p>
           <Button size="lg" className="shadow-btn" onClick={() => window.open(BUILD_REQUEST_URL, "_blank")}>
-            Get Started <ArrowUpRight className="w-4 h-4 ml-1" />
+            Book a Free Consultation <ArrowUpRight className="w-4 h-4 ml-1" />
           </Button>
         </div>
       </section>

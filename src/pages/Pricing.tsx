@@ -20,16 +20,16 @@ const buildPackages = [
     icon: CircleCheckBig,
     title: "Simple Build",
     price: "From $899",
-    desc: "Single-page registrations with standard branding and email confirmations. Same-day delivery available.",
-    features: ["Single-page registration", "Standard branding", "Email confirmation", "Same-day turnaround"],
+    desc: "Single-track events with a straightforward registration flow and standard Cvent setup.",
+    features: ["Registration page and attendee-facing flow", "Registration types and admission items", "Branded confirmation email", "Basic attendee management configuration"],
     cta: "Get Started",
     ctaVariant: "default" as const,
   },
   {
     icon: Layers,
     title: "Medium Build",
-    price: "Custom Quote",
-    desc: "Multi-page registrations with custom branding, automated workflows, and basic reporting.",
+    price: "Custom quoted",
+    desc: "Events with multiple registration types, session selection, more complex registration logic, or Attendee Hub support requirements.",
     features: ["Multi-page registration", "Custom branding & design", "Automated email workflows", "Basic reporting setup"],
     cta: "Get a Quote",
     ctaVariant: "outline" as const,
@@ -37,8 +37,8 @@ const buildPackages = [
   {
     icon: FileBarChart,
     title: "Advanced Build",
-    price: "Custom Quote",
-    desc: "Complex conditional logic, payment integrations, multi-session support, and advanced analytics.",
+    price: "Custom quoted",
+    desc: "Events requiring multiple registration types, custom Cvent workflows, Attendee Hub configuration, mobile app readiness, OnArrival and check-in preparation, and pre-launch QA.",
     features: ["Complex conditional logic", "Payment integration", "Multi-session support", "Advanced reporting"],
     cta: "Get a Quote",
     ctaVariant: "outline" as const,
@@ -46,8 +46,8 @@ const buildPackages = [
   {
     icon: HelpCircle,
     title: "Complex Build",
-    price: "Custom Quote",
-    desc: "Enterprise-grade solutions with approval workflows, API integrations, and dedicated project management.",
+    price: "Custom quoted",
+    desc: "High-complexity events requiring full Cvent configuration, Attendee Hub, mobile app readiness, OnArrival and check-in preparation, custom reporting, and ongoing support across the full event lifecycle.",
     features: ["Approval workflows", "API integrations", "Multi-event management", "Dedicated project manager"],
     cta: "Get a Quote",
     ctaVariant: "outline" as const,
@@ -59,8 +59,8 @@ const hubCards = [
   {
     icon: Smartphone,
     title: "Attendee Hub Build",
-    price: "$1,999",
-    desc: "Complete Attendee Hub setup including branding, session configuration, speaker profiles, and mobile app readiness.",
+    price: "Custom quoted",
+    desc: "Build and configure the Cvent Attendee Hub with agenda, speaker profiles, branding, and content. Available as part of a Medium, Advanced, or Complex build, or as a standalone add-on to an existing build.",
   },
   {
     icon: Headphones,
@@ -98,7 +98,7 @@ const Pricing = () => {
   const { openContactPanel } = useContactPanel();
 
   useEffect(() => {
-    document.title = "Pricing — LaunchHouse Events | Transparent Pricing, Exceptional Value";
+    document.title = "Pricing | LaunchHouse Events";
     return () => { document.title = "LaunchHouse Events"; };
   }, []);
 
@@ -120,12 +120,12 @@ const Pricing = () => {
           </div>
 
           <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold font-display tracking-tight max-w-4xl leading-[1.1] text-white">
-            Transparent Pricing,{" "}
-            <span className="text-white/80">Exceptional Value</span>
+            Clear, Project-Based Pricing for{" "}
+            <span className="text-white/80">Every Event Build</span>
           </h1>
 
           <p className="text-lg md:text-xl text-white/70 max-w-2xl leading-relaxed">
-            Premium Cvent expertise without the enterprise price tag. Get a tailored quote in under 24 hours.
+            No hidden fees. No bloated retainers. Every project is scoped and priced around what your event actually needs — nothing more.
           </p>
         </div>
       </section>
@@ -135,17 +135,17 @@ const Pricing = () => {
         <div className="container max-w-3xl text-center">
           <p className="text-sm font-semibold uppercase tracking-widest text-primary mb-3">Our Approach</p>
           <h2 className="text-3xl md:text-4xl font-bold font-display tracking-tight mb-8">
-            Why Some Builds Require a Custom Quote
+            How Our Pricing Works
           </h2>
           <div className="text-muted-foreground leading-relaxed space-y-4 text-sm md:text-base">
             <p>
-              Think of it this way — building a beach shack is a vastly different undertaking to constructing a five-star resort. Both serve a purpose, but the complexity, materials, and craftsmanship involved are worlds apart. Event registrations work the same way.
+              Every LaunchHouse Events project is priced based on what the build actually requires. We do not use hourly billing or open-ended retainers. Before any work begins, we review your event scope, ask the right questions, and provide a clear quote for the full project.
             </p>
             <p>
-              A <strong className="text-foreground">Simple Build</strong> follows a well-defined blueprint — we can price it confidently and even deliver it the same day. But Medium, Advanced, and Complex events often carry hidden layers: conditional logic trees, multi-currency payment flows, approval chains, or integrations with your existing tech stack.
+              Simple builds have a published starting price because they follow a consistent, well-defined scope. Medium, Advanced, and Complex builds vary too much by event to quote accurately without a brief conversation first — which is why those tiers are custom quoted.
             </p>
             <p>
-              Rather than padding a flat rate to cover unknowns, we scope every project individually. That way you only pay for what your event actually needs — nothing more, nothing less. Simple builds start from <strong className="text-foreground">$899</strong>, and for everything else, one of our consultants will provide a transparent breakdown within 24 hours.
+              There are no hidden fees. If your event scope changes after work has started, we discuss it with you before adjusting the quote. You will not receive an invoice for work you did not approve.
             </p>
           </div>
         </div>
@@ -158,7 +158,7 @@ const Pricing = () => {
             <p className="text-sm font-semibold uppercase tracking-widest text-primary mb-3">Event Builds</p>
             <h2 className="text-3xl md:text-4xl font-bold font-display tracking-tight">Registration Build Packages</h2>
             <p className="text-muted-foreground mt-4 max-w-xl mx-auto">
-              Four tiers designed to match every level of event complexity — from a one-page sign-up to a multi-layered enterprise programme.
+              Four tiers designed to match every level of event complexity — from a straightforward registration setup to a fully configured Complex build.
             </p>
           </div>
 
@@ -216,7 +216,7 @@ const Pricing = () => {
               </p>
               <ul className="space-y-3 mb-6">
                 {[
-                  "Prioritised in the build queue — your project jumps to the front",
+                  "Prioritized in the build queue — your project jumps to the front",
                   "Accelerated turnaround without cutting corners on quality",
                   "Available across all build tiers — Simple through Complex",
                 ].map((f) => (
@@ -241,7 +241,7 @@ const Pricing = () => {
             <p className="text-sm font-semibold uppercase tracking-widest text-primary mb-3">Attendee Hub</p>
             <h2 className="text-3xl md:text-4xl font-bold font-display tracking-tight">Attendee Hub & Training</h2>
             <p className="text-muted-foreground mt-4 max-w-xl mx-auto">
-              Deliver a polished attendee experience with a branded Hub, ongoing support, and custom training content.
+              The following services can be added to any build tier based on your event requirements. Pricing for add-ons is included in your custom quote.
             </p>
           </div>
 
@@ -308,12 +308,12 @@ const Pricing = () => {
           <div className="absolute inset-0 bg-[hsl(220,90%,10%)]/75" />
         </div>
         <div className="container relative text-center">
-          <h2 className="text-3xl md:text-4xl font-bold font-display tracking-tight mb-4 text-white">Ready to Scope Your Event?</h2>
+          <h2 className="text-3xl md:text-4xl font-bold font-display tracking-tight mb-4 text-white">Ready to Get a Quote?</h2>
           <p className="text-white/80 max-w-lg mx-auto mb-8">
-            Tell us about your event and one of our sales consultants will reach out with a transparent, tailored quote within 24 hours.
+            One of our team members will reach out within 24 hours. No commitment required.
           </p>
           <Button size="lg" className="shadow-btn" onClick={openContactPanel}>
-            Contact Us <ArrowUpRight className="w-4 h-4 ml-1" />
+            Book a Free Consultation <ArrowUpRight className="w-4 h-4 ml-1" />
           </Button>
         </div>
       </section>

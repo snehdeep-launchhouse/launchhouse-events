@@ -3,27 +3,27 @@ import { Settings, LayoutTemplate, Users, BarChart3 } from "lucide-react";
 const services = [
   {
     icon: LayoutTemplate,
-    title: "Registration Builds",
+    title: "Cvent Registration Builds",
     description:
-      "From simple single-page forms to complex multi-session registrations with conditional logic, approval workflows, and payment integration.",
+      "We build your event registration experience inside Cvent — including registration pages, types, session selection, branded confirmation emails, and attendee-facing flow.",
   },
   {
     icon: Settings,
-    title: "Cvent Configuration",
+    title: "Attendee Hub & Mobile App Readiness",
     description:
-      "Custom fields, email templates, reports, attendee management — we configure your Cvent instance to match your exact event needs.",
+      "We build and configure the Cvent Attendee Hub and prepare the event app with content, branding, session schedules, and pre-launch testing.",
   },
   {
     icon: Users,
-    title: "Ongoing Management",
+    title: "Event Tech QA",
     description:
-      "Don't have an in-house team? We handle day-to-day registration management, attendee support, and real-time troubleshooting.",
+      "We test your registration build, email workflows, and attendee journeys end-to-end before your event goes live — so issues are caught before your attendees are.",
   },
   {
     icon: BarChart3,
-    title: "Optimization & Reporting",
+    title: "Ongoing Event Support",
     description:
-      "Unlock insights from your event data. We create custom reports, optimize conversion rates, and improve attendee experience.",
+      "After launch, we handle attendee updates, troubleshooting, content changes, and real-time support through your full event lifecycle.",
   },
 ];
 
@@ -36,7 +36,7 @@ const ServicesSection = () => (
           Expert Cvent Services, On Demand
         </h2>
         <p className="text-muted-foreground mt-4 max-w-xl mx-auto">
-          You have the license. We bring the expertise to make it work — on your timeline and budget.
+          We handle the Cvent builds, configuration, testing, and support your team needs to launch cleaner events with less last-minute pressure.
         </p>
       </div>
 

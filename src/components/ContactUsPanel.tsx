@@ -557,7 +557,7 @@ const ContactUsPanel = ({ open, onOpenChange }: ContactUsPanelProps) => {
           <DrawerHeader className="px-6 pt-4 pb-3 border-b border-border flex-shrink-0">
             <DrawerTitle className="text-xl font-bold font-display">Contact Us</DrawerTitle>
             <DrawerDescription className="text-sm text-muted-foreground">
-              Tell us what you need and we'll be in touch shortly
+              One of our team members will reach out within 24 hours. No commitment required.
             </DrawerDescription>
           </DrawerHeader>
           {formContent}
@@ -575,7 +575,7 @@ const ContactUsPanel = ({ open, onOpenChange }: ContactUsPanelProps) => {
         <SheetHeader className="px-6 pt-6 pb-4 border-b border-border flex-shrink-0">
           <SheetTitle className="text-xl font-bold font-display">Contact Us</SheetTitle>
           <SheetDescription className="text-sm text-muted-foreground">
-            Tell us what you need and we'll be in touch shortly
+            One of our team members will reach out within 24 hours. No commitment required.
           </SheetDescription>
         </SheetHeader>
         {formContent}

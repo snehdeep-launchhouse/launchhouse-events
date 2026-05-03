@@ -4,24 +4,24 @@ import TnCTooltip from "@/components/TnCTooltip";
 const reasons = [
   {
     icon: Award,
-    title: "Cvent Certified",
-    description: "Our team holds official Cvent certifications — we know the platform inside and out.",
+    title: "15+ Years of Combined Experience",
+    description: "Practitioners with hands-on experience in event registration, attendee apps, and live event operations.",
   },
   {
     icon: Clock,
-    title: "Same-Day Delivery",
-    description: "Need it built today? Our Simple package includes same-day turnaround at just $1,199.",
-    hasTnC: true,
+    title: "Simple Builds from $899",
+    description: "Transparent, project-based pricing. No hidden fees. No bloated retainers.",
   },
   {
     icon: DollarSign,
-    title: "Transparent Value",
-    description: "No hidden fees, no bloated retainers. You pay for what you need — and nothing more.",
+    title: "Same-Day Delivery from $1,199",
+    description: "Available for simple and qualified medium builds. Get your registration live when you need it.",
+    hasTnC: true,
   },
   {
     icon: ShieldCheck,
-    title: "30+ Years Experience",
-    description: "Collective decades of event tech expertise across industries, audiences, and formats.",
+    title: "Dedicated Cvent Execution Support",
+    description: "Built for event teams that need practical Cvent support, seamless collaboration, and extra hands without adding internal headcount.",
   },
 ];
 
@@ -34,7 +34,7 @@ const WhyUsSection = () => (
           Faster. Cheaper. Better.
         </h2>
         <p className="text-muted-foreground mt-4 max-w-xl mx-auto">
-          We built our practice around one idea: expert Cvent work shouldn't cost a fortune or take forever.
+          Built by practitioners with hands-on experience across registration, attendee apps, and live event operations — expert Cvent work that doesn't cost a fortune or take forever.
         </p>
       </div>
 

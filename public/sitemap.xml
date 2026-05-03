@@ -36,6 +36,11 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://www.launchhouse.events/contact</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://www.launchhouse.events/privacy-policy</loc>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>

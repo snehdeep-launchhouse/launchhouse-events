@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import BreadcrumbJsonLd from "@/components/BreadcrumbJsonLd";
 import Footer from "@/components/Footer";
@@ -19,14 +20,14 @@ const GET_A_QUOTE_URL = "/get-a-quote";
 /* ── Timeline benchmarks ─────────────────────────────────────────── */
 const benchmarks = [
   { icon: Zap, label: "The Sprint", time: "5 days", desc: "Agile teams with urgent deadlines can launch a fully functional event fast." },
-  { icon: Target, label: "The Standard", time: "4 weeks", desc: "The sweet spot for most organisations — room for stakeholder alignment and revisions." },
-  { icon: Mountain, label: "The Marathon", time: "3 months", desc: "Complex programmes with layered requirements managed at a comfortable pace." },
+  { icon: Target, label: "The Standard", time: "4 weeks", desc: "The sweet spot for most organizations — room for stakeholder alignment and revisions." },
+  { icon: Mountain, label: "The Marathon", time: "3 months", desc: "Complex programs with layered requirements managed at a comfortable pace." },
 ];
 
 /* ── Service tier cards ──────────────────────────────────────────── */
 const fullBuildCards = [
   { icon: Clock, title: "Standard Deployment", timeline: "30+ days", desc: "Ideal for teams with healthy lead time. Complete First Draft followed by collaborative revision rounds to fine-tune every detail.", terms: "Concludes upon successful event launch." },
-  { icon: Rocket, title: "Rapid Deployment", timeline: "5–21 days", desc: "High-velocity service designed for urgency. We prioritise speed without sacrificing quality, moving quickly from draft to launch.", terms: "Concludes upon event launch." },
+  { icon: Rocket, title: "Rapid Deployment", timeline: "5–21 days", desc: "High-velocity service designed for urgency. We prioritize speed without sacrificing quality, moving quickly from draft to launch.", terms: "Concludes upon event launch." },
   { icon: Shield, title: "Lifecycle Support", timeline: "Ongoing", desc: "Our \"White Glove\" experience — we remain on standby post-launch to manage updates, tweaks, and content changes while your event is live.", terms: "Active until event concludes or hours are consumed." },
 ];
 
@@ -46,7 +47,7 @@ const slaRows = [
 
 /* ── Additional services ─────────────────────────────────────────── */
 const additionalServices = [
-  { icon: BookOpen, hook: "Got the tool but not the skills?", title: "Enablement & Training", desc: "Customised, high-impact sessions that go beyond manuals. We teach your team workflow optimisation so they can manage complex events in-house with confidence." },
+  { icon: BookOpen, hook: "Got the tool but not the skills?", title: "Enablement & Training", desc: "Customized, high-impact sessions that go beyond manuals. We teach your team workflow optimization so they can manage complex events in-house with confidence." },
   { icon: Headphones, hook: "Drowning in attendee emails?", title: "Post-Launch Support", desc: "Dedicated support during the live phase of your event — invitee management, reporting adjustments, and real-time troubleshooting so you can focus on the experience." },
   { icon: Wrench, hook: "Stuck on a technical hurdle?", title: "On-Demand Custom Tasks", desc: "Engage us for specific, isolated challenges — complex registration logic, API integrations, or tricky surveys — without committing to a full build package." },
 ];
@@ -72,7 +73,13 @@ const TierCard = ({ card }: { card: typeof fullBuildCards[0] }) => {
 };
 
 /* ── Page ─────────────────────────────────────────────────────────── */
-const Services = () => (
+const Services = () => {
+  useEffect(() => {
+    document.title = "Event Technology Services | LaunchHouse Events";
+    return () => { document.title = "LaunchHouse Events"; };
+  }, []);
+
+  return (
   <div className="min-h-screen bg-background">
     <BreadcrumbJsonLd items={[{ name: "Services", path: "/services" }]} />
     <Navbar />
@@ -85,10 +92,10 @@ const Services = () => (
       </div>
       <div className="container relative py-24 md:py-36 flex flex-col items-center text-center gap-8 animate-fade-in">
         <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold font-display tracking-tight max-w-3xl leading-[1.1] text-white">
-          The "White Glove" Approach to Event Tech
+          Dedicated Cvent Execution Support for Event Teams That Have More to Do Than Build
         </h1>
         <p className="text-lg md:text-xl text-white/80 max-w-2xl leading-relaxed">
-          Reclaim your time. Let us architect the experience.
+          LaunchHouse Events handles the Cvent builds, configuration, testing, and ongoing support — so your team can focus on event marketing, agenda building, speaker sourcing, and everything else that actually moves your event forward.
         </p>
       </div>
     </section>
@@ -97,7 +104,7 @@ const Services = () => (
     <section className="py-20 md:py-28">
       <div className="container">
         <p className="text-muted-foreground text-center max-w-2xl mx-auto mb-12 leading-relaxed">
-          Hand off the heavy lifting of website creation and registration workflows to a team that lives and breathes event technology. We translate your vision into a polished, fully branded digital reality.
+          Event teams using Cvent often run into the same operational pressure points: builds that take longer than the timeline allows, reporting that does not work properly because the setup was not configured correctly from the start, app and check-in workflows that get left until the last minute, and not enough internal bandwidth to manage it all alongside the rest of the event workload.
         </p>
         <div className="text-center mb-4">
           <p className="text-sm font-semibold uppercase tracking-widest text-primary mb-3">Timeline</p>
@@ -162,7 +169,7 @@ const Services = () => (
                 </div>
                 <h4 className="text-lg font-bold font-display mb-2">Custom Attendee Training Video</h4>
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  A polished, 5-minute personalised video guide designed to drive adoption and reduce help-desk queries. Tailored to your specific implementation — Web Hub, Mobile App, Appointment Scheduling, or On-Arrival experience.
+                  A polished, 5-minute personalized video guide designed to drive adoption and reduce help-desk queries. Tailored to your specific implementation — Web Hub, Mobile App, Appointment Scheduling, or On-Arrival experience.
                 </p>
               </div>
             </div>
@@ -213,7 +220,7 @@ const Services = () => (
       <div className="container">
         <div className="text-center mb-12">
           <p className="text-sm font-semibold uppercase tracking-widest text-primary mb-3">Beyond the Build</p>
-          <h2 className="text-3xl md:text-4xl font-bold font-display tracking-tight">Specialised Services & Strategic Support</h2>
+          <h2 className="text-3xl md:text-4xl font-bold font-display tracking-tight">Specialized Services & Strategic Support</h2>
           <p className="text-muted-foreground mt-4 max-w-xl mx-auto">
             Plug into your workflow exactly where you need us most.
           </p>
@@ -244,9 +251,9 @@ const Services = () => (
         <div className="absolute inset-0 bg-[hsl(220,90%,10%)]/75" />
       </div>
       <div className="container relative text-center">
-        <h2 className="text-3xl md:text-4xl font-bold font-display tracking-tight mb-4 text-white">Ready to Get Started?</h2>
+        <h2 className="text-3xl md:text-4xl font-bold font-display tracking-tight mb-4 text-white">Transparent Pricing for Every Build Type</h2>
         <p className="text-white/80 max-w-lg mx-auto mb-8">
-          Tell us about your event and we'll put together a tailored proposal within 24 hours.
+          Simple builds start from $899. Same-day delivery is available from $1,199 for simple and qualified medium builds. Medium, Advanced, and Complex builds are custom quoted based on your event scope. No hidden fees. No bloated retainers. You pay for what your event actually needs.
         </p>
         <Button size="lg" className="shadow-btn" onClick={() => window.open(GET_A_QUOTE_URL, "_blank")}>
           Get a Quote <ArrowUpRight className="w-4 h-4 ml-1" />
@@ -256,6 +263,7 @@ const Services = () => (
 
     <Footer />
   </div>
-);
+  );
+};
 
 export default Services;

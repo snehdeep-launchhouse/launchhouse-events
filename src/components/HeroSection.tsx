@@ -20,18 +20,16 @@ const HeroSection = () => {
       <div className="container relative py-24 md:py-36 flex flex-col items-center text-center gap-8">
         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 text-white text-sm font-medium backdrop-blur-sm">
           <Zap className="w-4 h-4" />
-          Cvent Certified · 30+ Years Collective Experience
+          Cvent Certified · 15+ Years Combined Experience
         </div>
 
         <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold font-display tracking-tight max-w-4xl leading-[1.1] text-white">
-          Event Registration,{" "}
-          <span className="text-white/80">Done Right.</span>
+          Your Cvent Events, Built and Ready to{" "}
+          <span className="text-white/80">Launch</span>
         </h1>
 
         <p className="text-lg md:text-xl text-white/70 max-w-2xl leading-relaxed">
-          Your Cvent license is powerful — but only if you know how to use it.
-          We build and manage event registrations{" "}
-          <strong className="text-white">faster, cheaper, and better.</strong>
+          Practical Cvent event build support for lean US event teams. We handle registration builds, Attendee Hub, mobile app readiness, and ongoing support — so your team can focus on running the event.
         </p>
 
         <div className="flex flex-col sm:flex-row gap-4 mt-2">
@@ -44,7 +42,7 @@ const HeroSection = () => {
         </div>
 
         <p className="text-sm text-white/60 mt-4">
-          Starting at <strong className="text-white">$1,199</strong> · Same-day delivery available · <TnCTooltip />
+          Simple builds from <strong className="text-white">$899</strong> · Same-day delivery from $1,199 · <TnCTooltip />
         </p>
       </div>
     </section>
