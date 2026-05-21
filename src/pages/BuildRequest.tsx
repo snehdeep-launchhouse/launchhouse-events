@@ -58,13 +58,6 @@ const GLOBAL_TIMEZONES = [
   "UTC+12:00 (Auckland)", "UTC+13:00 (Samoa)", "UTC+14:00 (Line Islands)",
 ];
 
-const CVENT_LINKS = [
-  { label: "Event Management", url: "https://support.cvent.com/s/communityarticle/Getting-Started-with-Event-Management" },
-  { label: "Attendee Hub", url: "https://support.cvent.com/s/communityarticle/Welcome-to-Attendee-Hub" },
-  { label: "Abstract Management", url: "https://support.cvent.com/s/communityarticle/Creating-an-Abstract-Project" },
-  { label: "Appointments", url: "https://support.cvent.com/s/communityarticle/Getting-Started-with-Appointments" },
-  { label: "Surveys", url: "https://support.cvent.com/s/communityarticle/Getting-Started-with-Survey" },
-];
 
 /* ── Schemas ────────────────────────────────────────────────────── */
 const step1Schema = z.object({
@@ -554,19 +547,6 @@ const BuildRequest = () => {
               </div>
             </div>
 
-            {/* Cvent Info - plain text, no links */}
-            <div className="rounded-lg border border-border/50 bg-muted/30 p-4 space-y-2">
-              <p className="text-sm text-muted-foreground">
-                New to Cvent or not sure which platform to use? Review the products below to learn more before making your selection.
-              </p>
-              <div className="flex flex-wrap gap-3">
-                {CVENT_LINKS.map((link) => (
-                  <span key={link.label} className="text-sm font-medium text-foreground">
-                    {link.label}
-                  </span>
-                ))}
-              </div>
-            </div>
 
             {/* Dual List */}
             <div className="space-y-2">
