@@ -5,6 +5,7 @@ const IgnitionFooter = () => (
       <div className="flex gap-4">
         <a href="/privacy-policy" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">Privacy</a>
         <a href="/terms-of-service" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">Terms</a>
+        <a href="tel:+15714448523" className="hover:text-foreground transition-colors">+1 (571) 444-8523</a>
       </div>
     </div>
   </footer>
