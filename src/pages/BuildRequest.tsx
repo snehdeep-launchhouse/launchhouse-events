@@ -251,24 +251,22 @@ const BuildRequest = () => {
       const { data, error } = await supabase.functions.invoke("send-build-request", { body: payload });
       if (error) throw error;
 
-      // Mark abandoned form as completed using token-based update
+      // Mark abandoned form as completed using token-based RPC
       try {
         if (submissionTokenRef.current) {
           const data1 = form1.getValues();
-          await supabase
-            .from("abandoned_eb_forms")
-            .update({
-              last_page_visited: 3,
-              status: "completed",
-              completed: true,
-              form_data: { page1: data1, page2: form2.getValues(), page3: data3 } as any,
-              updated_at: new Date().toISOString(),
-            })
-            .eq("submission_token", submissionTokenRef.current);
+          await supabase.rpc("update_abandoned_eb_by_token" as any, {
+            p_token: submissionTokenRef.current,
+            p_status: "completed",
+            p_completed: true,
+            p_last_page_visited: 3,
+            p_form_data: { page1: data1, page2: form2.getValues(), page3: data3 } as any,
+          });
         }
       } catch (e) {
         console.error("Abandoned form tracking error:", e);
       }
+
 
       setSubmitted(true);
       toast.success("Build request submitted successfully!");
