@@ -474,6 +474,21 @@ export type Database = {
         }
         Returns: undefined
       }
+      update_abandoned_eb_by_token: {
+        Args: {
+          p_company?: string
+          p_company_name?: string
+          p_completed?: boolean
+          p_email?: string
+          p_first_name?: string
+          p_form_data?: Json
+          p_last_name?: string
+          p_last_page_visited?: number
+          p_status?: string
+          p_token: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

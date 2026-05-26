@@ -173,12 +173,19 @@ const BuildRequest = () => {
         updated_at: new Date().toISOString(),
       };
 
-      // If we already have a token, UPDATE by token (secure)
+      // If we already have a token, UPDATE via secure RPC (token-scoped, SECURITY DEFINER)
       if (submissionTokenRef.current) {
-        await supabase
-          .from("abandoned_eb_forms")
-          .update(payload)
-          .eq("submission_token", submissionTokenRef.current);
+        await supabase.rpc("update_abandoned_eb_by_token" as any, {
+          p_token: submissionTokenRef.current,
+          p_status: "partial",
+          p_first_name: data1.firstName,
+          p_last_name: data1.lastName,
+          p_email: data1.email,
+          p_company_name: data1.companyName,
+          p_company: data1.companyName,
+          p_form_data: payload.form_data as any,
+          p_last_page_visited: page,
+        });
       } else {
         // Generate token client-side so we don't need SELECT permission after INSERT
         const clientToken = crypto.randomUUID();
@@ -193,6 +200,7 @@ const BuildRequest = () => {
           submissionTokenRef.current = clientToken;
         }
       }
+
     } catch (e) {
       console.error("Abandoned form tracking error:", e);
     }
@@ -243,24 +251,22 @@ const BuildRequest = () => {
       const { data, error } = await supabase.functions.invoke("send-build-request", { body: payload });
       if (error) throw error;
 
-      // Mark abandoned form as completed using token-based update
+      // Mark abandoned form as completed using token-based RPC
       try {
         if (submissionTokenRef.current) {
           const data1 = form1.getValues();
-          await supabase
-            .from("abandoned_eb_forms")
-            .update({
-              last_page_visited: 3,
-              status: "completed",
-              completed: true,
-              form_data: { page1: data1, page2: form2.getValues(), page3: data3 } as any,
-              updated_at: new Date().toISOString(),
-            })
-            .eq("submission_token", submissionTokenRef.current);
+          await supabase.rpc("update_abandoned_eb_by_token" as any, {
+            p_token: submissionTokenRef.current,
+            p_status: "completed",
+            p_completed: true,
+            p_last_page_visited: 3,
+            p_form_data: { page1: data1, page2: form2.getValues(), page3: data3 } as any,
+          });
         }
       } catch (e) {
         console.error("Abandoned form tracking error:", e);
       }
+
 
       setSubmitted(true);
       toast.success("Build request submitted successfully!");

@@ -368,12 +368,13 @@ const ContactUsPanel = ({ open, onOpenChange }: ContactUsPanelProps) => {
       await deleteAbandoned(step1Data.email);
       if (abandonedDemoRowCreatedRef.current) {
         try {
-          await supabase
-            .from("abandoned_demo_form" as any)
-            .update({ status: "completed", updated_at: new Date().toISOString() } as any)
-            .eq("session_id", sessionIdRef.current);
+          await supabase.rpc("update_abandoned_demo_by_session" as any, {
+            p_session_id: sessionIdRef.current,
+            p_status: "completed",
+          });
         } catch { /* silent */ }
       }
+
       setSubmitted(true);
     } catch (err: unknown) {
       console.error("Contact submission error:", err);
