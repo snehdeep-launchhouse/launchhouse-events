@@ -103,7 +103,7 @@ const Navbar = () => {
 
       {/* Sticky mobile CTA */}
       {!mobileOpen && (
-        <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 p-3 pb-safe bg-background/95 backdrop-blur-lg border-t border-border/50">
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 p-3 pb-safe bg-background/95 backdrop-blur-lg border-t border-border/50">
           <Button onClick={handleDemo} className="w-full shadow-btn min-h-[44px]">
             Book a Free Consultation
           </Button>
