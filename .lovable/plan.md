@@ -1,20 +1,32 @@
-Add US phone number +1 (571) 444-8523 to the marketing site in 4 places. No other changes.
+Add the US phone number +1 (571) 444-8523 as a second phone line alongside the existing India number +91 999 906 3734. Label them "US" and "India" respectively. No other changes.
 
-Files to change
+## Files to change
 
-1. src/components/Footer.tsx
-   - Add a `tel:+15714448523` anchor in the right-side flex row of links, between "Contact" and "Cookie Settings". Same styling class as siblings.
+### 1. `src/components/ContactUsPanel.tsx` (thank-you screen, ~lines 612–639)
 
-2. src/components/IgnitionFooter.tsx
-   - Add the same `tel:` anchor in the right-side gap row alongside Privacy and Terms.
+In the "Need to reach us sooner?" card, keep the existing email, WhatsApp, and India phone rows. Add one new phone row directly below the India phone:
 
-3. src/components/ContactSection.tsx (homepage Contact section — point 1)
-   - Below the existing email row at the bottom, add a second row with a Phone icon + `tel:` link styled identically to the email line.
+- Label: `+1 (571) 444-8523` with a small `US` tag, and update the existing one to show `India` tag.
+- Link: `tel:+15714448523`
+- Same `Phone` icon and styling as the existing phone row.
 
-4. src/pages/About.tsx (About page CTA section — point 2)
-   - Under the "Book a Free Consultation" button in the CTA, add a small white/translucent sub-line: "Prefer to talk? Call us at +1 (571) 444-8523" with the number as a `tel:` link.
+### 2. `supabase/functions/send-quote-request/index.ts` (user confirmation email, ~line 149)
 
-Not changing
-- Navbar (per user — phone will go inside the Contact Us form later).
-- Any forms, drawers, or quote/build pages.
-- No classNames, colors, or layout shifts beyond these added anchors.
+Inside the "Need urgent assistance?" block, keep the existing `+91 9999 063 734` line and add a new line right under it:
+
+- `📞 US: +1 (571) 444-8523` as a `tel:+15714448523` link with the same inline styling.
+- Tag the existing India line as `India:` for symmetry.
+
+### 3. `supabase/functions/send-lead-notification/index.ts` (calculator lead user email, ~line 226)
+
+Same change as #2 inside the "Need to speak with us sooner?" block: add `📞 US: +1 (571) 444-8523` as a `tel:+15714448523` link beneath the existing India phone, and prefix the India phone with `India:`.
+
+4. Add this new US number on the post submit page of book demo form
+  &nbsp;
+
+## Not changing
+
+- WhatsApp link (stays India only — that's the WhatsApp account).
+- Internal/admin notification emails (no phone block there).
+- `book-demo` and `send-build-request` emails (no "reach us" phone block to update).
+- Any other components, forms, or copy.
