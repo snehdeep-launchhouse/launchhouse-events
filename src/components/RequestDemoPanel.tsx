@@ -9,7 +9,7 @@ import { zodEmail, type VerificationStatus } from "@/lib/email-validation";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Calendar } from "@/components/ui/calendar";
-import { Loader2, CheckCircle2, ArrowLeft, X, Plus, Video, CalendarDays, ExternalLink, AlertTriangle, Clock } from "lucide-react";
+import { Loader2, CheckCircle2, ArrowLeft, X, Plus, Video, CalendarDays, ExternalLink, AlertTriangle, Clock, Mail, Phone, MessageCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -474,6 +474,42 @@ const RequestDemoPanel = ({ open, onOpenChange }: RequestDemoPanelProps) => {
                 View in Google Calendar
               </a>
             )}
+          </div>
+
+          <div className="rounded-xl border border-border bg-card p-5 space-y-4 text-left shadow-card">
+            <h4 className="text-sm font-semibold border-b border-border pb-2">
+              Need to reach us sooner?
+            </h4>
+            <a
+              href="mailto:sam@launchhouse.events"
+              className="flex items-center gap-3 text-sm hover:text-primary transition-colors min-h-[44px]"
+            >
+              <Mail className="w-4 h-4 text-primary" />
+              sam@launchhouse.events
+            </a>
+            <a
+              href="https://wa.me/919999063734"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-3 text-sm hover:text-primary transition-colors min-h-[44px]"
+            >
+              <MessageCircle className="w-4 h-4 text-green-600" />
+              WhatsApp Us
+            </a>
+            <a
+              href="tel:+919999063734"
+              className="flex items-center gap-3 text-sm hover:text-primary transition-colors min-h-[44px]"
+            >
+              <Phone className="w-4 h-4 text-primary" />
+              <span><span className="text-muted-foreground font-medium mr-1">India:</span>+91 999 906 3734</span>
+            </a>
+            <a
+              href="tel:+15714448523"
+              className="flex items-center gap-3 text-sm hover:text-primary transition-colors min-h-[44px]"
+            >
+              <Phone className="w-4 h-4 text-primary" />
+              <span><span className="text-muted-foreground font-medium mr-1">US:</span>+1 (571) 444-8523</span>
+            </a>
           </div>
 
           <Button

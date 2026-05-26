@@ -634,7 +634,14 @@ function ConfirmationContent({
           className="flex items-center gap-3 text-sm hover:text-primary transition-colors min-h-[44px]"
         >
           <Phone className="w-4 h-4 text-primary" />
-          +91 999 906 3734
+          <span><span className="text-muted-foreground font-medium mr-1">India:</span>+91 999 906 3734</span>
+        </a>
+        <a
+          href="tel:+15714448523"
+          className="flex items-center gap-3 text-sm hover:text-primary transition-colors min-h-[44px]"
+        >
+          <Phone className="w-4 h-4 text-primary" />
+          <span><span className="text-muted-foreground font-medium mr-1">US:</span>+1 (571) 444-8523</span>
         </a>
       </div>
 

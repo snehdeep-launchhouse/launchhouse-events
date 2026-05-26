@@ -223,7 +223,10 @@ serve(async (req) => {
           📧 <a href="mailto:sam@launchhouse.events" style="color:#1d4ed8;text-decoration:underline;">sam@launchhouse.events</a>
         </p>
         <p style="margin:0 0 4px;font-size:14px;color:#374151;">
-          📞 <a href="tel:+919999063734" style="color:#1d4ed8;text-decoration:underline;">+91 9999 063 734</a>
+          📞 <strong>India:</strong> <a href="tel:+919999063734" style="color:#1d4ed8;text-decoration:underline;">+91 9999 063 734</a>
+        </p>
+        <p style="margin:0 0 4px;font-size:14px;color:#374151;">
+          📞 <strong>US:</strong> <a href="tel:+15714448523" style="color:#1d4ed8;text-decoration:underline;">+1 (571) 444-8523</a>
         </p>
         <p style="margin:0;font-size:14px;color:#374151;">
           💬 <a href="https://wa.me/919999063734" style="color:#1d4ed8;text-decoration:underline;">WhatsApp</a>
