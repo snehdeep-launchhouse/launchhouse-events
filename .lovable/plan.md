@@ -1,32 +1,33 @@
-Add the US phone number +1 (571) 444-8523 as a second phone line alongside the existing India number +91 999 906 3734. Label them "US" and "India" respectively. No other changes.
+# Visual fixes: tablet navbar + footer overlap
 
-## Files to change
+Visual-only changes. No functionality, routing, or business logic touched.
 
-### 1. `src/components/ContactUsPanel.tsx` (thank-you screen, ~lines 612–639)
+## 1. Navbar — tablet crowding (`src/components/Navbar.tsx`)
 
-In the "Need to reach us sooner?" card, keep the existing email, WhatsApp, and India phone rows. Add one new phone row directly below the India phone:
+At 768px (md), all 4 nav links + "Contact Us" + "Book a Free Consultation" try to fit on one row, causing the wrapping seen in the screenshot ("About Us", "Our Services" wrapping to two lines; Pricing nearly touching Contact Us).
 
-- Label: `+1 (571) 444-8523` with a small `US` tag, and update the existing one to show `India` tag.
-- Link: `tel:+15714448523`
-- Same `Phone` icon and styling as the existing phone row.
+Fix: shift the horizontal desktop layout from the `md` breakpoint to `lg` (1024px). On tablet (md–lg) the hamburger menu shows instead, which already contains all links + both CTAs.
 
-### 2. `supabase/functions/send-quote-request/index.ts` (user confirmation email, ~line 149)
+- Line 50: `hidden md:flex items-center gap-8` → `hidden lg:flex items-center gap-6`
+- Line 63: `hidden md:inline-flex` (Contact Us) → `hidden lg:inline-flex`
+- Line 66: `hidden md:inline-flex` (Book a Free Consultation) → `hidden lg:inline-flex`
+- Line 71: hamburger `md:hidden` → `lg:hidden`
+- Line 81: mobile menu wrapper `md:hidden` → `lg:hidden`
+- Line 106: sticky mobile CTA `md:hidden` → `lg:hidden`
 
-Inside the "Need urgent assistance?" block, keep the existing `+91 9999 063 734` line and add a new line right under it:
+Result: desktop (≥1024px) unchanged. Tablet (768–1023px) now uses the existing tidy hamburger menu. Mobile unchanged.
 
-- `📞 US: +1 (571) 444-8523` as a `tel:+15714448523` link with the same inline styling.
-- Tag the existing India line as `India:` for symmetry.
+## 2. Footer — Cookie Settings hidden behind chat widget (`src/components/Footer.tsx`)
 
-### 3. `supabase/functions/send-lead-notification/index.ts` (calculator lead user email, ~line 226)
+The "Ask me anything" chat bubble (fixed bottom-right, z-50) overlaps the right-aligned footer links row, hiding "Cookie Settings" on tablet/mobile.
 
-Same change as #2 inside the "Need to speak with us sooner?" block: add `📞 US: +1 (571) 444-8523` as a `tel:+15714448523` link beneath the existing India phone, and prefix the India phone with `India:`.
+Fix: add bottom padding to the footer so its content sits above the chat widget, and ensure the links row wraps cleanly under the widget on tablet by giving it right-side breathing room.
 
-4. Add this new US number on the post submit page of book demo form
-  &nbsp;
+- Footer `<footer>` class: `py-12 border-t border-border/50` → `py-12 pb-24 lg:pb-12 border-t border-border/50`
+- Links container: keep `flex flex-wrap gap-6` (already wraps) — no other change needed once bottom padding clears the widget.
 
-## Not changing
+Result: on mobile/tablet the footer ends with ~96px of clearance so the floating chat widget no longer covers Cookie Settings. On desktop (lg+) the widget sits to the right of footer content without overlap, so padding stays normal.
 
-- WhatsApp link (stays India only — that's the WhatsApp account).
-- Internal/admin notification emails (no phone block there).
-- `book-demo` and `send-build-request` emails (no "reach us" phone block to update).
-- Any other components, forms, or copy.
+## Verification
+
+- Resize preview to 768, 1024, 1280 and confirm: no wrapping nav labels, both CTAs visible at ≥1024, hamburger at <1024, Cookie Settings fully visible at all sizes without the chat bubble covering it.
