@@ -1,7 +1,7 @@
 import Logo from "./Logo";
 
 const Footer = () => (
-  <footer className="py-12 border-t border-border/50">
+  <footer className="py-12 pb-28 lg:pb-12 border-t border-border/50">
     <div className="container flex flex-col md:flex-row items-center justify-between gap-6">
       <Logo size={32} />
       <div className="text-sm text-muted-foreground text-center">

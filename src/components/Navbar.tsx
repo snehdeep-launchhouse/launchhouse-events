@@ -47,28 +47,28 @@ const Navbar = () => {
         <div className="container flex items-center justify-between h-[var(--nav-height)]">
           <Logo />
           {/* Desktop nav */}
-          <div className="hidden md:flex items-center gap-8">
+          <div className="hidden lg:flex items-center gap-6">
             {navLinks.map((l) => (
               <a
                 key={l.href}
                 href={l.type === "route" ? l.href : `/${l.href}`}
                 onClick={(e) => handleNav(e, l)}
-                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap"
               >
                 {l.label}
               </a>
             ))}
           </div>
           <div className="flex items-center gap-2">
-            <Button onClick={handleContact} size="sm" variant="outline" className="hidden md:inline-flex">
+            <Button onClick={handleContact} size="sm" variant="outline" className="hidden lg:inline-flex">
               Contact Us
             </Button>
-            <Button onClick={handleDemo} size="sm" className="hidden md:inline-flex">
+            <Button onClick={handleDemo} size="sm" className="hidden lg:inline-flex">
               Book a Free Consultation
             </Button>
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
-              className="md:hidden p-2 text-foreground"
+              className="lg:hidden p-2 text-foreground"
               aria-label="Toggle menu"
             >
               {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -78,7 +78,7 @@ const Navbar = () => {
 
         {/* Mobile menu */}
         {mobileOpen && (
-          <div className="md:hidden border-t border-border/50 bg-background/95 backdrop-blur-lg">
+          <div className="lg:hidden border-t border-border/50 bg-background/95 backdrop-blur-lg">
             <div className="container py-4 flex flex-col gap-3">
               {navLinks.map((l) => (
                 <a
@@ -103,7 +103,7 @@ const Navbar = () => {
 
       {/* Sticky mobile CTA */}
       {!mobileOpen && (
-        <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 p-3 pb-safe bg-background/95 backdrop-blur-lg border-t border-border/50">
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 p-3 pb-safe bg-background/95 backdrop-blur-lg border-t border-border/50">
           <Button onClick={handleDemo} className="w-full shadow-btn min-h-[44px]">
             Book a Free Consultation
           </Button>
