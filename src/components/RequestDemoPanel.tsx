@@ -9,7 +9,7 @@ import { zodEmail, type VerificationStatus } from "@/lib/email-validation";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Calendar } from "@/components/ui/calendar";
-import { Loader2, CheckCircle2, ArrowLeft, X, Plus, Video, CalendarDays, ExternalLink, AlertTriangle, Clock } from "lucide-react";
+import { Loader2, CheckCircle2, ArrowLeft, X, Plus, Video, CalendarDays, ExternalLink, AlertTriangle, Clock, Mail, Phone, MessageCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
