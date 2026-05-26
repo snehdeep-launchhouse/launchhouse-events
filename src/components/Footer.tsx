@@ -1,14 +1,14 @@
 import Logo from "./Logo";
 
 const Footer = () => (
-  <footer className="py-12 pb-28 lg:pb-12 border-t border-border/50">
+  <footer className="py-12 pb-40 lg:pb-12 border-t border-border/50">
     <div className="container flex flex-col md:flex-row items-center justify-between gap-6">
       <Logo size={32} />
       <div className="text-sm text-muted-foreground text-center">
         <p>© {new Date().getFullYear()} LaunchHouse Events. A division of Rina Event Tech</p>
         <p>All rights reserved.</p>
       </div>
-      <div className="flex flex-wrap gap-6 text-sm text-muted-foreground">
+      <div className="flex flex-col items-center gap-3 sm:flex-row sm:flex-wrap sm:gap-6 text-sm text-muted-foreground">
         <a href="/privacy-policy" className="hover:text-primary transition-colors" target="_blank" rel="noopener noreferrer">
           Privacy Policy
         </a>
