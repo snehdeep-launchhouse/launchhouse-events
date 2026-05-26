@@ -1,15 +1,20 @@
-# Mobile footer: Cookie Settings hidden by chat widget
+# Replace Google search favicon
 
-On mobile the chat widget sits at `bottom-20 right-3` (above the sticky "Book a Free Consultation" CTA bar), occupying roughly the bottom-right 200px×45px of the viewport. The current footer links row (`flex flex-wrap gap-6`) wraps to a second line where "+1 (571) 444-8523" is on the left and "Cookie Settings" lands on the right — directly under the chat bubble.
+## Root cause
+`public/favicon.ico` still exists — this is the original Lovable icon. Browsers (and Google's crawler) request `/favicon.ico` by default, and that file overrides the `<link rel="icon" href="/favicon.svg">` we already have in `index.html`. That's why Google's result still shows the Lovable logo even though our SVG favicon is correct.
 
-`pb-28` on the footer was not enough to clear both the sticky CTA and the floating widget.
+## Fix
+1. Generate a Launch House `favicon.png` (512×512) from the LH mark (blue `#006AE1` rounded square, white "LH" — matching `public/favicon.svg` and `src/components/Logo.tsx`) and save it to `public/favicon.png`.
+2. Delete `public/favicon.ico` so it stops shadowing the new icon.
+3. Update `index.html` `<head>` to add a PNG icon link alongside the existing SVG, and add an explicit Google-preferred sized icon:
+   ```html
+   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+   <link rel="icon" type="image/png" sizes="512x512" href="/favicon.png" />
+   <link rel="apple-touch-icon" href="/favicon.png" />
+   ```
+4. Keep `og-banner.svg` and all other meta unchanged.
 
-## Fix (visual only — `src/components/Footer.tsx`)
+## Note on Google
+Google caches favicons for weeks. After publish, the new icon will appear on the live site immediately, but Google search results can take days to weeks to refresh on their next recrawl. Nothing further to do on our end.
 
-1. Stack the links container vertically on mobile so each item is on its own centered row (Cookie Settings is no longer pinned to the right edge where the widget sits). Keep the horizontal flex-wrap layout from `sm` upward.
-   - Links container: `flex flex-wrap gap-6 text-sm text-muted-foreground` → `flex flex-col items-center gap-3 sm:flex-row sm:flex-wrap sm:gap-6 text-sm text-muted-foreground`
-
-2. Increase mobile bottom padding so the whole footer content sits above the widget + sticky CTA stack (~sticky CTA 70px + widget 45px + spacing).
-   - `<footer>`: `py-12 pb-28 lg:pb-12 border-t border-border/50` → `py-12 pb-40 lg:pb-12 border-t border-border/50`
-
-No changes to functionality, links, or desktop layout (≥lg unchanged; sm/md gets a tidy wrapped row).
+No functional/code changes — assets and `<head>` tags only.
