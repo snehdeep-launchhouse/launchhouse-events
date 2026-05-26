@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Mail, Send } from "lucide-react";
+import { Mail, Phone, Send } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import EmailInput from "@/components/EmailInput";
 import { validateEmail, type VerificationStatus } from "@/lib/email-validation";
@@ -83,6 +83,12 @@ const ContactSection = () => {
           <Mail className="w-4 h-4" />
           <a href="mailto:snehdeep@launchhouse.events" className="hover:text-primary transition-colors">
             snehdeep@launchhouse.events
+          </a>
+        </div>
+        <div className="flex items-center justify-center gap-2 mt-2 text-sm text-muted-foreground">
+          <Phone className="w-4 h-4" />
+          <a href="tel:+15714448523" className="hover:text-primary transition-colors">
+            +1 (571) 444-8523
           </a>
         </div>
       </div>

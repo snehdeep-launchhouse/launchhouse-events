@@ -225,6 +225,12 @@ const About = () => {
           <Button size="lg" className="shadow-btn" onClick={() => window.open(BUILD_REQUEST_URL, "_blank")}>
             Book a Free Consultation <ArrowUpRight className="w-4 h-4 ml-1" />
           </Button>
+          <p className="text-sm text-white/80 mt-6">
+            Prefer to talk? Call us at{" "}
+            <a href="tel:+15714448523" className="text-white font-semibold hover:underline">
+              +1 (571) 444-8523
+            </a>
+          </p>
         </div>
       </section>
 

@@ -18,6 +18,9 @@ const Footer = () => (
         <a href="mailto:snehdeep@launchhouse.events" className="hover:text-primary transition-colors" target="_blank" rel="noopener noreferrer">
           Contact
         </a>
+        <a href="tel:+15714448523" className="hover:text-primary transition-colors">
+          +1 (571) 444-8523
+        </a>
         <button
           onClick={() => window.dispatchEvent(new Event("open-cookie-settings"))}
           className="hover:text-primary transition-colors"
