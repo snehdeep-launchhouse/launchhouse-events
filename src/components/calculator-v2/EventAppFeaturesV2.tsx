@@ -64,7 +64,11 @@ export function EventAppFeaturesV2({ onConfirm, initial }: EventAppFeaturesV2Pro
           ))}
         </div>
 
-        <Button className="mt-6 w-full gap-2" onClick={() => onConfirm(features)}>
+        {error && (
+          <p className="mt-4 text-sm text-red-600 font-medium">{error}</p>
+        )}
+
+        <Button className="mt-6 w-full gap-2" onClick={handleConfirm}>
           See my results
         </Button>
       </CardContent>
