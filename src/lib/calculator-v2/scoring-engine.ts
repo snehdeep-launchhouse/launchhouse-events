@@ -308,6 +308,7 @@ export function calculateV2(
   const inferredProducts = inferProducts(answers);
   const selectedProductsForScope = productSelection?.selectedProducts ?? inferredProducts;
   const eventAppSelected = productSelection?.eventAppSelected ?? false;
+  const eventAppFeatures = productSelection?.eventAppFeatures ?? [];
 
   return {
     aggregateScore,
@@ -335,5 +336,6 @@ export function calculateV2(
     inferredProducts,
     selectedProductsForScope,
     eventAppSelected,
+    eventAppFeatures,
   };
 }
