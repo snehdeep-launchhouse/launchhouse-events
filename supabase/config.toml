@@ -20,3 +20,6 @@ verify_jwt = false
 
 [functions.send-lead-notification]
 verify_jwt = false
+
+[functions.send-lead-notification-v2]
+verify_jwt = false
