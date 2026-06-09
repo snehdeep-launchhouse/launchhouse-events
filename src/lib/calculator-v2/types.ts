@@ -83,6 +83,7 @@ export interface ScoringTrace {
   inferredProducts: string[];
   selectedProductsForScope: string[];
   eventAppSelected: boolean;
+  eventAppFeatures: string[];
 }
 
 export interface ProductSelection {
