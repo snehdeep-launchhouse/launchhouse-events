@@ -8,10 +8,11 @@ const NOT_SURE = "Not sure / Need guidance";
 
 interface ProductPickerV2Props {
   onConfirm: (selected: string[]) => void;
+  initial?: string[];
 }
 
-export function ProductPickerV2({ onConfirm }: ProductPickerV2Props) {
-  const [selected, setSelected] = useState<Set<string>>(new Set());
+export function ProductPickerV2({ onConfirm, initial }: ProductPickerV2Props) {
+  const [selected, setSelected] = useState<Set<string>>(() => new Set(initial ?? []));
 
   const toggle = (label: string) => {
     const next = new Set(selected);

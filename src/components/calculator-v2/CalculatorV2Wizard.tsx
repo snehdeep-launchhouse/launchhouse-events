@@ -176,6 +176,7 @@ export function CalculatorV2Wizard() {
                     ? getRegPathOptionsForContactTypes(answers.contact_types)
                     : currentQuestion.options
                 }
+                selectedValue={answers[currentQuestion.id]}
                 onSelect={handleAnswer}
               />
             </CardContent>
@@ -194,13 +195,13 @@ export function CalculatorV2Wizard() {
                   change your event tier.
                 </p>
               </div>
-              <ProductPickerV2 onConfirm={handleProductsConfirm} />
+              <ProductPickerV2 initial={selectedProducts} onConfirm={handleProductsConfirm} />
             </CardContent>
           </Card>
         )}
 
         {stage === "eventAppFeatures" && (
-          <EventAppFeaturesV2 onConfirm={handleEventAppFeaturesConfirm} />
+          <EventAppFeaturesV2 initial={eventAppFeatures} onConfirm={handleEventAppFeaturesConfirm} />
         )}
 
         {stage === "lead" && trace && (
