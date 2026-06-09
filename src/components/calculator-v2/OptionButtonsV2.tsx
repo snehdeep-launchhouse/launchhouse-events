@@ -18,12 +18,12 @@ export function OptionButtonsV2({ options, onSelect, selectedValue }: OptionButt
             key={opt.label}
             variant="outline"
             className={cn(
-              "justify-start rounded-xl border-border bg-card px-4 py-6 text-left text-sm font-medium text-foreground shadow-sm transition-all hover:border-primary hover:bg-accent hover:text-accent-foreground",
+              "h-auto min-h-[3.5rem] w-full max-w-full justify-start whitespace-normal break-words rounded-xl border-border bg-card px-4 py-4 text-left text-sm font-medium leading-snug text-foreground shadow-sm transition-all hover:border-primary hover:bg-accent hover:text-accent-foreground",
               isSelected && "border-primary bg-accent text-accent-foreground",
             )}
             onClick={() => onSelect(opt)}
           >
-            {opt.label}
+            <span className="block w-full whitespace-normal break-words">{opt.label}</span>
           </Button>
         );
       })}

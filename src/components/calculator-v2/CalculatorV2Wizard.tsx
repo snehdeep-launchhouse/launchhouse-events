@@ -139,19 +139,19 @@ export function CalculatorV2Wizard() {
   ) : null;
 
   return (
-    <div className="min-h-screen bg-background py-8">
+    <div className="min-h-screen bg-background pb-12 pt-[calc(var(--nav-height)+1.5rem)]">
       <div className="container mx-auto max-w-2xl px-4">
-        <div className="mb-8">
-          <div className="mb-4 flex items-center justify-between gap-3">
-            <h1 className="text-2xl font-bold text-foreground">
-              Event Complexity Calculator
+        <div className="mb-6">
+          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <h1 className="text-2xl font-bold text-foreground sm:text-3xl">
+              Complexity Calculator
             </h1>
             {stage === "results" ? (
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handleRestart}
-                className="flex items-center gap-2"
+                className="flex w-full items-center justify-center gap-2 sm:w-auto"
               >
                 <RotateCcw className="h-4 w-4" />
                 Start over
