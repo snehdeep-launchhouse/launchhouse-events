@@ -176,6 +176,7 @@ export function CalculatorV2Wizard() {
                     ? getRegPathOptionsForContactTypes(answers.contact_types)
                     : currentQuestion.options
                 }
+                selectedValue={answers[currentQuestion.id]}
                 onSelect={handleAnswer}
               />
             </CardContent>
