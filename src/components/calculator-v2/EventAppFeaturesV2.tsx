@@ -7,10 +7,11 @@ import { EVENT_APP_FEATURES } from "@/lib/calculator-v2/questions";
 
 interface EventAppFeaturesV2Props {
   onConfirm: (features: string[]) => void;
+  initial?: string[];
 }
 
-export function EventAppFeaturesV2({ onConfirm }: EventAppFeaturesV2Props) {
-  const [features, setFeatures] = useState<string[]>([]);
+export function EventAppFeaturesV2({ onConfirm, initial }: EventAppFeaturesV2Props) {
+  const [features, setFeatures] = useState<string[]>(initial ?? []);
 
   const toggle = (feature: string) => {
     setFeatures((prev) =>
