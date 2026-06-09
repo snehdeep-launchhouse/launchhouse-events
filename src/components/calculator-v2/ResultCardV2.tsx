@@ -1,10 +1,12 @@
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import {
   Calculator,
   CheckCircle2,
   Clock,
+  Download,
   DollarSign,
   Info,
   RefreshCw,
@@ -12,12 +14,16 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { ScoringTrace } from "@/lib/calculator-v2/types";
+import type { QuestionId, ScoringTrace } from "@/lib/calculator-v2/types";
 import { EVENT_APP_PRICE } from "@/lib/calculator-v2/pricing";
 import {
   describeConfidence,
+  generateV2ScopeSummary,
   getKeyComplexityDrivers,
+  getPublicConfidenceReasons,
+  getPublicManualReviewReasons,
 } from "@/lib/calculator-v2/scope-summary";
+import { downloadResultsPdfV2 } from "@/lib/generate-results-pdf-v2";
 
 const tierBadgeColor: Record<string, string> = {
   Simple: "bg-success text-success-foreground",
