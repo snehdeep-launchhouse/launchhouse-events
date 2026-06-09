@@ -120,11 +120,29 @@ export function CalculatorV2Wizard() {
     return "Your results";
   })();
 
+  const canGoBack =
+    (stage === "questions" && currentStep > 0) ||
+    stage === "products" ||
+    stage === "eventAppFeatures" ||
+    stage === "lead";
+
+  const backButton = canGoBack ? (
+    <Button
+      type="button"
+      variant="outline"
+      onClick={handleBack}
+      className="flex w-full items-center justify-center gap-2 sm:w-auto"
+    >
+      <ArrowLeft className="h-4 w-4" />
+      Back
+    </Button>
+  ) : null;
+
   return (
     <div className="min-h-screen bg-background py-8">
       <div className="container mx-auto max-w-2xl px-4">
         <div className="mb-8">
-          <div className="mb-4 flex items-center justify-between">
+          <div className="mb-4 flex items-center justify-between gap-3">
             <h1 className="text-2xl font-bold text-foreground">
               Event Complexity Calculator
             </h1>
@@ -139,16 +157,7 @@ export function CalculatorV2Wizard() {
                 Start over
               </Button>
             ) : (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleBack}
-                disabled={stage === "questions" && currentStep === 0}
-                className="flex items-center gap-2"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                Back
-              </Button>
+              backButton
             )}
           </div>
           <div className="space-y-2">
