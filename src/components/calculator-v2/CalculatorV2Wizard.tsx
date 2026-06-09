@@ -206,6 +206,7 @@ export function CalculatorV2Wizard() {
                 </p>
               </div>
               <ProductPickerV2 initial={selectedProducts} onConfirm={handleProductsConfirm} />
+              {backButton && <div className="mt-4 flex justify-start">{backButton}</div>}
             </CardContent>
           </Card>
         )}
