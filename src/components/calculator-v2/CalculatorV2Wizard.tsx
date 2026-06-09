@@ -212,7 +212,10 @@ export function CalculatorV2Wizard() {
         )}
 
         {stage === "eventAppFeatures" && (
-          <EventAppFeaturesV2 initial={eventAppFeatures} onConfirm={handleEventAppFeaturesConfirm} />
+          <div className="space-y-4">
+            <EventAppFeaturesV2 initial={eventAppFeatures} onConfirm={handleEventAppFeaturesConfirm} />
+            {backButton && <div className="flex justify-start">{backButton}</div>}
+          </div>
         )}
 
         {stage === "lead" && trace && (
