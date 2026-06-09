@@ -10,9 +10,10 @@ import { OptionButtonsV2 } from "./OptionButtonsV2";
 import { ProductPickerV2 } from "./ProductPickerV2";
 import { EventAppFeaturesV2 } from "./EventAppFeaturesV2";
 import { ResultCardV2 } from "./ResultCardV2";
+import { LeadFormV2 } from "./LeadFormV2";
 
 type Answers = Partial<Record<QuestionId, number>>;
-type Stage = "questions" | "products" | "eventAppFeatures" | "results";
+type Stage = "questions" | "products" | "eventAppFeatures" | "lead" | "results";
 
 const EVENT_APP_LABEL = "Event App";
 
@@ -28,9 +29,11 @@ export function CalculatorV2Wizard() {
   const currentQuestion = questions[currentStep];
 
   const progressPercent = useMemo(() => {
-    if (stage === "questions") return (currentStep / (totalQuestions + 2)) * 100;
-    if (stage === "products") return ((totalQuestions + 0) / (totalQuestions + 2)) * 100;
-    if (stage === "eventAppFeatures") return ((totalQuestions + 1) / (totalQuestions + 2)) * 100;
+    const denom = totalQuestions + 3; // products + eventAppFeatures(optional) + lead
+    if (stage === "questions") return (currentStep / denom) * 100;
+    if (stage === "products") return (totalQuestions / denom) * 100;
+    if (stage === "eventAppFeatures") return ((totalQuestions + 1) / denom) * 100;
+    if (stage === "lead") return ((totalQuestions + 2) / denom) * 100;
     return 100;
   }, [stage, currentStep, totalQuestions]);
 
@@ -49,16 +52,16 @@ export function CalculatorV2Wizard() {
     if (products.includes(EVENT_APP_LABEL)) {
       setStage("eventAppFeatures");
     } else {
-      finishCalculation(products, [], false);
+      computeTraceAndGoToLead(products, [], false);
     }
   };
 
   const handleEventAppFeaturesConfirm = (features: string[]) => {
     setEventAppFeatures(features);
-    finishCalculation(selectedProducts, features, true);
+    computeTraceAndGoToLead(selectedProducts, features, true);
   };
 
-  const finishCalculation = (
+  const computeTraceAndGoToLead = (
     products: string[],
     features: string[],
     eventAppSelected: boolean,
@@ -69,11 +72,16 @@ export function CalculatorV2Wizard() {
       eventAppFeatures: features,
     });
     setTrace(result);
+    setStage("lead");
+  };
+
+  const handleLeadSubmitted = () => {
     setStage("results");
   };
 
   const handleBack = () => {
-    if (stage === "results") {
+    // Results stage uses "Start over" only — no back button.
+    if (stage === "lead") {
       if (trace?.eventAppSelected) {
         setStage("eventAppFeatures");
       } else {
@@ -108,6 +116,7 @@ export function CalculatorV2Wizard() {
     if (stage === "questions") return `Question ${currentStep + 1} of ${totalQuestions}`;
     if (stage === "products") return "Services";
     if (stage === "eventAppFeatures") return "Event App features";
+    if (stage === "lead") return "Almost there";
     return "Your results";
   })();
 
@@ -194,8 +203,36 @@ export function CalculatorV2Wizard() {
           <EventAppFeaturesV2 onConfirm={handleEventAppFeaturesConfirm} />
         )}
 
+        {stage === "lead" && trace && (
+          <div className="space-y-4">
+            <div className="text-center">
+              <h2 className="text-2xl font-bold text-foreground">
+                You're almost there
+              </h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Enter your details to unlock your personalised pricing estimate.
+              </p>
+            </div>
+            <LeadFormV2
+              answers={answers}
+              trace={trace}
+              onSubmitted={handleLeadSubmitted}
+            />
+          </div>
+        )}
+
         {stage === "results" && trace && (
-          <ResultCardV2 trace={trace} answers={answers} />
+          <div className="space-y-4">
+            <div className="text-center">
+              <h2 className="text-2xl font-bold text-foreground">
+                Your results are ready
+              </h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                We've also emailed a copy for your records.
+              </p>
+            </div>
+            <ResultCardV2 trace={trace} answers={answers} />
+          </div>
         )}
       </div>
     </div>

@@ -68,6 +68,88 @@ export function describeConfidence(level: ScoringTrace["confidenceLevel"]): {
 }
 
 /**
+ * Maps internal manual-scoping-trigger strings (produced by the scoring engine)
+ * onto public-safe wording suitable for the lead/admin payload and emails.
+ * Strips internal numeric details like "average 0.67" and "max-4".
+ */
+const MANUAL_REASON_MAP: { match: (r: string) => boolean; sanitized: string }[] = [
+  { match: (r) => r === "11+ registration paths", sanitized: "Large number of registration paths" },
+  { match: (r) => r === "11+ contact types", sanitized: "Large number of attendee types" },
+  { match: (r) => r === "6+ registration rules", sanitized: "Several registration rules required" },
+  { match: (r) => r === "6+ hotel properties", sanitized: "Multiple hotel properties" },
+  { match: (r) => r === "11+ integrations", sanitized: "Many third-party integrations" },
+  { match: (r) => r === "Multilingual (3+) event", sanitized: "Multi-language event" },
+  { match: (r) => r === "13+ pages combined with custom/premium design", sanitized: "Large website combined with custom design" },
+  { match: (r) => r === "Advanced custom functionality", sanitized: "Advanced custom functionality required" },
+  { match: (r) => /\d+ answers scored at maximum complexity/.test(r), sanitized: "Multiple high-complexity selections across the event" },
+  { match: (r) => r === "Client selected 'Not sure / Need guidance'", sanitized: "Client requested guidance on services" },
+  { match: (r) => r.startsWith("Concentrated single driver: creative"), sanitized: "Concentrated complexity in the design/creative scope" },
+  { match: (r) => r.startsWith("Concentrated single driver: registration"), sanitized: "Concentrated complexity in the registration scope" },
+  { match: (r) => r.startsWith("Concentrated single driver: logistics"), sanitized: "Concentrated complexity in the logistics scope" },
+  { match: (r) => r.startsWith("Cross-category lopsidedness: creative max"), sanitized: "Design complexity is high relative to registration scope" },
+  { match: (r) => r.startsWith("Cross-category lopsidedness: registration max"), sanitized: "Registration complexity is high relative to design scope" },
+];
+
+export function getPublicManualReviewReasons(reasons: string[]): string[] {
+  const out: string[] = [];
+  for (const reason of reasons) {
+    const hit = MANUAL_REASON_MAP.find((m) => m.match(reason));
+    if (hit && !out.includes(hit.sanitized)) {
+      out.push(hit.sanitized);
+    }
+  }
+  return out;
+}
+
+/**
+ * Generates sanitized public-safe confidence reason strings for the V2 payload
+ * and notification emails. Internal trace fields (aggregateScore, signals,
+ * boundary numbers) are inspected here but NEVER emitted in the output.
+ */
+export function getPublicConfidenceReasons(trace: ScoringTrace): string[] {
+  const reasons: string[] = [];
+
+  if (trace.confidenceLevel === "high") {
+    reasons.push("The estimate is consistent across your answers.");
+    return reasons;
+  }
+
+  const score = trace.aggregateScore;
+  const nearBoundary = [14, 25, 37].some((b) => Math.abs(score - b) <= 2);
+  if (nearBoundary) {
+    reasons.push(
+      "Your estimate is close to a tier boundary, so a few details may refine the final scope.",
+    );
+  }
+
+  const overrideCount = trace.effectiveTierOverrides.length;
+  if (overrideCount === 1) {
+    reasons.push("One advanced requirement is driving the estimate.");
+  } else if (overrideCount >= 2) {
+    reasons.push("Several advanced requirements make a scoping call recommended.");
+  }
+
+  const triggerCount = trace.manualReviewReasons.length;
+  if (triggerCount >= 3) {
+    reasons.push("Multiple parts of your event would benefit from a scoping conversation.");
+  } else if (triggerCount >= 1) {
+    reasons.push("A few aspects of your event would benefit from a quick scoping conversation.");
+  }
+
+  const gap = Math.abs(trace.creative_max_signal - trace.noncreative_max_signal);
+  if (gap >= 3) {
+    reasons.push(
+      "Your event mixes high-complexity and low-complexity areas — a scoping call will help align scope.",
+    );
+  }
+
+  if (reasons.length === 0) {
+    reasons.push("A short scoping conversation will confirm pricing.");
+  }
+  return reasons;
+}
+
+/**
  * Pulls the answers whose option label is most "driver-like" (value ≥ 2),
  * mapping each to a friendly key driver phrase using the picked option's label.
  */
