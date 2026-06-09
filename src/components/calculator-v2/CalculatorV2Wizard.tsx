@@ -188,6 +188,7 @@ export function CalculatorV2Wizard() {
                 selectedValue={answers[currentQuestion.id]}
                 onSelect={handleAnswer}
               />
+              {backButton && <div className="mt-4 flex justify-start">{backButton}</div>}
             </CardContent>
           </Card>
         )}
