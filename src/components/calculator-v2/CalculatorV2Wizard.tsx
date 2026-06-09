@@ -228,6 +228,7 @@ export function CalculatorV2Wizard() {
               trace={trace}
               onSubmitted={handleLeadSubmitted}
             />
+            {backButton && <div className="flex justify-start">{backButton}</div>}
           </div>
         )}
 
