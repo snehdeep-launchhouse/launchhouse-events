@@ -54,14 +54,42 @@ function formatUSD(n: number): string {
 export function ResultCardV2({ trace, answers }: ResultCardV2Props) {
   const { result, confidenceLevel, manualReviewRequired, manualReviewReasons } = trace;
   const confidence = describeConfidence(confidenceLevel);
-  const drivers = getKeyComplexityDrivers(answers as Partial<Record<import("@/lib/calculator-v2/types").QuestionId, number>>);
+  const drivers = getKeyComplexityDrivers(answers as Partial<Record<QuestionId, number>>);
 
   const eventBuildPrice = parsePrice(result.price);
   const eventAppPriceN = trace.eventAppSelected ? parsePrice(EVENT_APP_PRICE) : 0;
   const total = eventBuildPrice + eventAppPriceN;
 
+  const handleDownloadPdf = () => {
+    const scopeBullets = generateV2ScopeSummary(
+      answers as Partial<Record<QuestionId, number>>,
+      trace.selectedProductsForScope,
+      trace.eventAppSelected,
+      trace.eventAppFeatures,
+    );
+    const confidenceReasons = getPublicConfidenceReasons(trace);
+    const publicScopingReasons = manualReviewRequired
+      ? getPublicManualReviewReasons(manualReviewReasons)
+      : [];
+    downloadResultsPdfV2({
+      trace,
+      scopeBullets,
+      confidenceReasons,
+      publicScopingReasons,
+    });
+  };
+
   return (
     <div className="space-y-6 animate-slide-up">
+      {/* Download PDF action */}
+      <div className="flex justify-end">
+        <Button onClick={handleDownloadPdf} variant="outline" className="gap-2">
+          <Download className="h-4 w-4" />
+          Download PDF
+        </Button>
+      </div>
+
+
       {/* Tier card */}
       <Card className="overflow-hidden border-primary/20 shadow-lg">
         <div className="border-b border-border bg-accent/40 px-6 py-6 text-center">
