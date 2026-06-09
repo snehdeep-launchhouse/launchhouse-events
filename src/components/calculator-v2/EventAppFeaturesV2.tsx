@@ -12,11 +12,21 @@ interface EventAppFeaturesV2Props {
 
 export function EventAppFeaturesV2({ onConfirm, initial }: EventAppFeaturesV2Props) {
   const [features, setFeatures] = useState<string[]>(initial ?? []);
+  const [error, setError] = useState<string | null>(null);
 
   const toggle = (feature: string) => {
     setFeatures((prev) =>
       prev.includes(feature) ? prev.filter((f) => f !== feature) : [...prev, feature],
     );
+    setError(null);
+  };
+
+  const handleConfirm = () => {
+    if (features.length === 0) {
+      setError("Please select at least one Event App feature to continue.");
+      return;
+    }
+    onConfirm(features);
   };
 
   return (
@@ -54,7 +64,11 @@ export function EventAppFeaturesV2({ onConfirm, initial }: EventAppFeaturesV2Pro
           ))}
         </div>
 
-        <Button className="mt-6 w-full gap-2" onClick={() => onConfirm(features)}>
+        {error && (
+          <p className="mt-4 text-sm text-red-600 font-medium">{error}</p>
+        )}
+
+        <Button className="mt-6 w-full gap-2" onClick={handleConfirm}>
           See my results
         </Button>
       </CardContent>
