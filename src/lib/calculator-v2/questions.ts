@@ -22,21 +22,21 @@ export const questions: Question[] = [
     ],
   },
   {
-    id: "reg_paths",
-    text: "How many registration paths will your event have?",
-    options: [
-      { label: "1", value: 1 },
-      { label: "2–5", value: 2 },
-      { label: "6–10", value: 3 },
-      { label: "11+", value: 4 },
-    ],
-  },
-  {
     id: "contact_types",
     text: "How many attendee or contact types will there be?",
     options: [
       { label: "1–2", value: 1 },
       { label: "3–5", value: 2 },
+      { label: "6–10", value: 3 },
+      { label: "11+", value: 4 },
+    ],
+  },
+  {
+    id: "reg_paths",
+    text: "How many registration paths will your event have?",
+    options: [
+      { label: "1", value: 1 },
+      { label: "2–5", value: 2 },
       { label: "6–10", value: 3 },
       { label: "11+", value: 4 },
     ],
@@ -170,3 +170,43 @@ export const EVENT_APP_FEATURES = [
 ] as const;
 
 export type EventAppFeature = (typeof EVENT_APP_FEATURES)[number];
+
+/**
+ * Returns the registration-path options that are valid for a given contact_types value.
+ * Each registration path generally needs at least one contact type behind it, so the
+ * upper bound of reg_paths is capped by the contact_types band.
+ *
+ * Scoring values stay grid-aligned (1/2/3/4) — only the visible options narrow.
+ * When contact_types = 1 (1–2 contact types), the upper option is shown as
+ * "2 only" but still scores as 2 (Medium band) per the grid.
+ */
+export function getRegPathOptionsForContactTypes(
+  contactTypesValue: number | undefined,
+): { label: string; value: number }[] {
+  const v = contactTypesValue ?? 4;
+  if (v <= 1) {
+    return [
+      { label: "1", value: 1 },
+      { label: "2 only", value: 2 },
+    ];
+  }
+  if (v === 2) {
+    return [
+      { label: "1", value: 1 },
+      { label: "2–5", value: 2 },
+    ];
+  }
+  if (v === 3) {
+    return [
+      { label: "1", value: 1 },
+      { label: "2–5", value: 2 },
+      { label: "6–10", value: 3 },
+    ];
+  }
+  return [
+    { label: "1", value: 1 },
+    { label: "2–5", value: 2 },
+    { label: "6–10", value: 3 },
+    { label: "11+", value: 4 },
+  ];
+}

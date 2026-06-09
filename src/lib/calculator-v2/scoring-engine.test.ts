@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { calculateV2 } from "./scoring-engine";
+import { questions, getRegPathOptionsForContactTypes } from "./questions";
 import type { QuestionId } from "./types";
 
 type Answers = Partial<Record<QuestionId, number>>;
@@ -410,5 +411,74 @@ describe("Calculator V2 Scoring Engine", () => {
       expect(trace1.finalTier).toBe(trace2.finalTier);
       expect(trace1.aggregateScore).toBe(trace2.aggregateScore);
     });
+  });
+});
+
+describe("Question flow ordering and reg_paths dependency", () => {
+  it("contact_types appears before reg_paths in the question flow", () => {
+    const ids = questions.map((q) => q.id);
+    const ctIndex = ids.indexOf("contact_types");
+    const rpIndex = ids.indexOf("reg_paths");
+    expect(ctIndex).toBeGreaterThanOrEqual(0);
+    expect(rpIndex).toBeGreaterThanOrEqual(0);
+    expect(ctIndex).toBeLessThan(rpIndex);
+  });
+
+  it("contact_types = 1–2 (value 1) → reg_paths cannot show 6–10 or 11+", () => {
+    const opts = getRegPathOptionsForContactTypes(1);
+    const labels = opts.map((o) => o.label);
+    const values = opts.map((o) => o.value);
+    expect(labels).not.toContain("6–10");
+    expect(labels).not.toContain("11+");
+    expect(values).not.toContain(3);
+    expect(values).not.toContain(4);
+    // Still grid-aligned: "2 only" must score as 2 (Medium band)
+    const twoOnly = opts.find((o) => o.label === "2 only");
+    expect(twoOnly?.value).toBe(2);
+  });
+
+  it("contact_types = 3–5 (value 2) → reg_paths cannot show 6–10 or 11+", () => {
+    const opts = getRegPathOptionsForContactTypes(2);
+    const labels = opts.map((o) => o.label);
+    const values = opts.map((o) => o.value);
+    expect(labels).not.toContain("6–10");
+    expect(labels).not.toContain("11+");
+    expect(values).not.toContain(3);
+    expect(values).not.toContain(4);
+    // Should expose "1" and "2–5"
+    expect(labels).toContain("1");
+    expect(labels).toContain("2–5");
+  });
+
+  it("contact_types = 6–10 (value 3) → reg_paths cannot show 11+", () => {
+    const opts = getRegPathOptionsForContactTypes(3);
+    const labels = opts.map((o) => o.label);
+    const values = opts.map((o) => o.value);
+    expect(labels).not.toContain("11+");
+    expect(values).not.toContain(4);
+    expect(labels).toContain("6–10");
+  });
+
+  it("contact_types = 11+ (value 4) → all grid-aligned reg_paths options available", () => {
+    const opts = getRegPathOptionsForContactTypes(4);
+    const labels = opts.map((o) => o.label);
+    const values = opts.map((o) => o.value);
+    expect(labels).toEqual(["1", "2–5", "6–10", "11+"]);
+    expect(values).toEqual([1, 2, 3, 4]);
+  });
+
+  it("'2 only' option (contact_types=1-2 case) scores into Medium band when chosen", () => {
+    // Simulate a user who picked contact_types=1 and reg_paths="2 only" (scores as 2)
+    const answers: Answers = makeAnswers({
+      contact_types: 1,
+      reg_paths: 2, // grid Medium band — must NOT be rebucketed to Simple
+    });
+    const trace = calculateV2(answers);
+    // reg_paths contributes its grid-aligned value (2) to the aggregate, not 1
+    // No floor rule should fire; the value is just a normal Medium-band reg_paths score
+    expect(trace.aggregateScore).toBeGreaterThanOrEqual(
+      // event_length(1)+sessions(1)+contact_types(1)+reg_paths(2)+pages(1)+branding(1) = 7
+      7,
+    );
   });
 });
