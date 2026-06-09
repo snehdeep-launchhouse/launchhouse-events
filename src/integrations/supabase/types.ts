@@ -325,8 +325,10 @@ export type Database = {
           registration_rules: string | null
           scope_summary: string | null
           sessions: string | null
+          source: string
           speaker_management: string | null
           starting_price: string | null
+          v2_payload: Json | null
           website_pages: string | null
         }
         Insert: {
@@ -351,8 +353,10 @@ export type Database = {
           registration_rules?: string | null
           scope_summary?: string | null
           sessions?: string | null
+          source?: string
           speaker_management?: string | null
           starting_price?: string | null
+          v2_payload?: Json | null
           website_pages?: string | null
         }
         Update: {
@@ -377,8 +381,10 @@ export type Database = {
           registration_rules?: string | null
           scope_summary?: string | null
           sessions?: string | null
+          source?: string
           speaker_management?: string | null
           starting_price?: string | null
+          v2_payload?: Json | null
           website_pages?: string | null
         }
         Relationships: []
