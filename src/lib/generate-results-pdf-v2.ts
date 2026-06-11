@@ -386,15 +386,12 @@ export function downloadResultsPdfV2({
     y + 18,
   );
 
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(8);
-  doc.setTextColor(TEXT_MUTED);
-  doc.text(
-    "LaunchHouse Events  ·  launchhouse.events",
-    pageW / 2,
-    y + 36,
-    { align: "center" },
-  );
+  // ── Draw branded footer on every page ──────────────────────
+  const totalPages = doc.getNumberOfPages();
+  for (let p = 1; p <= totalPages; p++) {
+    doc.setPage(p);
+    drawFooter();
+  }
 
   doc.save("Event-Complexity-Analysis.pdf");
 }
