@@ -36,13 +36,45 @@ export function downloadResultsPdfV2({
   const pageH = doc.internal.pageSize.getHeight();
   const margin = 20;
   const contentW = pageW - margin * 2;
+  const FOOTER_HEIGHT = 22; // mm reserved at bottom for branded footer
   let y = 0;
 
   const ensureSpace = (needed: number) => {
-    if (y + needed > pageH - 20) {
+    if (y + needed > pageH - FOOTER_HEIGHT) {
       doc.addPage();
       y = margin;
     }
+  };
+
+  const drawFooter = () => {
+    const fy = pageH - FOOTER_HEIGHT + 4; // top of footer area
+    // separator line
+    doc.setDrawColor(LINE_COLOR);
+    doc.setLineWidth(0.25);
+    doc.line(margin, fy, pageW - margin, fy);
+
+    // LH logo mark (vector)
+    const tile = 10;
+    const tx = margin;
+    const ty = fy + 4;
+    doc.setFillColor(BRAND_PRIMARY);
+    doc.roundedRect(tx, ty, tile, tile, 1.8, 1.8, "F");
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(8);
+    doc.setTextColor(WHITE);
+    doc.text("LH", tx + tile / 2, ty + tile / 2 + 1.4, { align: "center" });
+
+    // Text block to right of logo
+    const textX = tx + tile + 4;
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9);
+    doc.setTextColor(BRAND_DARK);
+    doc.text("www.launchhouse.events", textX, ty + 4);
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    doc.setTextColor(TEXT_MUTED);
+    doc.text("US +1 (571) 444-8523  |  India +91 9999063734", textX, ty + 9);
   };
 
   const drawCard = (
@@ -354,15 +386,12 @@ export function downloadResultsPdfV2({
     y + 18,
   );
 
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(8);
-  doc.setTextColor(TEXT_MUTED);
-  doc.text(
-    "LaunchHouse Events  ·  launchhouse.events",
-    pageW / 2,
-    y + 36,
-    { align: "center" },
-  );
+  // ── Draw branded footer on every page ──────────────────────
+  const totalPages = doc.getNumberOfPages();
+  for (let p = 1; p <= totalPages; p++) {
+    doc.setPage(p);
+    drawFooter();
+  }
 
   doc.save("Event-Complexity-Analysis.pdf");
 }
