@@ -298,6 +298,10 @@ serve(async (req) => {
         </p>
       </div>
 
+      <p style="margin:0 0 24px;font-size:12px;color:#6b7280;">
+        GST # 29AIKPC3628E1ZE &nbsp;·&nbsp; Exporter of Service # AIKPC3628E
+      </p>
+
       <p style="margin:0;font-size:15px;color:#374151;">
         Warm regards,<br/>
         <strong>The LaunchHouse Events Team</strong>
