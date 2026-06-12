@@ -19,6 +19,10 @@ import {
   verifyEmailDomain,
   type VerificationStatus,
 } from "@/lib/email-validation";
+
+// Warm the shared verify-email-domain edge function once per session
+// to reduce cold-start latency when the user blurs the email field.
+let v2DomainWarmed = false;
 import type { QuestionId, ScoringTrace } from "@/lib/calculator-v2/types";
 import {
   generateV2ScopeSummary,
