@@ -49,6 +49,18 @@ export function LeadFormV2({ answers, trace, onSubmitted }: LeadFormV2Props) {
   const [emailError, setEmailError] = useState<string | undefined>();
   const [emailStatus, setEmailStatus] = useState<VerificationStatus>("idle");
 
+  // Option B: warm the verify-email-domain edge function on mount so the
+  // first real user verification doesn't pay cold-start latency.
+  useEffect(() => {
+    if (v2DomainWarmed) return;
+    v2DomainWarmed = true;
+    verifyEmailDomain("warmup@launchhouse.events").catch(() => {
+      // Best-effort warmup — never surface failures.
+    });
+  }, []);
+
+
+
   const handleEmailBlur = async () => {
     const trimmed = email.trim();
     if (!trimmed) {
