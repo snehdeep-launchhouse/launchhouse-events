@@ -235,7 +235,7 @@ serve(async (req) => {
         Your Event Complexity Results
       </h1>
     </div>
-    <div style="padding:32px;border:1px solid #d1d5db;border-top:none;border-radius:0 0 8px 8px;">
+    <div style="padding:32px;border:1px solid #d1d5db;border-top:none;border-radius:0;">
       <p style="margin:0 0 16px;font-size:16px;">Hi ${sanitize(name)},</p>
       <p style="margin:0 0 16px;font-size:15px;color:#374151;">
         Thank you for using the LaunchHouse Events Complexity Calculator. Based on your answers, here is a summary of your event:
@@ -298,13 +298,25 @@ serve(async (req) => {
         </p>
       </div>
 
-      <p style="margin:0 0 24px;font-size:12px;color:#6b7280;">
-        GST # 29AIKPC3628E1ZE &nbsp;·&nbsp; Exporter of Service # AIKPC3628E
-      </p>
-
       <p style="margin:0;font-size:15px;color:#374151;">
         Warm regards,<br/>
         <strong>The LaunchHouse Events Team</strong>
+      </p>
+    </div>
+    <div style="background:#006AE1;padding:28px 32px;border-radius:0 0 8px 8px;text-align:center;">
+      <p style="margin:0 0 6px;font-size:16px;font-weight:700;color:#ffffff;font-family:'Space Grotesk',Arial,sans-serif;">
+        LaunchHouse Events
+      </p>
+      <p style="margin:0 0 18px;font-size:14px;color:#ffffff;">
+        <a href="https://launchhouse.events" style="color:#ffffff;text-decoration:underline;">www.launchhouse.events</a>
+      </p>
+      <p style="margin:0 0 4px;font-size:13px;color:#ffffff;">
+        US <a href="tel:+15714448523" style="color:#ffffff;text-decoration:none;">+1 (571) 444-8523</a>
+        &nbsp;&nbsp;|&nbsp;&nbsp;
+        India <a href="tel:+919999063734" style="color:#ffffff;text-decoration:none;">+91 9999 063 734</a>
+      </p>
+      <p style="margin:0;font-size:12px;color:rgba(255,255,255,0.85);">
+        GST # 29AIKPC3628E1ZE &nbsp;|&nbsp; Exporter of Service # AIKPC3628E
       </p>
     </div>
     <p style="margin-top:24px;font-size:12px;color:#6b7280;text-align:center;">
