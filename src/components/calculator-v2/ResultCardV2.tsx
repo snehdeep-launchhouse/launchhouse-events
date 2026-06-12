@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import {
   Calculator,
+  CalendarCheck,
   CheckCircle2,
   Clock,
   Download,
@@ -24,6 +25,7 @@ import {
   getPublicManualReviewReasons,
 } from "@/lib/calculator-v2/scope-summary";
 import { downloadResultsPdfV2 } from "@/lib/generate-results-pdf-v2";
+import { useContactPanel } from "@/components/ContactPanelProvider";
 
 const tierBadgeColor: Record<string, string> = {
   Simple: "bg-success text-success-foreground",
@@ -52,6 +54,7 @@ function formatUSD(n: number): string {
 }
 
 export function ResultCardV2({ trace, answers }: ResultCardV2Props) {
+  const { openDemoPanel } = useContactPanel();
   const { result, confidenceLevel, manualReviewRequired, manualReviewReasons } = trace;
   const confidence = describeConfidence(confidenceLevel);
   const drivers = getKeyComplexityDrivers(answers as Partial<Record<QuestionId, number>>);
@@ -81,11 +84,15 @@ export function ResultCardV2({ trace, answers }: ResultCardV2Props) {
 
   return (
     <div className="space-y-6 animate-slide-up">
-      {/* Download PDF action */}
-      <div className="flex justify-end">
+      {/* CTA actions */}
+      <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
         <Button onClick={handleDownloadPdf} variant="outline" className="gap-2">
           <Download className="h-4 w-4" />
           Download PDF
+        </Button>
+        <Button onClick={openDemoPanel} className="gap-2">
+          <CalendarCheck className="h-4 w-4" />
+          Book A Scoping
         </Button>
       </div>
 
