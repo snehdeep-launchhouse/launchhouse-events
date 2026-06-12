@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import {
   Calculator,
+  CalendarCheck,
   CheckCircle2,
   Clock,
   Download,
@@ -24,6 +25,7 @@ import {
   getPublicManualReviewReasons,
 } from "@/lib/calculator-v2/scope-summary";
 import { downloadResultsPdfV2 } from "@/lib/generate-results-pdf-v2";
+import { useContactPanel } from "@/components/ContactPanelProvider";
 
 const tierBadgeColor: Record<string, string> = {
   Simple: "bg-success text-success-foreground",
