@@ -96,6 +96,10 @@ export function LeadFormV2({ answers, trace, onSubmitted }: LeadFormV2Props) {
       });
       return;
     }
+    if (emailStatus === "verifying") {
+      // Guarded by disabled button, but keep a safe no-op fallback.
+      return;
+    }
     if (emailStatus !== "valid") {
       toast({
         title: "Please use a valid company email address",
