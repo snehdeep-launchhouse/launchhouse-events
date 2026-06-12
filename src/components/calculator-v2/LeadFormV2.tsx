@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { CalendarIcon, Loader2, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -19,6 +19,10 @@ import {
   verifyEmailDomain,
   type VerificationStatus,
 } from "@/lib/email-validation";
+
+// Warm the shared verify-email-domain edge function once per session
+// to reduce cold-start latency when the user blurs the email field.
+let v2DomainWarmed = false;
 import type { QuestionId, ScoringTrace } from "@/lib/calculator-v2/types";
 import {
   generateV2ScopeSummary,
@@ -44,6 +48,18 @@ export function LeadFormV2({ answers, trace, onSubmitted }: LeadFormV2Props) {
   const [saving, setSaving] = useState(false);
   const [emailError, setEmailError] = useState<string | undefined>();
   const [emailStatus, setEmailStatus] = useState<VerificationStatus>("idle");
+
+  // Option B: warm the verify-email-domain edge function on mount so the
+  // first real user verification doesn't pay cold-start latency.
+  useEffect(() => {
+    if (v2DomainWarmed) return;
+    v2DomainWarmed = true;
+    verifyEmailDomain("warmup@launchhouse.events").catch(() => {
+      // Best-effort warmup — never surface failures.
+    });
+  }, []);
+
+
 
   const handleEmailBlur = async () => {
     const trimmed = email.trim();
@@ -78,6 +94,10 @@ export function LeadFormV2({ answers, trace, onSubmitted }: LeadFormV2Props) {
         title: "Please fill in all required fields",
         variant: "destructive",
       });
+      return;
+    }
+    if (emailStatus === "verifying") {
+      // Guarded by disabled button, but keep a safe no-op fallback.
       return;
     }
     if (emailStatus !== "valid") {
@@ -286,13 +306,18 @@ export function LeadFormV2({ answers, trace, onSubmitted }: LeadFormV2Props) {
 
           <Button
             type="submit"
-            disabled={saving}
+            disabled={saving || emailStatus === "verifying"}
             className="mt-2 w-full gap-2"
           >
             {saving ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
                 Sending…
+              </>
+            ) : emailStatus === "verifying" ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Verifying email…
               </>
             ) : (
               <>
