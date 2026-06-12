@@ -54,6 +54,7 @@ function formatUSD(n: number): string {
 }
 
 export function ResultCardV2({ trace, answers }: ResultCardV2Props) {
+  const { openDemoPanel } = useContactPanel();
   const { result, confidenceLevel, manualReviewRequired, manualReviewReasons } = trace;
   const confidence = describeConfidence(confidenceLevel);
   const drivers = getKeyComplexityDrivers(answers as Partial<Record<QuestionId, number>>);
