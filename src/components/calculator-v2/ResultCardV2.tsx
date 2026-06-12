@@ -84,11 +84,15 @@ export function ResultCardV2({ trace, answers }: ResultCardV2Props) {
 
   return (
     <div className="space-y-6 animate-slide-up">
-      {/* Download PDF action */}
-      <div className="flex justify-end">
+      {/* CTA actions */}
+      <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
         <Button onClick={handleDownloadPdf} variant="outline" className="gap-2">
           <Download className="h-4 w-4" />
           Download PDF
+        </Button>
+        <Button onClick={openDemoPanel} className="gap-2">
+          <CalendarCheck className="h-4 w-4" />
+          Book A Scoping
         </Button>
       </div>
 
