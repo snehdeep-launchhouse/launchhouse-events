@@ -85,7 +85,7 @@ export function ResultCardV2({ trace, answers }: ResultCardV2Props) {
   return (
     <div className="space-y-6 animate-slide-up">
       {/* CTA actions */}
-      <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+      <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-center items-center">
         <Button onClick={handleDownloadPdf} variant="outline" className="gap-2">
           <Download className="h-4 w-4" />
           Download PDF
