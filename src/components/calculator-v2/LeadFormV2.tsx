@@ -306,13 +306,18 @@ export function LeadFormV2({ answers, trace, onSubmitted }: LeadFormV2Props) {
 
           <Button
             type="submit"
-            disabled={saving}
+            disabled={saving || emailStatus === "verifying"}
             className="mt-2 w-full gap-2"
           >
             {saving ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
                 Sending…
+              </>
+            ) : emailStatus === "verifying" ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Verifying email…
               </>
             ) : (
               <>
