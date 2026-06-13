@@ -6,11 +6,9 @@ import fs from "fs";
 };
 const trace: any = {
   result: { complexity: "Simple", price: "$899", firstDraft: "2 business days", revisionTurnaround: "1 business day" },
-  hasEventApp: false, eventAppAddon: false,
-  selectedProductsForScope: ["Registration & Event Website"],
-  selectedServices: ["Registration & Event Website"],
+  hasEventApp: false, selectedProductsForScope: ["Registration & Event Website"],
+  confidenceLevel: "high",
   publicScopingReasons: [], manualReviewReasons: [], categorySignals: {},
-  inputs: {}, scoreBreakdown: {}, multipliers: {}, addOns: [],
 };
 downloadResultsPdfV2({ trace, scopeBullets: ["Test scope bullet"], confidenceReasons: ["High confidence"], publicScopingReasons: [] });
 console.log("ok", fs.statSync("/tmp/v2-out.pdf").size);
