@@ -36,7 +36,7 @@ export function downloadResultsPdfV2({
   const pageH = doc.internal.pageSize.getHeight();
   const margin = 20;
   const contentW = pageW - margin * 2;
-  const FOOTER_HEIGHT = 22; // mm reserved at bottom for branded footer
+  const FOOTER_HEIGHT = 24; // mm reserved at bottom for branded footer
   let y = 0;
 
   const ensureSpace = (needed: number) => {
@@ -74,7 +74,8 @@ export function downloadResultsPdfV2({
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8);
     doc.setTextColor(TEXT_MUTED);
-    doc.text("US +1 (571) 444-8523  |  India +91 9999063734", textX, ty + 9);
+    doc.text("US +1 (571) 444-8523  |  India +91 9999 063 734", textX, ty + 9);
+    doc.text("GST # 29AIKPC3628E1ZE  |  Exporter of Service # AIKPC3628E", textX, ty + 14);
   };
 
   const drawCard = (
