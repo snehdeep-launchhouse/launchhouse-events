@@ -11,25 +11,29 @@ import { ProductPickerV2 } from "./ProductPickerV2";
 import { EventAppFeaturesV2 } from "./EventAppFeaturesV2";
 import { ResultCardV2 } from "./ResultCardV2";
 import { LeadFormV2 } from "./LeadFormV2";
+import { DescribeEventV2, type DescribeEventV2Result } from "./DescribeEventV2";
 
 type Answers = Partial<Record<QuestionId, number>>;
-type Stage = "questions" | "products" | "eventAppFeatures" | "lead" | "results";
+type Stage = "describe" | "questions" | "products" | "eventAppFeatures" | "lead" | "results";
 
 const EVENT_APP_LABEL = "Event App";
 
 export function CalculatorV2Wizard() {
-  const [stage, setStage] = useState<Stage>("questions");
+  const [stage, setStage] = useState<Stage>("describe");
   const [currentStep, setCurrentStep] = useState(0);
   const [answers, setAnswers] = useState<Answers>({});
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
   const [eventAppFeatures, setEventAppFeatures] = useState<string[]>([]);
   const [trace, setTrace] = useState<ScoringTrace | null>(null);
+  const [aiSuggestedProducts, setAiSuggestedProducts] = useState<string[] | null>(null);
+  const [aiSuggestedEventApp, setAiSuggestedEventApp] = useState<boolean>(false);
 
   const totalQuestions = questions.length;
   const currentQuestion = questions[currentStep];
 
   const progressPercent = useMemo(() => {
     const denom = totalQuestions + 3; // products + eventAppFeatures(optional) + lead
+    if (stage === "describe") return 0;
     if (stage === "questions") return (currentStep / denom) * 100;
     if (stage === "products") return (totalQuestions / denom) * 100;
     if (stage === "eventAppFeatures") return ((totalQuestions + 1) / denom) * 100;
@@ -104,15 +108,31 @@ export function CalculatorV2Wizard() {
   };
 
   const handleRestart = () => {
-    setStage("questions");
+    setStage("describe");
     setCurrentStep(0);
     setAnswers({});
     setSelectedProducts([]);
     setEventAppFeatures([]);
     setTrace(null);
+    setAiSuggestedProducts(null);
+    setAiSuggestedEventApp(false);
+  };
+
+  const handleDescribeAnalyzed = (r: DescribeEventV2Result) => {
+    setAnswers(r.answers);
+    setAiSuggestedProducts(r.selectedProducts);
+    setAiSuggestedEventApp(r.eventAppSelected);
+    setStage("questions");
+    setCurrentStep(0);
+  };
+
+  const handleDescribeSkip = () => {
+    setStage("questions");
+    setCurrentStep(0);
   };
 
   const headerLabel = (() => {
+    if (stage === "describe") return "Describe your event (optional)";
     if (stage === "questions") return `Question ${currentStep + 1} of ${totalQuestions}`;
     if (stage === "products") return "Services";
     if (stage === "eventAppFeatures") return "Event App features";
@@ -193,6 +213,10 @@ export function CalculatorV2Wizard() {
           </Card>
         )}
 
+        {stage === "describe" && (
+          <DescribeEventV2 onAnalyzed={handleDescribeAnalyzed} onSkip={handleDescribeSkip} />
+        )}
+
         {stage === "products" && (
           <Card className="border-border shadow-sm animate-fade-in">
             <CardContent className="p-6">
@@ -205,7 +229,10 @@ export function CalculatorV2Wizard() {
                   change your event tier.
                 </p>
               </div>
-              <ProductPickerV2 initial={selectedProducts} onConfirm={handleProductsConfirm} />
+              <ProductPickerV2
+                initial={selectedProducts.length > 0 ? selectedProducts : (aiSuggestedProducts ?? [])}
+                onConfirm={handleProductsConfirm}
+              />
               {backButton && <div className="mt-4 flex justify-start">{backButton}</div>}
             </CardContent>
           </Card>
