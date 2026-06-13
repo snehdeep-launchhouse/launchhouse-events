@@ -213,6 +213,10 @@ export function CalculatorV2Wizard() {
           </Card>
         )}
 
+        {stage === "describe" && (
+          <DescribeEventV2 onAnalyzed={handleDescribeAnalyzed} onSkip={handleDescribeSkip} />
+        )}
+
         {stage === "products" && (
           <Card className="border-border shadow-sm animate-fade-in">
             <CardContent className="p-6">
@@ -225,7 +229,10 @@ export function CalculatorV2Wizard() {
                   change your event tier.
                 </p>
               </div>
-              <ProductPickerV2 initial={selectedProducts} onConfirm={handleProductsConfirm} />
+              <ProductPickerV2
+                initial={selectedProducts.length > 0 ? selectedProducts : (aiSuggestedProducts ?? [])}
+                onConfirm={handleProductsConfirm}
+              />
               {backButton && <div className="mt-4 flex justify-start">{backButton}</div>}
             </CardContent>
           </Card>
