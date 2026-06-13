@@ -22,7 +22,7 @@ const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const AdminReport = lazy(() => import("./pages/AdminReport"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
-const Calculator = lazy(() => import("./pages/Calculator"));
+
 const CalculatorV2 = lazy(() => import("./pages/CalculatorV2"));
 const ReceptionistWidget = lazy(() => import("./components/ReceptionistWidget").then(m => ({ default: m.ReceptionistWidget })));
 
