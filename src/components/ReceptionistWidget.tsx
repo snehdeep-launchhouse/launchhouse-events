@@ -321,7 +321,7 @@ export function ReceptionistWidget() {
           className={cn(
             "fixed z-50 flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl animate-widget-panel-enter",
             isMobile
-              ? "bottom-20 right-3 left-3 h-[28rem]"
+              ? mobilePanelPos
               : "bottom-5 right-5 h-[500px] w-[360px]"
           )}
           onMouseEnter={handleUserInteraction}
