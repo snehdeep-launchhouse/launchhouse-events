@@ -10,7 +10,7 @@ import { useContactPanel } from "@/components/ContactPanelProvider";
 type Msg = { role: "user" | "assistant"; content: string };
 
 const GREETING =
-  "Hi! I'm Chloe, your Launchhouse assistant. I can help answer questions about Cvent event builds, pricing, timelines, and how our services work.";
+  "Hi! I'm Chloe, your LaunchHouse assistant. I can help answer questions about event build services, pricing, timelines, and how our process works.";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
