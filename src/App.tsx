@@ -92,7 +92,7 @@ const App = () => (
                 <Route path="/terms-of-service" element={<TermsOfService />} />
                 <Route path="/admin-report" element={<AdminReport />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
-                <Route path="/calculator" element={<Calculator />} />
+                <Route path="/calculator" element={<CalculatorV2 />} />
                 <Route path="/calculator-v2" element={<CalculatorV2 />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
