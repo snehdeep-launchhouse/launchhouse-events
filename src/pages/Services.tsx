@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { setPageSeo } from "@/lib/seo-head";
+import JsonLd from "@/components/JsonLd";
 import Navbar from "@/components/Navbar";
 import BreadcrumbJsonLd from "@/components/BreadcrumbJsonLd";
 import Footer from "@/components/Footer";
@@ -87,6 +88,44 @@ const Services = () => {
   return (
   <div className="min-h-screen bg-background">
     <BreadcrumbJsonLd items={[{ name: "Services", path: "/services" }]} />
+    <JsonLd
+      id="services-jsonld"
+      data={{
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "Service",
+            name: "Standard Build Support",
+            provider: { "@type": "Organization", name: "LaunchHouse Events", url: "https://launchhouse.events" },
+            serviceType: "Cvent registration and Attendee Hub build",
+            areaServed: "Global",
+            url: "https://launchhouse.events/services",
+            description:
+              "Hands-on Cvent build support — registration setup, Attendee Hub configuration, mobile app readiness, OnArrival, QA, and reporting.",
+          },
+          {
+            "@type": "Service",
+            name: "Rapid / Same-Day Delivery",
+            provider: { "@type": "Organization", name: "LaunchHouse Events", url: "https://launchhouse.events" },
+            serviceType: "Expedited Cvent build",
+            areaServed: "Global",
+            url: "https://launchhouse.events/services",
+            description:
+              "Same-day or expedited Cvent registration builds for tight timelines — Simple and Medium scopes delivered within 12 hours when briefed by 8AM ET.",
+          },
+          {
+            "@type": "Service",
+            name: "Lifecycle Support",
+            provider: { "@type": "Organization", name: "LaunchHouse Events", url: "https://launchhouse.events" },
+            serviceType: "Ongoing event-technology support",
+            areaServed: "Global",
+            url: "https://launchhouse.events/services",
+            description:
+              "Continuous Cvent and event-technology support across the full event lifecycle, including pre-event QA, on-event check-in, and post-event reporting.",
+          },
+        ],
+      }}
+    />
     <Navbar />
 
     {/* Hero */}

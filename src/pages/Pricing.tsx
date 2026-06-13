@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { setPageSeo } from "@/lib/seo-head";
+import JsonLd from "@/components/JsonLd";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import BreadcrumbJsonLd from "@/components/BreadcrumbJsonLd";
@@ -110,6 +111,56 @@ const Pricing = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <BreadcrumbJsonLd items={[{ name: "Pricing", path: "/pricing" }]} />
+      <JsonLd
+        id="pricing-jsonld"
+        data={{
+          "@context": "https://schema.org",
+          "@type": "Product",
+          name: "LaunchHouse Events — Cvent Build Packages",
+          description:
+            "Tiered Cvent registration and Attendee Hub build packages for commercial event teams: Simple, Medium, Advanced, and Complex.",
+          brand: { "@type": "Brand", name: "LaunchHouse Events" },
+          url: "https://launchhouse.events/pricing",
+          offers: [
+            {
+              "@type": "Offer",
+              name: "Simple Build",
+              price: "899",
+              priceCurrency: "USD",
+              availability: "https://schema.org/InStock",
+              url: "https://launchhouse.events/pricing",
+              description: "Single-form registration with a small number of question logics. Starting price.",
+            },
+            {
+              "@type": "Offer",
+              name: "Medium Build",
+              priceCurrency: "USD",
+              priceSpecification: { "@type": "PriceSpecification", priceCurrency: "USD", description: "Custom quoted" },
+              availability: "https://schema.org/InStock",
+              url: "https://launchhouse.events/pricing",
+              description: "Multi-step registration with moderate logic, payments, or session selection. Custom quoted.",
+            },
+            {
+              "@type": "Offer",
+              name: "Advanced Build",
+              priceCurrency: "USD",
+              priceSpecification: { "@type": "PriceSpecification", priceCurrency: "USD", description: "Custom quoted" },
+              availability: "https://schema.org/InStock",
+              url: "https://launchhouse.events/pricing",
+              description: "Complex conditional logic, payment integration, multi-session support, and advanced reporting. Custom quoted.",
+            },
+            {
+              "@type": "Offer",
+              name: "Complex Build",
+              priceCurrency: "USD",
+              priceSpecification: { "@type": "PriceSpecification", priceCurrency: "USD", description: "Custom quoted" },
+              availability: "https://schema.org/InStock",
+              url: "https://launchhouse.events/pricing",
+              description: "Enterprise-grade builds with deep integrations, multi-event programs, and bespoke workflows. Custom quoted.",
+            },
+          ],
+        }}
+      />
       <Navbar />
 
       {/* ── Hero ──────────────────────────────────────────────────────── */}
