@@ -275,8 +275,16 @@ export function ReceptionistWidget() {
     }
   };
 
-  // Mobile: bottom-20 to clear sticky CTA bar; Desktop: bottom-5
-  const positionClass = isMobile ? "bottom-20 right-3" : "bottom-5 right-5";
+  // Mobile: bottom-20 to clear sticky CTA bar; Desktop: bottom-5.
+  // On calculator routes, raise mobile offset so the widget never overlaps
+  // calculator controls (e.g. Event App feature cards on /calculator-v2).
+  const isCalculatorRoute =
+    location.pathname === "/calculator" || location.pathname === "/calculator-v2";
+  const mobilePos = isCalculatorRoute ? "bottom-32 right-3" : "bottom-20 right-3";
+  const positionClass = isMobile ? mobilePos : "bottom-5 right-5";
+  const mobilePanelPos = isCalculatorRoute
+    ? "bottom-32 right-3 left-3 h-[24rem]"
+    : "bottom-20 right-3 left-3 h-[28rem]";
 
   return (
     <>
