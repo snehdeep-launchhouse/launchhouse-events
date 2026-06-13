@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { setPageSeo } from "@/lib/seo-head";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import BreadcrumbJsonLd from "@/components/BreadcrumbJsonLd";
@@ -67,8 +68,12 @@ const philosophy = [
 /* ── Page ─────────────────────────────────────────────────────────── */
 const About = () => {
   useEffect(() => {
-    document.title = "About Us | LaunchHouse Events";
-    return () => { document.title = "LaunchHouse Events"; };
+    return setPageSeo({
+      title: "About Us | LaunchHouse Events",
+      description:
+        "Meet LaunchHouse Events — a Bengaluru-founded Cvent build studio with 30+ years of combined event-tech experience helping commercial event teams ship faster, cheaper, and better.",
+      path: "/about",
+    });
   }, []);
 
   return (

@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { setPageSeo } from "@/lib/seo-head";
 import Navbar from "@/components/Navbar";
 import BreadcrumbJsonLd from "@/components/BreadcrumbJsonLd";
 import Footer from "@/components/Footer";
@@ -75,8 +76,12 @@ const TierCard = ({ card }: { card: typeof fullBuildCards[0] }) => {
 /* ── Page ─────────────────────────────────────────────────────────── */
 const Services = () => {
   useEffect(() => {
-    document.title = "Event Technology Services | LaunchHouse Events";
-    return () => { document.title = "LaunchHouse Events"; };
+    return setPageSeo({
+      title: "Event Technology Services | LaunchHouse Events",
+      description:
+        "White-glove Cvent and event technology services: registration builds, Attendee Hub, mobile app readiness, OnArrival check-in, QA, reporting, and on-event support.",
+      path: "/services",
+    });
   }, []);
 
   return (
