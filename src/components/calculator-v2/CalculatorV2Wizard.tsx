@@ -108,15 +108,31 @@ export function CalculatorV2Wizard() {
   };
 
   const handleRestart = () => {
-    setStage("questions");
+    setStage("describe");
     setCurrentStep(0);
     setAnswers({});
     setSelectedProducts([]);
     setEventAppFeatures([]);
     setTrace(null);
+    setAiSuggestedProducts(null);
+    setAiSuggestedEventApp(false);
+  };
+
+  const handleDescribeAnalyzed = (r: DescribeEventV2Result) => {
+    setAnswers(r.answers);
+    setAiSuggestedProducts(r.selectedProducts);
+    setAiSuggestedEventApp(r.eventAppSelected);
+    setStage("questions");
+    setCurrentStep(0);
+  };
+
+  const handleDescribeSkip = () => {
+    setStage("questions");
+    setCurrentStep(0);
   };
 
   const headerLabel = (() => {
+    if (stage === "describe") return "Describe your event (optional)";
     if (stage === "questions") return `Question ${currentStep + 1} of ${totalQuestions}`;
     if (stage === "products") return "Services";
     if (stage === "eventAppFeatures") return "Event App features";
