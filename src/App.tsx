@@ -22,7 +22,7 @@ const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const AdminReport = lazy(() => import("./pages/AdminReport"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
-const Calculator = lazy(() => import("./pages/Calculator"));
+
 const CalculatorV2 = lazy(() => import("./pages/CalculatorV2"));
 const ReceptionistWidget = lazy(() => import("./components/ReceptionistWidget").then(m => ({ default: m.ReceptionistWidget })));
 
@@ -92,7 +92,7 @@ const App = () => (
                 <Route path="/terms-of-service" element={<TermsOfService />} />
                 <Route path="/admin-report" element={<AdminReport />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
-                <Route path="/calculator" element={<Calculator />} />
+                <Route path="/calculator" element={<CalculatorV2 />} />
                 <Route path="/calculator-v2" element={<CalculatorV2 />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
