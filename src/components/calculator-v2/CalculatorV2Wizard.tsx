@@ -11,25 +11,29 @@ import { ProductPickerV2 } from "./ProductPickerV2";
 import { EventAppFeaturesV2 } from "./EventAppFeaturesV2";
 import { ResultCardV2 } from "./ResultCardV2";
 import { LeadFormV2 } from "./LeadFormV2";
+import { DescribeEventV2, type DescribeEventV2Result } from "./DescribeEventV2";
 
 type Answers = Partial<Record<QuestionId, number>>;
-type Stage = "questions" | "products" | "eventAppFeatures" | "lead" | "results";
+type Stage = "describe" | "questions" | "products" | "eventAppFeatures" | "lead" | "results";
 
 const EVENT_APP_LABEL = "Event App";
 
 export function CalculatorV2Wizard() {
-  const [stage, setStage] = useState<Stage>("questions");
+  const [stage, setStage] = useState<Stage>("describe");
   const [currentStep, setCurrentStep] = useState(0);
   const [answers, setAnswers] = useState<Answers>({});
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
   const [eventAppFeatures, setEventAppFeatures] = useState<string[]>([]);
   const [trace, setTrace] = useState<ScoringTrace | null>(null);
+  const [aiSuggestedProducts, setAiSuggestedProducts] = useState<string[] | null>(null);
+  const [aiSuggestedEventApp, setAiSuggestedEventApp] = useState<boolean>(false);
 
   const totalQuestions = questions.length;
   const currentQuestion = questions[currentStep];
 
   const progressPercent = useMemo(() => {
     const denom = totalQuestions + 3; // products + eventAppFeatures(optional) + lead
+    if (stage === "describe") return 0;
     if (stage === "questions") return (currentStep / denom) * 100;
     if (stage === "products") return (totalQuestions / denom) * 100;
     if (stage === "eventAppFeatures") return ((totalQuestions + 1) / denom) * 100;
