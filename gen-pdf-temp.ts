@@ -1,19 +1,22 @@
+import fs from "fs";
 import jsPDF from "jspdf";
-(jsPDF as any).prototype.save = function (name: string) {
-  const fs = require("fs");
+import { downloadResultsPdfV2 } from "/dev-server/src/lib/generate-results-pdf-v2.ts";
+
+console.log("save type:", typeof (jsPDF as any).API.save, typeof (jsPDF as any).prototype?.save);
+const d = new jsPDF();
+console.log("instance save:", typeof d.save);
+
+// patch instance via API
+(jsPDF as any).API.save = function () {
   fs.writeFileSync("/tmp/v2-out.pdf", Buffer.from(this.output("arraybuffer")));
-  process.stdout.write("saved " + name + "\n");
+  console.log("saved!");
 };
-try {
-  const m = await import("/dev-server/src/lib/generate-results-pdf-v2.ts");
-  const trace: any = {
-    result: { complexity: "Simple", price: "$899", firstDraft: "2 business days", revisionTurnaround: "1 business day" },
-    hasEventApp: false, selectedProductsForScope: ["Registration & Event Website"],
-    confidenceLevel: "high",
-    publicScopingReasons: [], manualReviewReasons: [], categorySignals: {},
-  };
-  m.downloadResultsPdfV2({ trace, scopeBullets: ["Test"], confidenceReasons: ["x"], publicScopingReasons: [] });
-  process.stdout.write("done\n");
-} catch (e) {
-  process.stdout.write("ERR: " + (e as Error).message + "\n" + (e as Error).stack + "\n");
-}
+
+const trace: any = {
+  result: { complexity: "Simple", price: "$899", firstDraft: "2 business days", revisionTurnaround: "1 business day" },
+  hasEventApp: false, selectedProductsForScope: ["Registration & Event Website"],
+  confidenceLevel: "high",
+  publicScopingReasons: [], manualReviewReasons: [], categorySignals: {},
+};
+downloadResultsPdfV2({ trace, scopeBullets: ["Test"], confidenceReasons: ["x"], publicScopingReasons: [] });
+console.log("done");
