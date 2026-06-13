@@ -13,4 +13,4 @@ Allow: /
 User-agent: *
 Allow: /
 
-Sitemap: https://www.launchhouse.events/sitemap.xml
+Sitemap: https://launchhouse.events/sitemap.xml

@@ -1,0 +1,20 @@
+# LaunchHouse Events
+
+> Hands-on Cvent event build support for commercial event teams: registration builds, Attendee Hub configuration, mobile event app readiness, OnArrival check-in preparation, event tech QA, reporting, and ongoing event operations support. Simple builds start at $899.
+
+LaunchHouse Events is a specialist Cvent build and event-technology partner for commercial and lean event teams. The team handles registration form configuration, Attendee Hub setup, mobile app readiness, OnArrival/check-in preparation, reporting, and on-event support — designed to be faster, cheaper, and better than generic agency engagements.
+
+## Pages
+
+- [Home](/): Overview of Cvent build services, pricing tiers, and same-day delivery options.
+- [About](/about): Company story, mission, and the team's Cvent experience.
+- [Services](/services): Full catalogue of Cvent and event technology services.
+- [Pricing](/pricing): Tiered pricing model from Simple to Complex builds.
+- [Event Complexity Calculator](/calculator): Interactive 16-question wizard that scores event complexity and returns an indicative starting price.
+- [Get a Quote](/get-a-quote): Quote request form for tailored event build engagements.
+- [Contact Us](/contact-us): Contact form for general enquiries and scoping conversations.
+
+## Optional
+
+- [Privacy Policy](/privacy-policy)
+- [Terms of Service](/terms-of-service)

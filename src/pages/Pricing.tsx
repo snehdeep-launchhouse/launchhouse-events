@@ -98,8 +98,12 @@ const Pricing = () => {
   const { openContactPanel } = useContactPanel();
 
   useEffect(() => {
-    document.title = "Pricing | LaunchHouse Events";
-    return () => { document.title = "LaunchHouse Events"; };
+    return setPageSeo({
+      title: "Pricing | LaunchHouse Events",
+      description:
+        "Transparent tiered pricing for Cvent event builds — Simple from $899, Medium, and Complex engagements. Same-day delivery available for qualifying projects.",
+      path: "/pricing",
+    });
   }, []);
 
   return (
