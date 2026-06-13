@@ -10,7 +10,7 @@ import { useContactPanel } from "@/components/ContactPanelProvider";
 type Msg = { role: "user" | "assistant"; content: string };
 
 const GREETING =
-  "Hi! I'm Chloe, your Launchhouse assistant. I can help answer questions about Cvent event builds, pricing, timelines, and how our services work.";
+  "Hi! I'm Chloe, your LaunchHouse assistant. I can help answer questions about event build services, pricing, timelines, and how our process works.";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
@@ -275,8 +275,16 @@ export function ReceptionistWidget() {
     }
   };
 
-  // Mobile: bottom-20 to clear sticky CTA bar; Desktop: bottom-5
-  const positionClass = isMobile ? "bottom-20 right-3" : "bottom-5 right-5";
+  // Mobile: bottom-20 to clear sticky CTA bar; Desktop: bottom-5.
+  // On calculator routes, raise mobile offset so the widget never overlaps
+  // calculator controls (e.g. Event App feature cards on /calculator-v2).
+  const isCalculatorRoute =
+    location.pathname === "/calculator" || location.pathname === "/calculator-v2";
+  const mobilePos = isCalculatorRoute ? "bottom-32 right-3" : "bottom-20 right-3";
+  const positionClass = isMobile ? mobilePos : "bottom-5 right-5";
+  const mobilePanelPos = isCalculatorRoute
+    ? "bottom-32 right-3 left-3 h-[24rem]"
+    : "bottom-20 right-3 left-3 h-[28rem]";
 
   return (
     <>
@@ -313,7 +321,7 @@ export function ReceptionistWidget() {
           className={cn(
             "fixed z-50 flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl animate-widget-panel-enter",
             isMobile
-              ? "bottom-20 right-3 left-3 h-[28rem]"
+              ? mobilePanelPos
               : "bottom-5 right-5 h-[500px] w-[360px]"
           )}
           onMouseEnter={handleUserInteraction}
