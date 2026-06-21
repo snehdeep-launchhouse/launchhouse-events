@@ -202,9 +202,9 @@ const Pricing = () => {
             </p>
             <p>
               Simple builds have a published starting price because they follow a consistent, well-defined scope. Medium, Advanced, and Complex builds vary too much by event to quote accurately without a brief conversation first — which is why those tiers are{" "}
-              <Link to={CALCULATOR_URL} className="text-primary font-medium underline-offset-4 hover:underline">
+              <a href={CALCULATOR_URL} target="_blank" rel="noopener noreferrer" className="text-primary font-medium underline-offset-4 hover:underline">
                 custom quoted
-              </Link>
+              </a>
               .
             </p>
             <p>
@@ -212,13 +212,15 @@ const Pricing = () => {
             </p>
           </div>
           <div className="mt-8 flex justify-center">
-            <Link
-              to={CALCULATOR_URL}
+            <a
+              href={CALCULATOR_URL}
+              target="_blank"
+              rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:gap-2.5 transition-all"
             >
               Not sure where your event fits? Try our Complexity Calculator
               <ArrowUpRight className="w-4 h-4" />
-            </Link>
+            </a>
           </div>
         </div>
       </section>
