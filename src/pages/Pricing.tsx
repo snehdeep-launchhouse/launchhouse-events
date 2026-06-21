@@ -201,11 +201,24 @@ const Pricing = () => {
               Every LaunchHouse Events project is priced based on what the build actually requires. We do not use hourly billing or open-ended retainers. Before any work begins, we review your event scope, ask the right questions, and provide a clear quote for the full project.
             </p>
             <p>
-              Simple builds have a published starting price because they follow a consistent, well-defined scope. Medium, Advanced, and Complex builds vary too much by event to quote accurately without a brief conversation first — which is why those tiers are custom quoted.
+              Simple builds have a published starting price because they follow a consistent, well-defined scope. Medium, Advanced, and Complex builds vary too much by event to quote accurately without a brief conversation first — which is why those tiers are{" "}
+              <Link to={CALCULATOR_URL} className="text-primary font-medium underline-offset-4 hover:underline">
+                custom quoted
+              </Link>
+              .
             </p>
             <p>
               There are no hidden fees. If your event scope changes after work has started, we discuss it with you before adjusting the quote. You will not receive an invoice for work you did not approve.
             </p>
+          </div>
+          <div className="mt-8 flex justify-center">
+            <Link
+              to={CALCULATOR_URL}
+              className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:gap-2.5 transition-all"
+            >
+              Not sure where your event fits? Try our Complexity Calculator
+              <ArrowUpRight className="w-4 h-4" />
+            </Link>
           </div>
         </div>
       </section>
