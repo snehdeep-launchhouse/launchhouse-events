@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { setPageSeo } from "@/lib/seo-head";
 import JsonLd from "@/components/JsonLd";
 import Navbar from "@/components/Navbar";
@@ -15,6 +16,7 @@ import heroBanner from "@/assets/banners/pricing-banner.jpg";
 import ctaBanner from "@/assets/banners/pricing-cta-banner.jpg";
 
 const GET_A_QUOTE_URL = "/get-a-quote";
+const CALCULATOR_URL = "/calculator";
 
 /* ── Registration Build Packages ─────────────────────────────────── */
 const buildPackages = [
@@ -97,7 +99,8 @@ const specialistServices = [
 ];
 
 const Pricing = () => {
-  const { openContactPanel } = useContactPanel();
+  const { openContactPanel, openDemoPanel } = useContactPanel();
+  const navigate = useNavigate();
 
   useEffect(() => {
     return setPageSeo({
@@ -198,11 +201,24 @@ const Pricing = () => {
               Every LaunchHouse Events project is priced based on what the build actually requires. We do not use hourly billing or open-ended retainers. Before any work begins, we review your event scope, ask the right questions, and provide a clear quote for the full project.
             </p>
             <p>
-              Simple builds have a published starting price because they follow a consistent, well-defined scope. Medium, Advanced, and Complex builds vary too much by event to quote accurately without a brief conversation first — which is why those tiers are custom quoted.
+              Simple builds have a published starting price because they follow a consistent, well-defined scope. Medium, Advanced, and Complex builds vary too much by event to quote accurately without a brief conversation first — which is why those tiers are{" "}
+              <Link to={CALCULATOR_URL} className="text-primary font-medium underline-offset-4 hover:underline">
+                custom quoted
+              </Link>
+              .
             </p>
             <p>
               There are no hidden fees. If your event scope changes after work has started, we discuss it with you before adjusting the quote. You will not receive an invoice for work you did not approve.
             </p>
+          </div>
+          <div className="mt-8 flex justify-center">
+            <Link
+              to={CALCULATOR_URL}
+              className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:gap-2.5 transition-all"
+            >
+              Not sure where your event fits? Try our Complexity Calculator
+              <ArrowUpRight className="w-4 h-4" />
+            </Link>
           </div>
         </div>
       </section>
@@ -230,7 +246,17 @@ const Pricing = () => {
                     <Icon className="w-5 h-5 text-primary" />
                   </div>
                   <h3 className="text-lg font-bold font-display mb-1">{p.title}</h3>
-                  <p className="text-xl font-bold font-display text-primary mb-3">{p.price}</p>
+                  {p.price === "Custom quoted" ? (
+                    <Link
+                      to={CALCULATOR_URL}
+                      className="group inline-flex items-center gap-1 text-base font-bold font-display text-primary mb-3 hover:gap-1.5 transition-all"
+                    >
+                      Get a tailored estimate
+                      <ArrowUpRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                    </Link>
+                  ) : (
+                    <p className="text-xl font-bold font-display text-primary mb-3">{p.price}</p>
+                  )}
                   <p className="text-sm text-muted-foreground leading-relaxed mb-5">{p.desc}</p>
                   <ul className="space-y-2 flex-1 mb-6">
                     {p.features.map((f) => (
@@ -282,7 +308,7 @@ const Pricing = () => {
                   </li>
                 ))}
               </ul>
-              <Button onClick={() => window.open(GET_A_QUOTE_URL, "_blank")}>
+              <Button onClick={openDemoPanel}>
                 Get Started <ArrowUpRight className="w-4 h-4 ml-1" />
               </Button>
             </div>
@@ -312,7 +338,7 @@ const Pricing = () => {
                   <h4 className="text-lg font-bold font-display mb-1">{c.title}</h4>
                   <p className="text-xl font-bold font-display text-primary mb-3">{c.price}</p>
                   <p className="text-sm text-muted-foreground leading-relaxed flex-1 mb-6">{c.desc}</p>
-                  <Button className="w-full" onClick={() => window.open(GET_A_QUOTE_URL, "_blank")}>
+                  <Button className="w-full" onClick={() => navigate(CALCULATOR_URL)}>
                     Get Started <ArrowUpRight className="w-4 h-4 ml-1" />
                   </Button>
                 </div>
