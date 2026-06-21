@@ -249,13 +249,15 @@ const Pricing = () => {
                   </div>
                   <h3 className="text-lg font-bold font-display mb-1">{p.title}</h3>
                   {p.price === "Custom quoted" ? (
-                    <Link
-                      to={CALCULATOR_URL}
+                    <a
+                      href={CALCULATOR_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
                       className="group inline-flex items-center gap-1 text-base font-bold font-display text-primary mb-3 hover:gap-1.5 transition-all"
                     >
                       Get a tailored estimate
                       <ArrowUpRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-                    </Link>
+                    </a>
                   ) : (
                     <p className="text-xl font-bold font-display text-primary mb-3">{p.price}</p>
                   )}
