@@ -99,7 +99,8 @@ const specialistServices = [
 ];
 
 const Pricing = () => {
-  const { openContactPanel } = useContactPanel();
+  const { openContactPanel, openDemoPanel } = useContactPanel();
+  const navigate = useNavigate();
 
   useEffect(() => {
     return setPageSeo({
