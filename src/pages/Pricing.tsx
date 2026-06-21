@@ -398,8 +398,8 @@ const Pricing = () => {
           <p className="text-white/80 max-w-lg mx-auto mb-8">
             One of our team members will reach out within 24 hours. No commitment required.
           </p>
-          <Button size="lg" className="shadow-btn" onClick={openContactPanel}>
-            Book a Free Consultation <ArrowUpRight className="w-4 h-4 ml-1" />
+          <Button size="lg" className="shadow-btn" onClick={() => window.open(CALCULATOR_URL, "_blank", "noopener,noreferrer")}>
+            Pricing Calculator <ArrowUpRight className="w-4 h-4 ml-1" />
           </Button>
         </div>
       </section>
