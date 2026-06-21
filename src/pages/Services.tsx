@@ -17,7 +17,7 @@ import heroBanner from "@/assets/banners/services-banner.jpg";
 import ctaBanner from "@/assets/banners/services-cta-banner.jpg";
 
 const BUILD_REQUEST_URL = "/build-request";
-const GET_A_QUOTE_URL = "/get-a-quote";
+const GET_A_QUOTE_URL = "/calculator";
 
 /* ── Timeline benchmarks ─────────────────────────────────────────── */
 const benchmarks = [
