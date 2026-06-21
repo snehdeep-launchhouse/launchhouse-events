@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import BreadcrumbJsonLd from "@/components/BreadcrumbJsonLd";
+import { setPageSeo } from "@/lib/seo-head";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -135,6 +136,14 @@ const BuildRequest = () => {
   // Token for secure abandoned form tracking (token-based ownership)
   const submissionTokenRef = useRef<string | null>(null);
   const [plannerVerifications, setPlannerVerifications] = useState<Record<number, VerificationStatus>>({});
+
+  useEffect(() => {
+    return setPageSeo({
+      title: "Build Request — LaunchHouse Events",
+      description: "Submit your Cvent event build request to LaunchHouse Events. Share scope, timelines, and solutions to kick off your project.",
+      path: "/build-request",
+    });
+  }, []);
 
   // Step 1
   const form1 = useForm<Step1>({ resolver: zodResolver(step1Schema), defaultValues: { firstName: "", lastName: "", email: "", companyName: "" } });

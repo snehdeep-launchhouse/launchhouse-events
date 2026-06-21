@@ -1,6 +1,8 @@
+import { useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import BreadcrumbJsonLd from "@/components/BreadcrumbJsonLd";
+import { setPageSeo } from "@/lib/seo-head";
 
 const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
   <section className="mb-10">
@@ -9,7 +11,14 @@ const Section = ({ title, children }: { title: string; children: React.ReactNode
   </section>
 );
 
-const PrivacyPolicy = () => (
+const PrivacyPolicy = () => {
+  useEffect(() => setPageSeo({
+    title: "Privacy Policy — LaunchHouse Events",
+    description: "How LaunchHouse Events collects, uses, and safeguards personal information submitted through our website and Build Requests.",
+    path: "/privacy-policy",
+  }), []);
+
+  return (
   <div className="min-h-screen flex flex-col bg-background">
     <BreadcrumbJsonLd items={[{ name: "Privacy Policy", path: "/privacy-policy" }]} />
     <Navbar />
@@ -110,6 +119,8 @@ const PrivacyPolicy = () => (
     </main>
     <Footer />
   </div>
-);
+  );
+};
+
 
 export default PrivacyPolicy;
