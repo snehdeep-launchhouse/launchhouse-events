@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+// router imports removed — calculator links open in a new tab via <a>/window.open
 import { setPageSeo } from "@/lib/seo-head";
 import JsonLd from "@/components/JsonLd";
 import Navbar from "@/components/Navbar";
@@ -99,8 +99,7 @@ const specialistServices = [
 ];
 
 const Pricing = () => {
-  const { openContactPanel, openDemoPanel } = useContactPanel();
-  const navigate = useNavigate();
+  const { openDemoPanel } = useContactPanel();
 
   useEffect(() => {
     return setPageSeo({
@@ -202,9 +201,9 @@ const Pricing = () => {
             </p>
             <p>
               Simple builds have a published starting price because they follow a consistent, well-defined scope. Medium, Advanced, and Complex builds vary too much by event to quote accurately without a brief conversation first — which is why those tiers are{" "}
-              <Link to={CALCULATOR_URL} className="text-primary font-medium underline-offset-4 hover:underline">
+              <a href={CALCULATOR_URL} target="_blank" rel="noopener noreferrer" className="text-primary font-medium underline-offset-4 hover:underline">
                 custom quoted
-              </Link>
+              </a>
               .
             </p>
             <p>
@@ -212,13 +211,15 @@ const Pricing = () => {
             </p>
           </div>
           <div className="mt-8 flex justify-center">
-            <Link
-              to={CALCULATOR_URL}
+            <a
+              href={CALCULATOR_URL}
+              target="_blank"
+              rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:gap-2.5 transition-all"
             >
               Not sure where your event fits? Try our Complexity Calculator
               <ArrowUpRight className="w-4 h-4" />
-            </Link>
+            </a>
           </div>
         </div>
       </section>
@@ -247,13 +248,15 @@ const Pricing = () => {
                   </div>
                   <h3 className="text-lg font-bold font-display mb-1">{p.title}</h3>
                   {p.price === "Custom quoted" ? (
-                    <Link
-                      to={CALCULATOR_URL}
+                    <a
+                      href={CALCULATOR_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
                       className="group inline-flex items-center gap-1 text-base font-bold font-display text-primary mb-3 hover:gap-1.5 transition-all"
                     >
                       Get a tailored estimate
                       <ArrowUpRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-                    </Link>
+                    </a>
                   ) : (
                     <p className="text-xl font-bold font-display text-primary mb-3">{p.price}</p>
                   )}
@@ -338,7 +341,7 @@ const Pricing = () => {
                   <h4 className="text-lg font-bold font-display mb-1">{c.title}</h4>
                   <p className="text-xl font-bold font-display text-primary mb-3">{c.price}</p>
                   <p className="text-sm text-muted-foreground leading-relaxed flex-1 mb-6">{c.desc}</p>
-                  <Button className="w-full" onClick={() => navigate(CALCULATOR_URL)}>
+                  <Button className="w-full" onClick={() => window.open(CALCULATOR_URL, "_blank", "noopener,noreferrer")}>
                     Get Started <ArrowUpRight className="w-4 h-4 ml-1" />
                   </Button>
                 </div>
@@ -394,8 +397,8 @@ const Pricing = () => {
           <p className="text-white/80 max-w-lg mx-auto mb-8">
             One of our team members will reach out within 24 hours. No commitment required.
           </p>
-          <Button size="lg" className="shadow-btn" onClick={openContactPanel}>
-            Book a Free Consultation <ArrowUpRight className="w-4 h-4 ml-1" />
+          <Button size="lg" className="shadow-btn" onClick={() => window.open(CALCULATOR_URL, "_blank", "noopener,noreferrer")}>
+            Pricing Calculator <ArrowUpRight className="w-4 h-4 ml-1" />
           </Button>
         </div>
       </section>
