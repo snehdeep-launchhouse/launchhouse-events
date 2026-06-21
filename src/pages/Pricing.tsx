@@ -342,7 +342,7 @@ const Pricing = () => {
                   <h4 className="text-lg font-bold font-display mb-1">{c.title}</h4>
                   <p className="text-xl font-bold font-display text-primary mb-3">{c.price}</p>
                   <p className="text-sm text-muted-foreground leading-relaxed flex-1 mb-6">{c.desc}</p>
-                  <Button className="w-full" onClick={() => navigate(CALCULATOR_URL)}>
+                  <Button className="w-full" onClick={() => window.open(CALCULATOR_URL, "_blank", "noopener,noreferrer")}>
                     Get Started <ArrowUpRight className="w-4 h-4 ml-1" />
                   </Button>
                 </div>
