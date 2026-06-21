@@ -1,73 +1,65 @@
-## Goal
+# Pricing Page — Minimal CTA & Copy Updates
 
-Produce a single PDF — `Calculator-Logic-Spec.pdf` — that fully documents the Event Complexity Calculator on `/calculator`, so you have a precise reference when upgrading or fixing it.
+Presentation-only edits to `src/pages/Pricing.tsx`. No data, schema, route, edge function, or component-library changes. No impact on existing forms or flows.
 
-This is a one-off artifact. No code in the app changes.
+## UI recommendation (your question on button vs inline link)
 
-## What the PDF will cover
+For section #1 ("How Our Pricing Works"), an **inline anchor on meaningful words + a small ghost "arrow link" below the copy** reads as the most organic and on-brand option. A full solid button here would feel abrupt against the centered editorial paragraph block and would compete with the bold CTAs further down the page. The ghost arrow-link pattern (`text → ArrowUpRight`) is already used elsewhere on the site, so it stays inside the existing design language.
 
-**1. Overview & Entry Points**
-- Route: `/calculator` → `src/pages/Calculator.tsx`
-- Main component: `EventComplexityCalculator.tsx`
-- Two entry flows: manual Q&A and AI "Describe Your Event" (`DescribeEvent.tsx` → `analyze-event` edge function)
+For section #2 (build cards), replacing the repeated "Custom quoted" with a single tappable phrase that opens the calculator is both the cleanest visual fix and the most engaging — the price slot becomes the CTA itself instead of a dead label.
 
-**2. The 13 Questions (full catalog)**
-For each question: ID, prompt text, options, point values, single vs multi-select. Sourced from `src/lib/calculator-data.ts`.
+## Changes
 
-**3. Scoring Engine (step-by-step)**
-- Stage 1 — Base score: sum of all answer values except `cvent_products`
-- Stage 2 — Inferred products (Speakers → Abstract; Appointments → Appointments)
-- Stage 3 — Base tier thresholds: ≤12 Simple, ≤18 Medium, ≤25 Advanced, >25 Complex
-- Stage 4 — Minimum-tier overrides: Advanced branding → ≥Medium; 4+ reg paths → ≥Advanced
-- Stage 5 — Product-count overrides (Attendee Hub explicitly excluded): 2 products → ≥Advanced, 3+ → Complex
-- Stage 6 — Final result mapping (price, first draft, revision turnaround) per tier
-- Worked examples for each tier
+### 1. "How Our Pricing Works" — integrate Calculator V2
 
-**4. Attendee Hub Module (separate pricing track)**
-- Triggered by selecting "Attendee Hub / Event App"
-- Triggers a follow-up features step (Agenda, Networking, Push, Gamification, Exhibitors)
-- Flat $1,999 add-on, excluded from complexity scoring
+Edit the second paragraph so "custom quoted" becomes an inline link to `/calculator`, and append a small ghost arrow-link beneath the three paragraphs:
 
-**5. Pricing & Timeline Table**
-Tier → Starting price, First Draft SLA, Revision SLA, plus Hub add-on.
+- Inline: `…which is why those tiers are <Link>custom quoted</Link>.` styled `text-primary underline-offset-4 hover:underline font-medium`.
+- Below paragraphs, centered: `Not sure where your event fits?  Try our Complexity Calculator →` as a ghost link (`Button variant="link"` or plain `<a>` with `ArrowUpRight`).
 
-**6. Scope Summary Generator**
-Mapping of answers → bullet points (`generate-scope-summary.ts`), used in UI, PDF, and lead emails.
+Both point to `/calculator` (V2 alias preserved separately, not used here). Opens in same tab.
 
-**7. UI / UX Flow**
-Step progress, Hub features sub-step, results gate behind `LeadForm`, post-submit reveal of result cards, PDF download (`generate-results-pdf.ts`).
+### 2. Registration Build Packages — replace repeated "Custom quoted"
 
-**8. Lead Capture & Persistence**
-- `LeadForm.tsx` → inserts into `event_complexity_leads` (column mapping table included)
-- Email validation: format check + DNS/MX via `verify-email-domain` edge function (blocks generic providers)
-- Required fields, event date, complexity, price, products, hub flags, scope summary
+For Medium / Advanced / Complex cards only (Simple keeps `From $899`):
 
-**9. Integrations & Connections**
-- Supabase table: `event_complexity_leads` (column list)
-- Edge functions: `analyze-event` (Lovable AI Gateway, Gemini), `verify-email-domain`, `send-lead-notification`
-- AI Receptionist (`receptionist-chat`) — gated from revealing prices
-- Admin Report page consumes the leads table
-- Results PDF generator (`generate-results-pdf.ts`)
+- Replace the `Custom quoted` price line with a tappable element rendered as an anchor-styled element: `Get a tailored estimate` with `ArrowUpRight`, styled in `text-primary font-semibold` so it visually occupies the same slot the price used to.
+- Clicking navigates to `/calculator`.
+- Simple Build is unchanged (price stays, no CTA — matches current behavior since the existing `cta` field is not rendered today).
 
-**10. Known Quirks / Upgrade Candidates**
-- Attendee Hub deliberately excluded from product count & overrides
-- "Not sure" Cvent option counts toward selection length but is filtered from product list
-- `cvent_products` answer value = count of selections (not a weighted score)
-- Inferred products auto-hidden from the multi-select to avoid double-counting
-- AI analyzer doesn't infer Attendee Hub features (only top-level products)
+No card layout, grid, icon, feature-list, or hover-state changes. The `buildPackages` array `cta` / `ctaVariant` fields stay as-is (currently unused) to avoid risk.
 
-**11. File Reference Index**
-Quick table of every file involved, with one-line purpose each.
+### 3. Priority Delivery — switch CTA target
 
-## How it will be built
+Current: `onClick={() => window.open(GET_A_QUOTE_URL, "_blank")}` → Get a Quote (contact form).
 
-- Python + `reportlab` (Platypus) for a clean, branded multi-page PDF
-- Brand colors: Signature Blue `#006AE1`, dark `#141D2B`
-- Tables for questions, scoring tiers, DB column mappings, file index
-- Visual QA: render to images with `pdftoppm`, inspect every page, fix issues, re-render
-- Output saved to `/mnt/documents/Calculator-Logic-Spec.pdf` and surfaced via `<presentation-artifact>`
+Change to: `onClick={openDemoPanel}` so it opens the existing "Book a Free Consultation" RequestDemoPanel that the Navbar already uses. Button label, variant, and icon unchanged.
 
-## Out of scope (this task)
+`openDemoPanel` is already exposed by `useContactPanel()` — just destructure it alongside the existing `openContactPanel`.
 
-- No edits to calculator code, schema, or UI
-- No recommendations for changes beyond noting quirks; we'll discuss upgrades after you review the spec
+### 4. Attendee Hub & Training — three "Get Started" buttons → Calculator V2
+
+In the `hubCards.map` render (Attendee Hub Build, Premium Hub Support, Training Video), change:
+
+`onClick={() => window.open(GET_A_QUOTE_URL, "_blank")}` → `onClick={() => navigate("/calculator")}` (or `window.location.assign("/calculator")` to avoid adding a new import if `useNavigate` isn't already in this file — it isn't, so prefer `window.location.href = "/calculator"` for a same-tab navigation that stays inside the SPA shell). Button label, variant, icon unchanged.
+
+## Out of scope (explicitly untouched)
+
+- All other pages, components, routes
+- JSON-LD / SEO metadata on this page
+- `buildPackages` and `hubCards` data arrays' shape
+- Specialist Services section
+- Hero, CTA banner, footer
+- `/calculator-v2` alias, V1 rollback path
+- DB, edge functions, email flows, RLS
+
+## Safety / rollback
+
+- All edits are inside `src/pages/Pricing.tsx`. Reverting the single file restores prior behavior.
+- No new dependencies, no new files, no routing changes.
+- No form, lead-capture, or analytics wiring is altered.
+- "Get a Quote" route (`/get-a-quote`) remains live and reachable from other parts of the site.
+
+## Files touched
+
+- `src/pages/Pricing.tsx` (only)
