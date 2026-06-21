@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+// router imports removed — calculator links open in a new tab via <a>/window.open
 import { setPageSeo } from "@/lib/seo-head";
 import JsonLd from "@/components/JsonLd";
 import Navbar from "@/components/Navbar";
