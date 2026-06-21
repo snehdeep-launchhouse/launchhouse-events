@@ -1,6 +1,8 @@
+import { useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import BreadcrumbJsonLd from "@/components/BreadcrumbJsonLd";
+import { setPageSeo } from "@/lib/seo-head";
 
 const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
   <section className="mb-10">
@@ -245,7 +247,13 @@ const hoursRows = [
   { build: "Premium", hours: ">100 hours" },
 ];
 
-const TermsOfService = () => (
+const TermsOfService = () => {
+  useEffect(() => setPageSeo({
+    title: "Terms of Service — LaunchHouse Events",
+    description: "Terms of Service governing the use of LaunchHouse Events' Cvent event build and configuration services.",
+    path: "/terms-of-service",
+  }), []);
+  return (
   <div className="min-h-screen flex flex-col bg-background">
     <BreadcrumbJsonLd items={[{ name: "Terms of Service", path: "/terms-of-service" }]} />
     <Navbar />
