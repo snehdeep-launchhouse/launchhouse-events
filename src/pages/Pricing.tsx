@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { setPageSeo } from "@/lib/seo-head";
 import JsonLd from "@/components/JsonLd";
 import Navbar from "@/components/Navbar";
@@ -15,6 +16,7 @@ import heroBanner from "@/assets/banners/pricing-banner.jpg";
 import ctaBanner from "@/assets/banners/pricing-cta-banner.jpg";
 
 const GET_A_QUOTE_URL = "/get-a-quote";
+const CALCULATOR_URL = "/calculator";
 
 /* ── Registration Build Packages ─────────────────────────────────── */
 const buildPackages = [
