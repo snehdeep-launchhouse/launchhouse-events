@@ -246,7 +246,17 @@ const Pricing = () => {
                     <Icon className="w-5 h-5 text-primary" />
                   </div>
                   <h3 className="text-lg font-bold font-display mb-1">{p.title}</h3>
-                  <p className="text-xl font-bold font-display text-primary mb-3">{p.price}</p>
+                  {p.price === "Custom quoted" ? (
+                    <Link
+                      to={CALCULATOR_URL}
+                      className="group inline-flex items-center gap-1 text-base font-bold font-display text-primary mb-3 hover:gap-1.5 transition-all"
+                    >
+                      Get a tailored estimate
+                      <ArrowUpRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                    </Link>
+                  ) : (
+                    <p className="text-xl font-bold font-display text-primary mb-3">{p.price}</p>
+                  )}
                   <p className="text-sm text-muted-foreground leading-relaxed mb-5">{p.desc}</p>
                   <ul className="space-y-2 flex-1 mb-6">
                     {p.features.map((f) => (
