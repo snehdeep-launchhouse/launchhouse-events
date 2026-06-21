@@ -308,7 +308,7 @@ const Pricing = () => {
                   </li>
                 ))}
               </ul>
-              <Button onClick={() => window.open(GET_A_QUOTE_URL, "_blank")}>
+              <Button onClick={openDemoPanel}>
                 Get Started <ArrowUpRight className="w-4 h-4 ml-1" />
               </Button>
             </div>
