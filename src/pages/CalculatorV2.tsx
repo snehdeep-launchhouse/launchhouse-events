@@ -10,7 +10,7 @@ const CalculatorV2 = () => {
       title: "Event Complexity Calculator | LaunchHouse Events",
       description:
         "Score your Cvent event complexity in 16 questions and get an indicative starting price from LaunchHouse Events — Simple, Medium, or Complex build tiers.",
-      path: "/calculator-v2",
+      path: "/calculator",
     });
   }, []);
 

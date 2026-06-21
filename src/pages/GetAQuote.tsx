@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import BreadcrumbJsonLd from "@/components/BreadcrumbJsonLd";
+import { setPageSeo } from "@/lib/seo-head";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -87,10 +88,11 @@ const GetAQuote = () => {
   const submissionTokenRef = useRef<string | null>(null);
 
   useEffect(() => {
-    document.title = "Contact Us — LaunchHouse Events";
-    return () => {
-      document.title = "LaunchHouse Events";
-    };
+    return setPageSeo({
+      title: "Contact Us — LaunchHouse Events",
+      description: "Get in touch with LaunchHouse Events for Cvent registration builds, Attendee Hub support, mobile app readiness, and event tech QA.",
+      path: "/get-a-quote",
+    });
   }, []);
 
   const {
