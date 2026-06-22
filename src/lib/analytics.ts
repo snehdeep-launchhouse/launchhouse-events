@@ -10,6 +10,8 @@
 
 export const GA_MEASUREMENT_ID = "G-JDM9N7HJD3";
 
+export const ANALYTICS_READY_EVENT = "launchhouse:ga4-ready";
+
 const ALLOWED_HOSTNAMES = new Set(["launchhouse.events", "www.launchhouse.events"]);
 
 const ALLOWED_PARAMS = new Set([
