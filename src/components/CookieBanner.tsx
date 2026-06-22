@@ -9,7 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { GA_MEASUREMENT_ID, isProductionHost } from "@/lib/analytics";
+import { GA_MEASUREMENT_ID, isProductionHost, ANALYTICS_READY_EVENT } from "@/lib/analytics";
 
 interface CookiePreferences {
   necessary: boolean;
@@ -38,8 +38,10 @@ function enableGA() {
   function gtag(...args: any[]) { window.dataLayer.push(args); }
   (window as any).gtag = gtag;
   gtag("js", new Date());
-  // send_page_view disabled here; SPA page_view tracking is wired in a later step.
+  // send_page_view disabled here; SPA page_view tracking is handled by RouteChangeTracker.
   gtag("config", GA_MEASUREMENT_ID, { send_page_view: false });
+  // Readiness signal so RouteChangeTracker can send the first page_view for the current route.
+  window.dispatchEvent(new Event(ANALYTICS_READY_EVENT));
 }
 
 function disableGA() {

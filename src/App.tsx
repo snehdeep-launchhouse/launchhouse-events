@@ -9,6 +9,7 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import ErrorBoundary from "./components/ErrorBoundary";
 import ContactPanelProvider, { useContactPanel } from "./components/ContactPanelProvider";
+import RouteChangeTracker from "./components/RouteChangeTracker";
 
 const CookieBanner = lazy(() => import("./components/CookieBanner"));
 
@@ -77,6 +78,7 @@ const App = () => (
       <BrowserRouter>
         <ErrorBoundary>
           <ContactPanelProvider>
+            <RouteChangeTracker />
             <BookDemoListener />
             <Suspense fallback={<SuspenseFallback />}>
               <Routes>
