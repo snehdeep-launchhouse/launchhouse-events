@@ -67,14 +67,16 @@ function isAllowedValue(value: unknown): value is string | number | boolean {
   return false;
 }
 
-export function track(eventName: string, params?: Record<string, unknown>): void {
-  if (!isProductionHost()) return;
-  if (!isBrowser()) return;
+export function track(eventName: string, params?: Record<string, unknown>): boolean {
+  if (!isProductionHost()) return false;
+  if (!isBrowser()) return false;
 
-  if (!window.gtag || typeof window.gtag !== "function") return;
+  if (!window.gtag || typeof window.gtag !== "function") return false;
 
   const disableFlag = window["ga-disable-G-JDM9N7HJD3"];
-  if (disableFlag === true) return;
+  if (disableFlag === true) return false;
+
+  if (typeof eventName !== "string" || eventName.trim().length === 0) return false;
 
   const safeParams: Record<string, string | number | boolean> = {};
 
@@ -86,5 +88,8 @@ export function track(eventName: string, params?: Record<string, unknown>): void
     }
   }
 
+  if (Object.keys(safeParams).length === 0) return false;
+
   window.gtag("event", eventName, safeParams);
+  return true;
 }
