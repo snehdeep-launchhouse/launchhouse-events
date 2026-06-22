@@ -35,7 +35,7 @@ type Gtag = (...args: (string | Date | boolean | object)[]) => void;
 declare global {
   interface Window {
     gtag?: Gtag;
-    [`ga-disable-${typeof GA_MEASUREMENT_ID}`]?: boolean;
+    "ga-disable-G-JDM9N7HJD3"?: boolean;
   }
 }
 
