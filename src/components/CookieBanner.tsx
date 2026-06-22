@@ -9,9 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-
-
-const GA_ID = "G-JDM9N7HJD3";
+import { GA_MEASUREMENT_ID, isProductionHost } from "@/lib/analytics";
 
 interface CookiePreferences {
   necessary: boolean;
@@ -28,20 +26,25 @@ const DEFAULT_PREFS: CookiePreferences = {
 };
 
 function enableGA() {
-  if (document.querySelector(`script[src*="googletagmanager.com/gtag/js?id=${GA_ID}"]`)) return;
+  // Hard gate: GA4 must never load on preview, lovable.app, localhost, or unknown hosts.
+  if (!isProductionHost()) return;
+  if (typeof document === "undefined" || typeof window === "undefined") return;
+  if (document.querySelector(`script[src*="googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}"]`)) return;
   const script = document.createElement("script");
   script.async = true;
-  script.src = `https://www.googletagmanager.com/gtag/js?id=${GA_ID}`;
+  script.src = `https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`;
   document.head.appendChild(script);
   window.dataLayer = window.dataLayer || [];
   function gtag(...args: any[]) { window.dataLayer.push(args); }
   (window as any).gtag = gtag;
   gtag("js", new Date());
-  gtag("config", GA_ID);
+  // send_page_view disabled here; SPA page_view tracking is wired in a later step.
+  gtag("config", GA_MEASUREMENT_ID, { send_page_view: false });
 }
 
 function disableGA() {
-  (window as any)[`ga-disable-${GA_ID}`] = true;
+  if (typeof window === "undefined") return;
+  (window as any)[`ga-disable-${GA_MEASUREMENT_ID}`] = true;
 }
 
 declare global {
