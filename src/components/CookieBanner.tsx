@@ -9,7 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { GA_MEASUREMENT_ID, isProductionHost } from "@/lib/analytics";
+import { GA_MEASUREMENT_ID, isProductionHost, ANALYTICS_READY_EVENT } from "@/lib/analytics";
 
 interface CookiePreferences {
   necessary: boolean;
