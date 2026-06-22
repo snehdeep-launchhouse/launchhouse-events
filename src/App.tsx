@@ -78,6 +78,7 @@ const App = () => (
       <BrowserRouter>
         <ErrorBoundary>
           <ContactPanelProvider>
+            <RouteChangeTracker />
             <BookDemoListener />
             <Suspense fallback={<SuspenseFallback />}>
               <Routes>
