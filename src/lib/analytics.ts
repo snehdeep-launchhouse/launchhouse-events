@@ -71,7 +71,7 @@ export function track(eventName: string, params?: Record<string, unknown>): void
 
   if (!window.gtag || typeof window.gtag !== "function") return;
 
-  const disableFlag = window[`ga-disable-${GA_MEASUREMENT_ID}`];
+  const disableFlag = window["ga-disable-G-JDM9N7HJD3"];
   if (disableFlag === true) return;
 
   const safeParams: Record<string, string | number | boolean> = {};
