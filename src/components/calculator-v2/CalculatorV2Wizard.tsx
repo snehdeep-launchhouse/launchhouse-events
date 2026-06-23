@@ -1,4 +1,11 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
+import { track } from "@/lib/analytics";
+
+const getCalculatorPath = (): string | undefined => {
+  if (typeof window === "undefined") return undefined;
+  const path = window.location.pathname;
+  return path === "/calculator" || path === "/calculator-v2" ? path : undefined;
+};
 import { ArrowLeft, Calculator, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -27,6 +34,30 @@ export function CalculatorV2Wizard() {
   const [trace, setTrace] = useState<ScoringTrace | null>(null);
   const [aiSuggestedProducts, setAiSuggestedProducts] = useState<string[] | null>(null);
   const [aiSuggestedEventApp, setAiSuggestedEventApp] = useState<boolean>(false);
+
+  const startedRef = useRef(false);
+  const completedRef = useRef(false);
+
+  const trackStarted = () => {
+    if (startedRef.current) return;
+    const calculator_path = getCalculatorPath();
+    const params = calculator_path ? { calculator_path } : {};
+    if (track("calculator_started", params)) {
+      startedRef.current = true;
+    }
+  };
+
+  const trackCompleted = (result: ScoringTrace) => {
+    if (completedRef.current) return;
+    const calculator_path = getCalculatorPath();
+    const params: Record<string, unknown> = {};
+    if (calculator_path) params.calculator_path = calculator_path;
+    if (result?.finalTier) params.recommended_tier = String(result.finalTier).toLowerCase();
+    params.event_app_selected = Boolean(result?.eventAppSelected);
+    if (track("calculator_completed", params)) {
+      completedRef.current = true;
+    }
+  };
 
   const totalQuestions = questions.length;
   const currentQuestion = questions[currentStep];
@@ -76,6 +107,7 @@ export function CalculatorV2Wizard() {
       eventAppFeatures: features,
     });
     setTrace(result);
+    trackCompleted(result);
     setStage("lead");
   };
 
@@ -124,11 +156,13 @@ export function CalculatorV2Wizard() {
     setAiSuggestedEventApp(r.eventAppSelected);
     setStage("questions");
     setCurrentStep(0);
+    trackStarted();
   };
 
   const handleDescribeSkip = () => {
     setStage("questions");
     setCurrentStep(0);
+    trackStarted();
   };
 
   const headerLabel = (() => {
