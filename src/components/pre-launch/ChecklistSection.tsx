@@ -1,6 +1,5 @@
 import type { Section } from "@/lib/pre-launch/content";
 import CheckCard from "./CheckCard";
-import BackToIndex from "./BackToIndex";
 
 export function sectionAnchorId(s: Section) {
   return `section-${s.letter.toLowerCase()}-${s.slug}`;
@@ -44,8 +43,6 @@ export default function ChecklistSection({ section }: { section: Section }) {
             </li>
           ))}
         </ol>
-
-        <BackToIndex />
       </div>
     </section>
   );

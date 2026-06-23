@@ -297,7 +297,7 @@
   .pre-launch-print nav,
   .pre-launch-print footer,
   .pre-launch-print .pl-skip-link,
-  .pre-launch-print a[href="#index"],
+  .pre-launch-print [data-pl-quick-index],
   .pre-launch-print [data-pl-filter],
   .pre-launch-print [data-pl-search],
   .pre-launch-print [data-pl-clear],

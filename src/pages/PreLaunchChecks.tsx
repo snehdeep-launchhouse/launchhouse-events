@@ -8,13 +8,10 @@ import { SECTIONS, PRE_LAUNCH_META } from "@/lib/pre-launch/content";
 import HeroPreLaunch from "@/components/pre-launch/HeroPreLaunch";
 import OrientationBlock from "@/components/pre-launch/OrientationBlock";
 import TimingGuide from "@/components/pre-launch/TimingGuide";
-import ChecklistIndex from "@/components/pre-launch/ChecklistIndex";
 import ChecklistSection from "@/components/pre-launch/ChecklistSection";
 import RedFlags from "@/components/pre-launch/RedFlags";
 import LaunchHouseLens from "@/components/pre-launch/LaunchHouseLens";
-import SuggestedUsage from "@/components/pre-launch/SuggestedUsage";
 import Guardrails from "@/components/pre-launch/Guardrails";
-import DownloadPdfBlock from "@/components/pre-launch/DownloadPdfBlock";
 import FloatingResourceActions from "@/components/pre-launch/FloatingResourceActions";
 import ReadingProgress from "@/components/pre-launch/ReadingProgress";
 import { DownloadGateProvider } from "@/components/pre-launch/DownloadGateContext";
@@ -28,25 +25,12 @@ const DESCRIPTION =
 
 /**
  * Move focus to the destination of the current hash without re-scrolling.
- * For #index, push focus to the index search field so Back to Index also
- * returns keyboard focus to the search.
+ * Generic deep-link helper for major-section anchors.
  */
 function focusHashTarget() {
   const hash = window.location.hash;
   if (!hash) return;
   const id = hash.slice(1);
-
-  if (id === "index") {
-    // The search input is the first focusable input inside #index.
-    const indexEl = document.getElementById("index");
-    const input =
-      indexEl?.querySelector<HTMLInputElement>('input[type="search"]');
-    if (input) {
-      input.focus({ preventScroll: true });
-      return;
-    }
-  }
-
   const el = document.getElementById(id);
   if (el && typeof (el as HTMLElement).focus === "function") {
     (el as HTMLElement).focus({ preventScroll: true });
@@ -101,10 +85,10 @@ export default function PreLaunchChecks() {
 
         {/* Skip link */}
         <a
-          href="#index"
+          href="#orientation"
           className="pl-skip-link sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[100] focus:px-3 focus:py-2 focus:rounded-md focus:bg-primary focus:text-primary-foreground focus:shadow-btn"
         >
-          Skip to checklist index
+          Skip to orientation
         </a>
 
         <Navbar />
@@ -114,15 +98,12 @@ export default function PreLaunchChecks() {
           <HeroPreLaunch />
           <OrientationBlock />
           <TimingGuide />
-          <ChecklistIndex />
           {SECTIONS.map((s) => (
             <ChecklistSection key={s.letter} section={s} />
           ))}
           <RedFlags />
           <LaunchHouseLens />
-          <SuggestedUsage />
           <Guardrails />
-          <DownloadPdfBlock />
         </main>
 
         <FloatingResourceActions />
