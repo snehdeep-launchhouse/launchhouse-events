@@ -1,4 +1,4 @@
-import { useId, useMemo, useState } from "react";
+import { useId, useMemo, useRef, useState } from "react";
 import {
   SECTIONS,
   ORIENTATION,
@@ -125,6 +125,7 @@ const FILTERS: { value: "All" | Category; label: string }[] = [
 
 export default function ChecklistIndex() {
   const searchId = useId();
+  const searchRef = useRef<HTMLInputElement>(null);
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<"All" | Category>("All");
 
@@ -142,6 +143,11 @@ export default function ChecklistIndex() {
   const clearAll = () => {
     setQuery("");
     setFilter("All");
+    // Restore focus to the search input after React commits the state update
+    // (the Clear button itself unmounts on the next render).
+    requestAnimationFrame(() => {
+      searchRef.current?.focus();
+    });
   };
 
   const isFiltered = query !== "" || filter !== "All";
@@ -175,6 +181,7 @@ export default function ChecklistIndex() {
             </label>
             <Input
               id={searchId}
+              ref={searchRef}
               type="search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
