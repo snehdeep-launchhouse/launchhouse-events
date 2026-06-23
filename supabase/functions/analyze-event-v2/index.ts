@@ -1,10 +1,14 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { isAllowedOrigin, hashedIp, makeCooldown } from "../_shared/abuse-guard.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
+
+const MAX_DESCRIPTION_LEN = 2000;
+const rateLimiter = makeCooldown(60_000, 10);
 
 // V2 allowed values per question — must match src/lib/calculator-v2/questions.ts.
 const ALLOWED: Record<string, number[]> = {
@@ -57,10 +61,29 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  if (!isAllowedOrigin(req.headers.get("origin"))) {
+    return new Response(JSON.stringify({ error: "Forbidden." }), {
+      status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  const ipKey = await hashedIp(req);
+  if (ipKey && rateLimiter.isLimited(ipKey)) {
+    return new Response(JSON.stringify({ error: "Too many requests. Please try again shortly." }), {
+      status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
   try {
     const { description } = await req.json();
     if (!description || typeof description !== "string" || description.trim().length === 0) {
       return new Response(JSON.stringify({ error: "Description is required" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    if (description.length > MAX_DESCRIPTION_LEN) {
+      return new Response(JSON.stringify({ error: `Description must be ${MAX_DESCRIPTION_LEN} characters or fewer.` }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });

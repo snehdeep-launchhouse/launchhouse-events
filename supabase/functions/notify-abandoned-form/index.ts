@@ -13,9 +13,29 @@ function sanitize(val: unknown, maxLen = 500): string {
   );
 }
 
+function constantTimeEquals(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let result = 0;
+  for (let i = 0; i < a.length; i++) result |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return result === 0;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  // Internal-only endpoint: invoked by the DB trigger using the service role
+  // key. Reject any caller that doesn't present that exact token.
+  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  const authHeader = req.headers.get("authorization") ?? "";
+  const presented = authHeader.toLowerCase().startsWith("bearer ")
+    ? authHeader.slice(7).trim()
+    : "";
+  if (!serviceRoleKey || !presented || !constantTimeEquals(presented, serviceRoleKey)) {
+    return new Response(JSON.stringify({ error: "Forbidden." }), {
+      status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 
   try {
