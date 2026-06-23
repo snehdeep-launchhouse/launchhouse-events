@@ -385,7 +385,7 @@ export function ReceptionistWidget() {
         <div
           className={cn(
             "fixed z-50 flex flex-col overflow-hidden rounded-3xl border border-white/15 ring-1 ring-inset ring-white/10",
-            "bg-slate-900/55 supports-[backdrop-filter]:bg-white/[0.06] backdrop-blur-xl md:backdrop-blur-2xl backdrop-saturate-150",
+            "bg-slate-900/90 backdrop-blur-xl md:backdrop-blur-2xl backdrop-saturate-150",
             "shadow-[0_30px_80px_-20px_rgba(8,47,112,0.6)]",
             "before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/50 before:to-transparent",
             "animate-widget-panel-enter",
