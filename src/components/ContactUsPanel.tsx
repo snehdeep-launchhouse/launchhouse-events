@@ -551,17 +551,20 @@ const ContactUsPanel = ({ open, onOpenChange }: ContactUsPanelProps) => {
   );
 
   /* ── Render: Drawer on mobile, Sheet on desktop ──────────────── */
+  const glassPanelClass =
+    "bg-white/75 supports-[backdrop-filter]:bg-white/60 backdrop-blur-2xl backdrop-saturate-150 ring-1 ring-inset ring-white/40 shadow-[0_30px_80px_-20px_rgba(0,106,225,0.25)] before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-primary/40 before:to-transparent after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:h-32 after:bg-gradient-to-t after:from-primary/10 after:to-transparent";
+
   if (isMobile) {
     return (
       <Drawer open={open} onOpenChange={handleOpenChange}>
-        <DrawerContent className="max-h-[85vh] flex flex-col">
-          <DrawerHeader className="px-6 pt-4 pb-3 border-b border-border flex-shrink-0">
-            <DrawerTitle className="text-xl font-bold font-display">Contact Us</DrawerTitle>
+        <DrawerContent className={cn("max-h-[85vh] flex flex-col overflow-hidden border-primary/20", glassPanelClass)}>
+          <DrawerHeader className="relative px-6 pt-4 pb-3 border-b border-primary/15 flex-shrink-0 bg-transparent">
+            <DrawerTitle className="text-xl font-bold font-display text-foreground">Contact Us</DrawerTitle>
             <DrawerDescription className="text-sm text-muted-foreground">
               One of our team members will reach out within 24 hours. No commitment required.
             </DrawerDescription>
           </DrawerHeader>
-          {formContent}
+          <div className="relative flex-1 flex flex-col min-h-0">{formContent}</div>
         </DrawerContent>
       </Drawer>
     );
@@ -571,15 +574,15 @@ const ContactUsPanel = ({ open, onOpenChange }: ContactUsPanelProps) => {
     <Sheet open={open} onOpenChange={handleOpenChange}>
       <SheetContent
         side="right"
-        className="w-full sm:max-w-md md:max-w-lg p-0 flex flex-col"
+        className={cn("w-full sm:max-w-md md:max-w-lg p-0 flex flex-col overflow-hidden border-l border-primary/20", glassPanelClass)}
       >
-        <SheetHeader className="px-6 pt-6 pb-4 border-b border-border flex-shrink-0">
-          <SheetTitle className="text-xl font-bold font-display">Contact Us</SheetTitle>
+        <SheetHeader className="relative px-6 pt-6 pb-4 border-b border-primary/15 flex-shrink-0 bg-transparent">
+          <SheetTitle className="text-xl font-bold font-display text-foreground">Contact Us</SheetTitle>
           <SheetDescription className="text-sm text-muted-foreground">
             One of our team members will reach out within 24 hours. No commitment required.
           </SheetDescription>
         </SheetHeader>
-        {formContent}
+        <div className="relative flex-1 flex flex-col min-h-0">{formContent}</div>
       </SheetContent>
     </Sheet>
   );
