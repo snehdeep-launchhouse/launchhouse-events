@@ -1,5 +1,4 @@
 import { RED_FLAGS, RED_FLAGS_META, RED_FLAGS_CLOSING } from "@/lib/pre-launch/content";
-import BackToIndex from "./BackToIndex";
 import { AlertTriangle } from "lucide-react";
 
 export default function RedFlags() {
@@ -43,7 +42,6 @@ export default function RedFlags() {
 
         <p className="mt-6 text-sm italic text-muted-foreground">{RED_FLAGS_CLOSING}</p>
 
-        <BackToIndex />
       </div>
     </section>
   );

@@ -1,5 +1,4 @@
 import { LAUNCHHOUSE_LENS } from "@/lib/pre-launch/content";
-import BackToIndex from "./BackToIndex";
 
 export default function LaunchHouseLens() {
   return (
@@ -24,15 +23,6 @@ export default function LaunchHouseLens() {
             <p key={i}>{p}</p>
           ))}
         </div>
-        <div className="mt-8 rounded-xl border border-border bg-card-gradient p-5 md:p-6">
-          <p className="text-base md:text-lg font-semibold text-foreground">
-            {LAUNCHHOUSE_LENS.callout}
-          </p>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {LAUNCHHOUSE_LENS.calloutUrl}
-          </p>
-        </div>
-        <BackToIndex />
       </div>
     </section>
   );
