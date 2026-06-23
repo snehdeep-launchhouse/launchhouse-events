@@ -8,46 +8,34 @@ interface Props {
 export default function CheckCard({ sectionLetter, check }: Props) {
   const letter = sectionLetter.toLowerCase();
   const anchorId = `check-${letter}-${check.number}`;
+  const label = `${sectionLetter}.${check.number}`;
 
   return (
     <article
       id={anchorId}
       tabIndex={-1}
-      className="scroll-mt-[var(--nav-height)] rounded-xl border border-border bg-card p-5 md:p-6 shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      className="scroll-mt-[var(--nav-height)] py-4 outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm"
       aria-labelledby={`${anchorId}-title`}
     >
-      <div className="flex items-baseline gap-3 mb-2">
-        <span className="inline-flex items-center justify-center min-w-8 h-7 px-2 rounded-md bg-primary/10 text-primary text-sm font-semibold">
-          {sectionLetter}.{check.number}
-        </span>
-      </div>
       <h3
         id={`${anchorId}-title`}
-        className="text-base md:text-lg font-semibold font-display leading-snug text-foreground"
+        className="text-[15px] md:text-base font-semibold leading-snug text-foreground"
       >
-        {check.title}
+        <span className="text-primary font-semibold mr-2">{label}</span>
+        <span>{check.title}</span>
       </h3>
 
       {check.why && (
-        <div className="mt-3">
-          <p className="text-[11px] font-semibold uppercase tracking-widest text-primary">
-            Why it matters
-          </p>
-          <p className="text-sm text-muted-foreground leading-relaxed mt-1">
-            {check.why}
-          </p>
-        </div>
+        <p className="mt-1.5 text-sm text-muted-foreground leading-relaxed">
+          <span className="font-semibold text-foreground/80">Why: </span>
+          {check.why}
+        </p>
       )}
 
-      <div className="mt-3">
-        <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-          Common issue to catch
-        </p>
-        <p className="text-sm text-foreground/90 leading-relaxed mt-1">
-          {check.commonIssue}
-        </p>
-      </div>
-
+      <p className="mt-1.5 text-sm text-foreground/85 leading-relaxed">
+        <span className="font-semibold text-foreground/80">Common issue: </span>
+        {check.commonIssue}
+      </p>
     </article>
   );
 }
