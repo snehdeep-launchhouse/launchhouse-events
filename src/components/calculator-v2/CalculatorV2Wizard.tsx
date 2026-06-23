@@ -35,6 +35,30 @@ export function CalculatorV2Wizard() {
   const [aiSuggestedProducts, setAiSuggestedProducts] = useState<string[] | null>(null);
   const [aiSuggestedEventApp, setAiSuggestedEventApp] = useState<boolean>(false);
 
+  const startedRef = useRef(false);
+  const completedRef = useRef(false);
+
+  const trackStarted = () => {
+    if (startedRef.current) return;
+    const calculator_path = getCalculatorPath();
+    const params = calculator_path ? { calculator_path } : {};
+    if (track("calculator_started", params)) {
+      startedRef.current = true;
+    }
+  };
+
+  const trackCompleted = (result: ScoringTrace) => {
+    if (completedRef.current) return;
+    const calculator_path = getCalculatorPath();
+    const params: Record<string, unknown> = {};
+    if (calculator_path) params.calculator_path = calculator_path;
+    if (result?.complexity) params.recommended_tier = String(result.complexity).toLowerCase();
+    params.event_app_selected = Boolean(result?.eventAppSelected);
+    if (track("calculator_completed", params)) {
+      completedRef.current = true;
+    }
+  };
+
   const totalQuestions = questions.length;
   const currentQuestion = questions[currentStep];
 
