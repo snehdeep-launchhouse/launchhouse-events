@@ -1,5 +1,12 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { isAllowedOrigin, hashedIp, makeCooldown } from "../_shared/abuse-guard.ts";
+import {
+  buildPreLaunchGroundingBlock,
+  normalizeSectionLetter,
+  PRE_LAUNCH_ROUTE_RULES,
+} from "./pre_launch_grounding.ts";
+
+const PRE_LAUNCH_ROUTE = "/pre-launch-checks";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
