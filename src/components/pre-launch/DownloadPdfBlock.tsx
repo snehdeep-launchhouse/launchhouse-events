@@ -1,10 +1,12 @@
+import { useRef } from "react";
 import { Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
-
-const PDF_HREF = "/resources/LH_Phase_2_Cvent_Pre_Launch_QA_Checklist_v03.pdf";
-const PDF_FILENAME = "LaunchHouse-Cvent-Pre-Launch-QA-Checklist.pdf";
+import { useDownloadGate } from "./DownloadGateContext";
 
 export default function DownloadPdfBlock() {
+  const { openDownloadGate } = useDownloadGate();
+  const btnRef = useRef<HTMLButtonElement>(null);
+
   return (
     <section
       id="download"
@@ -26,11 +28,15 @@ export default function DownloadPdfBlock() {
             formatted for offline reading and print.
           </p>
           <div className="mt-6 flex justify-center">
-            <Button asChild size="lg" className="gap-2">
-              <a href={PDF_HREF} download={PDF_FILENAME}>
-                <Download className="w-4 h-4" aria-hidden="true" />
-                Download original PDF
-              </a>
+            <Button
+              ref={btnRef}
+              type="button"
+              size="lg"
+              className="gap-2"
+              onClick={() => openDownloadGate(btnRef.current)}
+            >
+              <Download className="w-4 h-4" aria-hidden="true" />
+              Download original PDF
             </Button>
           </div>
         </div>

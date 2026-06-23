@@ -19,7 +19,7 @@ export default function HeroPreLaunch() {
       </div>
       <div className="container relative py-20 md:py-32 flex flex-col items-center text-center gap-6 animate-fade-in">
         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 text-white text-xs sm:text-sm font-medium tracking-widest uppercase backdrop-blur-sm">
-          {PRE_LAUNCH_META.eyebrow.replace(/\s*·\s*V\d+\s*$/i, "")}
+          PRACTITIONER RESOURCE
         </div>
         <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold font-display tracking-tight max-w-3xl leading-[1.1] text-white">
           {PRE_LAUNCH_META.title}
