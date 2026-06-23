@@ -14,7 +14,8 @@ export default function Guardrails() {
         </p>
         <h2
           id="guardrails-heading"
-          className="text-3xl md:text-4xl font-bold font-display tracking-tight mb-4"
+          data-quick-index-heading
+          className="scroll-mt-[calc(var(--nav-height)+2.5rem)] text-3xl md:text-4xl font-bold font-display tracking-tight mb-4"
         >
           {GUARDRAILS.heading}
         </h2>
