@@ -15,6 +15,9 @@ const Footer = () => (
         <a href="/terms-of-service" className="hover:text-primary transition-colors" target="_blank" rel="noopener noreferrer">
           Terms of Service
         </a>
+        <a href="/pre-launch-checks" className="hover:text-primary transition-colors">
+          Pre-Launch Checks
+        </a>
         <a href="mailto:snehdeep@launchhouse.events" className="hover:text-primary transition-colors" target="_blank" rel="noopener noreferrer">
           Contact
         </a>
