@@ -78,29 +78,50 @@ export default function QuickIndexDrawer({
     }
 
     const base = Math.max(renderedBottom, navVarPx, 0);
-    // Comfortable breathing room below the header.
-    return base + 24;
+    // Intentional visual breathing room below the header.
+    return base + 40;
+  };
+
+  const resolveHeadingElement = (targetId: string): HTMLElement | null => {
+    const section = document.getElementById(targetId);
+    if (!section) return null;
+    const tagged = section.querySelector<HTMLElement>(
+      "[data-quick-index-heading]",
+    );
+    if (tagged) return tagged;
+    const h2 = section.querySelector<HTMLElement>("h2");
+    if (h2) return h2;
+    return section;
   };
 
   const performScroll = (targetId: string) => {
-    const el = document.getElementById(targetId);
-    if (!el) return;
+    const section = document.getElementById(targetId);
+    const heading = resolveHeadingElement(targetId);
+    if (!heading) return;
 
     const prefersReducedMotion = window.matchMedia(
       "(prefers-reduced-motion: reduce)",
     ).matches;
 
     const clearance = measureHeaderClearance();
-    const targetY =
-      window.scrollY + el.getBoundingClientRect().top - clearance;
+    const headingRect = heading.getBoundingClientRect();
+    const targetY = Math.max(
+      0,
+      window.scrollY + headingRect.top - clearance,
+    );
 
     window.scrollTo({
-      top: Math.max(0, targetY),
+      top: targetY,
       behavior: prefersReducedMotion ? "auto" : "smooth",
     });
 
-    if (typeof (el as HTMLElement).focus === "function") {
-      (el as HTMLElement).focus({ preventScroll: true });
+    // Prefer focusing the heading itself; fall back to the section target.
+    const focusTarget =
+      typeof (heading as HTMLElement).focus === "function" && heading.tabIndex >= 0
+        ? heading
+        : section ?? heading;
+    if (focusTarget && typeof (focusTarget as HTMLElement).focus === "function") {
+      (focusTarget as HTMLElement).focus({ preventScroll: true });
     }
   };
 
@@ -134,7 +155,11 @@ export default function QuickIndexDrawer({
               const target = pendingScrollRef.current;
               pendingScrollRef.current = null;
               if (target) {
-                window.setTimeout(() => performScroll(target), 0);
+                // Wait two rAF cycles so the overlay fully releases focus
+                // and scroll lock, then measure + scroll once.
+                window.requestAnimationFrame(() => {
+                  window.requestAnimationFrame(() => performScroll(target));
+                });
               }
             }
           }}
