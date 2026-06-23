@@ -421,10 +421,10 @@ export function ReceptionistWidget() {
               >
                 <div
                   className={cn(
-                    "max-w-[85%] rounded-xl px-3 py-2 text-sm",
+                    "max-w-[85%] rounded-xl px-3 py-2 text-sm border backdrop-blur-md",
                     msg.role === "user"
-                      ? "bg-primary text-primary-foreground rounded-br-sm"
-                      : "bg-muted text-foreground rounded-bl-sm"
+                      ? "bg-primary/15 text-primary border-primary/30 rounded-br-sm"
+                      : "bg-card/60 text-foreground border-border/60 rounded-bl-sm"
                   )}
                 >
                   {msg.role === "assistant" ? (
@@ -439,7 +439,7 @@ export function ReceptionistWidget() {
             ))}
             {showTypingIndicator && (
               <div className="flex justify-start animate-widget-message-slide">
-                <div className="flex items-center gap-1.5 rounded-xl bg-muted px-3 py-2" role="status" aria-label="Chloe is typing">
+                <div className="flex items-center gap-1.5 rounded-xl border border-border/60 bg-card/60 backdrop-blur-md px-3 py-2" role="status" aria-label="Chloe is typing">
                   <span className="h-2 w-2 rounded-full bg-muted-foreground/70 animate-typing-dot" />
                   <span className="h-2 w-2 rounded-full bg-muted-foreground/70 animate-typing-dot [animation-delay:0.2s]" />
                   <span className="h-2 w-2 rounded-full bg-muted-foreground/70 animate-typing-dot [animation-delay:0.4s]" />
