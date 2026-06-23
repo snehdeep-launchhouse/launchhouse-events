@@ -250,9 +250,7 @@ serve(async (req) => {
       ? normalizeSectionLetter(focus_section)
       : null;
 
-    const systemContent = isPreLaunchRoute
-      ? `${SYSTEM_PROMPT}\n${PRE_LAUNCH_ROUTE_RULES}\n${buildPreLaunchGroundingBlock(focusLetter)}`
-      : SYSTEM_PROMPT;
+    const systemContent = buildSystemPrompt(isPreLaunchRoute, focusLetter);
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
