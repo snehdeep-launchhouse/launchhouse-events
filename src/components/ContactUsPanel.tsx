@@ -423,7 +423,7 @@ const ContactUsPanel = ({ open, onOpenChange }: ContactUsPanelProps) => {
             {/* ── Step 1 ─────────────────────────────────────── */}
             {step === 1 && (
               <form onSubmit={handleSubmit(onStep1Submit)} className="space-y-5">
-                <div className="rounded-xl border border-border bg-card p-5 space-y-4 shadow-card">
+                <div className="rounded-xl border border-primary/15 bg-white/70 backdrop-blur-md p-5 space-y-4 shadow-card">
                   <h2 className="text-base font-bold font-display border-b border-border pb-2">
                     Your Information
                   </h2>
