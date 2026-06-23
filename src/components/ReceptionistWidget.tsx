@@ -29,6 +29,45 @@ const setSessionFlag = (key: string, value: boolean): void => {
   if (value) sessionStorage.setItem(key, 'true');
   else sessionStorage.removeItem(key);
 };
+// Conservative section detector for /pre-launch-checks. Only fires when
+// the message clearly references one of sections A–N (e.g. "Section D",
+// "A.1", a full known section title, or a recognizable slug phrase).
+// Bare standalone letters like "A" or "C" are intentionally not matched.
+// Server validates the value independently before using it.
+const KNOWN_SECTIONS: Array<{ letter: string; title: string; slug: string }> = [
+  { letter: "A", title: "Event Website / Registration Page", slug: "event-website-registration-page" },
+  { letter: "B", title: "Registration Paths", slug: "registration-paths" },
+  { letter: "C", title: "Registration Questions and Logic", slug: "registration-questions-and-logic" },
+  { letter: "D", title: "Session Selection", slug: "session-selection" },
+  { letter: "E", title: "Pricing / Payment", slug: "pricing-payment" },
+  { letter: "F", title: "Confirmation Emails", slug: "confirmation-emails" },
+  { letter: "G", title: "Attendee Communications", slug: "attendee-communications" },
+  { letter: "H", title: "Modification / Cancellation Flow", slug: "modification-cancellation-flow" },
+  { letter: "I", title: "Invitee and Attendee Data", slug: "invitee-and-attendee-data" },
+  { letter: "J", title: "Stakeholder Review", slug: "stakeholder-review" },
+  { letter: "K", title: "Mobile / Device Testing", slug: "mobile-device-testing" },
+  { letter: "L", title: "Accessibility / Readability", slug: "accessibility-readability" },
+  { letter: "M", title: "Final Go-Live Readiness", slug: "final-go-live-readiness" },
+  { letter: "N", title: "Attendee Hub & Event App", slug: "attendee-hub-event-app" },
+];
+
+function detectFocusSection(text: string): string | undefined {
+  const lower = text.toLowerCase();
+  // "section X" / "section x" — letter must be A–N
+  const sectionWord = lower.match(/\bsection\s+([a-n])\b/);
+  if (sectionWord) return sectionWord[1].toUpperCase();
+  // "X.1".."X.8" — dotted check reference
+  const dotted = text.match(/\b([A-Na-n])\s*\.\s*[1-8]\b/);
+  if (dotted) return dotted[1].toUpperCase();
+  // Known slug phrase, e.g. "registration paths", "session selection"
+  for (const s of KNOWN_SECTIONS) {
+    const slugPhrase = s.slug.replace(/-/g, " ");
+    if (lower.includes(slugPhrase)) return s.letter;
+    if (lower.includes(s.title.toLowerCase())) return s.letter;
+  }
+  return undefined;
+}
+
 
 export function ReceptionistWidget() {
   const [open, setOpen] = useState(false);
@@ -178,6 +217,19 @@ export function ReceptionistWidget() {
 
     let assistantSoFar = "";
 
+    // Route-aware optional payload. Only /pre-launch-checks ships page_context.
+    const isPreLaunch = location.pathname === "/pre-launch-checks";
+    const pageContext = isPreLaunch
+      ? { route: "/pre-launch-checks", title: "Cvent Pre-Launch QA Checklist" }
+      : undefined;
+    const focusSection = isPreLaunch ? detectFocusSection(text) : undefined;
+
+    const requestBody: Record<string, unknown> = {
+      messages: history.map((m) => ({ role: m.role, content: m.content })),
+    };
+    if (pageContext) requestBody.page_context = pageContext;
+    if (focusSection) requestBody.focus_section = focusSection;
+
     try {
       const resp = await fetch(`${SUPABASE_URL}/functions/v1/receptionist-chat`, {
         method: "POST",
@@ -185,9 +237,7 @@ export function ReceptionistWidget() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${SUPABASE_KEY}`,
         },
-        body: JSON.stringify({
-          messages: history.map((m) => ({ role: m.role, content: m.content })),
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       if (!resp.ok || !resp.body) {

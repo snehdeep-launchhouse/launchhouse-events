@@ -1,5 +1,12 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { isAllowedOrigin, hashedIp, makeCooldown } from "../_shared/abuse-guard.ts";
+import {
+  buildPreLaunchGroundingBlock,
+  normalizeSectionLetter,
+  PRE_LAUNCH_ROUTE_RULES,
+} from "./pre_launch_grounding.ts";
+
+const PRE_LAUNCH_ROUTE = "/pre-launch-checks";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -179,7 +186,8 @@ serve(async (req) => {
 
 
   try {
-    const { messages } = await req.json();
+    const body = await req.json();
+    const { messages, page_context, focus_section } = body ?? {};
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
@@ -196,6 +204,24 @@ serve(async (req) => {
         content: String(m.content).slice(0, 2000),
       }));
 
+    // Route-aware prompt composition. Only /pre-launch-checks unlocks the
+    // route-scoped checklist grounding + Cvent/Attendee Hub naming exception.
+    // Unknown routes are ignored — global behavior (incl. Rule 9) stays in force.
+    const routeRaw =
+      page_context && typeof page_context === "object"
+        ? (page_context as Record<string, unknown>).route
+        : undefined;
+    const isPreLaunchRoute =
+      typeof routeRaw === "string" && routeRaw === PRE_LAUNCH_ROUTE;
+
+    const focusLetter = isPreLaunchRoute
+      ? normalizeSectionLetter(focus_section)
+      : null;
+
+    const systemContent = isPreLaunchRoute
+      ? `${SYSTEM_PROMPT}\n${PRE_LAUNCH_ROUTE_RULES}\n${buildPreLaunchGroundingBlock(focusLetter)}`
+      : SYSTEM_PROMPT;
+
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -205,7 +231,7 @@ serve(async (req) => {
       body: JSON.stringify({
         model: "google/gemini-3-flash-preview",
         messages: [
-          { role: "system", content: SYSTEM_PROMPT },
+          { role: "system", content: systemContent },
           ...safeMessages,
         ],
         stream: true,
