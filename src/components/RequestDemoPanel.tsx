@@ -430,7 +430,7 @@ const RequestDemoPanel = ({ open, onOpenChange }: RequestDemoPanelProps) => {
             </p>
           </div>
 
-          <div className="rounded-xl border border-border bg-card p-5 space-y-3 text-left shadow-card">
+          <div className="rounded-xl border border-primary/15 bg-white/70 backdrop-blur-md p-5 space-y-3 text-left shadow-card">
             <div className="flex items-center gap-2 text-sm">
               <CalendarDays className="w-4 h-4 text-primary" />
               <span className="font-medium">{confirmationData.date}</span>
@@ -476,7 +476,7 @@ const RequestDemoPanel = ({ open, onOpenChange }: RequestDemoPanelProps) => {
             )}
           </div>
 
-          <div className="rounded-xl border border-border bg-card p-5 space-y-4 text-left shadow-card">
+          <div className="rounded-xl border border-primary/15 bg-white/70 backdrop-blur-md p-5 space-y-4 text-left shadow-card">
             <h4 className="text-sm font-semibold border-b border-border pb-2">
               Need to reach us sooner?
             </h4>
@@ -546,7 +546,7 @@ const RequestDemoPanel = ({ open, onOpenChange }: RequestDemoPanelProps) => {
           {/* ── Step 1 ─────────────────────────────────────── */}
           {step === 1 && (
             <form onSubmit={handleSubmit(onStep1Submit)} className="space-y-5">
-              <div className="rounded-xl border border-border bg-card p-5 space-y-4 shadow-card">
+              <div className="rounded-xl border border-primary/15 bg-white/70 backdrop-blur-md p-5 space-y-4 shadow-card">
                 <h2 className="text-base font-bold font-display border-b border-border pb-2">
                   Your Information
                 </h2>
@@ -594,7 +594,7 @@ const RequestDemoPanel = ({ open, onOpenChange }: RequestDemoPanelProps) => {
           {/* ── Step 2 ─────────────────────────────────────── */}
           {step === 2 && (
             <div className="space-y-5">
-              <div className="rounded-xl border border-border bg-card p-5 space-y-4 shadow-card">
+              <div className="rounded-xl border border-primary/15 bg-white/70 backdrop-blur-md p-5 space-y-4 shadow-card">
                 <h2 className="text-base font-bold font-display border-b border-border pb-2">
                   What would you like a demo of?
                 </h2>
@@ -645,7 +645,7 @@ const RequestDemoPanel = ({ open, onOpenChange }: RequestDemoPanelProps) => {
           {/* ── Step 3 ─────────────────────────────────────── */}
           {step === 3 && (
             <div className="space-y-5">
-              <div className="rounded-xl border border-border bg-card p-5 space-y-4 shadow-card">
+              <div className="rounded-xl border border-primary/15 bg-white/70 backdrop-blur-md p-5 space-y-4 shadow-card">
               <h2 className="text-base font-bold font-display border-b border-border pb-2">
                   Pick a Date & Time
                 </h2>
@@ -719,7 +719,7 @@ const RequestDemoPanel = ({ open, onOpenChange }: RequestDemoPanelProps) => {
               </div>
 
               {/* Additional Attendees */}
-              <div className="rounded-xl border border-border bg-card p-5 space-y-3 shadow-card">
+              <div className="rounded-xl border border-primary/15 bg-white/70 backdrop-blur-md p-5 space-y-3 shadow-card">
                 <h2 className="text-base font-bold font-display border-b border-border pb-2">
                   Additional Attendees <span className="text-muted-foreground font-normal text-sm">(Optional)</span>
                 </h2>
