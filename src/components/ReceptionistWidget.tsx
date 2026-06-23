@@ -359,23 +359,24 @@ export function ReceptionistWidget() {
             setOpen(true);
             handleUserInteraction();
           }}
+          aria-label="Ask Chloe anything"
           className={cn(
-            "fixed z-50 flex items-center gap-2.5 rounded-full bg-primary text-primary-foreground shadow-lg transition-transform hover:scale-105 active:scale-95 pl-4 pr-2 py-2",
+            "fixed z-50 inline-flex items-center gap-2 rounded-full pl-3 pr-4 py-2 text-sm font-medium border border-primary/30 bg-primary/15 text-primary backdrop-blur-md shadow-md hover:bg-primary/25 hover:border-primary/50 active:scale-[0.98] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background",
             "animate-widget-pill-entrance",
             showPulse && "animate-widget-pill-pulse",
             positionClass
           )}
           title="Chat with Chloe"
         >
-          <span className="text-sm font-medium whitespace-nowrap">Ask me anything</span>
-          <div className="relative flex h-10 w-10 items-center justify-center rounded-full bg-primary-foreground/15">
-            <MessageCircle className="h-5 w-5" />
+          <span className="relative inline-flex">
+            <MessageCircle className="h-4 w-4" aria-hidden="true" />
             {unreadCount > 0 && (
-              <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground shadow-md animate-widget-pill-entrance">
+              <span className="absolute -top-2 -right-2 flex h-4 min-w-4 px-1 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground shadow-md">
                 {unreadCount > 9 ? "9+" : unreadCount}
               </span>
             )}
-          </div>
+          </span>
+          <span>Ask me anything</span>
         </button>
       )}
 
