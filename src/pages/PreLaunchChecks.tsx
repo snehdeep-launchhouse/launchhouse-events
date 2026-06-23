@@ -21,7 +21,7 @@ const PATH = "/pre-launch-checks";
 const SITE = "https://launchhouse.events";
 const TITLE = "Cvent Pre-Launch QA Checklist | LaunchHouse Events";
 const DESCRIPTION =
-  "Free 14-section, 112-check Cvent pre-launch QA pass for event teams — run before launch, invites, reminders, and event week.";
+  "A free Cvent pre-launch QA checklist for event teams — test registration, payments, sessions, emails, and reporting before invites and go-live.";
 
 /**
  * Move focus to the destination of the current hash without re-scrolling.
