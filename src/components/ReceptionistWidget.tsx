@@ -178,6 +178,19 @@ export function ReceptionistWidget() {
 
     let assistantSoFar = "";
 
+    // Route-aware optional payload. Only /pre-launch-checks ships page_context.
+    const isPreLaunch = location.pathname === "/pre-launch-checks";
+    const pageContext = isPreLaunch
+      ? { route: "/pre-launch-checks", title: "Cvent Pre-Launch QA Checklist" }
+      : undefined;
+    const focusSection = isPreLaunch ? detectFocusSection(text) : undefined;
+
+    const requestBody: Record<string, unknown> = {
+      messages: history.map((m) => ({ role: m.role, content: m.content })),
+    };
+    if (pageContext) requestBody.page_context = pageContext;
+    if (focusSection) requestBody.focus_section = focusSection;
+
     try {
       const resp = await fetch(`${SUPABASE_URL}/functions/v1/receptionist-chat`, {
         method: "POST",
@@ -185,9 +198,7 @@ export function ReceptionistWidget() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${SUPABASE_KEY}`,
         },
-        body: JSON.stringify({
-          messages: history.map((m) => ({ role: m.role, content: m.content })),
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       if (!resp.ok || !resp.body) {
