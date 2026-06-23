@@ -164,6 +164,20 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  if (!isAllowedOrigin(req.headers.get("origin"))) {
+    return new Response(JSON.stringify({ error: "Forbidden." }), {
+      status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  const ipKey = await hashedIp(req);
+  if (ipKey && rateLimiter.isLimited(ipKey)) {
+    return new Response(JSON.stringify({ error: "Too many requests. Please try again shortly." }), {
+      status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+
   try {
     const { messages } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
