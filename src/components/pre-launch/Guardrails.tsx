@@ -1,5 +1,4 @@
 import { GUARDRAILS } from "@/lib/pre-launch/content";
-import BackToIndex from "./BackToIndex";
 
 export default function Guardrails() {
   return (
@@ -44,7 +43,6 @@ export default function Guardrails() {
           ))}
         </div>
 
-        <BackToIndex />
       </div>
     </section>
   );
