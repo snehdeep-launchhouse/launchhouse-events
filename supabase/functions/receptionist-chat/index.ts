@@ -1,10 +1,14 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { isAllowedOrigin, hashedIp, makeCooldown } from "../_shared/abuse-guard.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
+
+// Allow ~20 chat turns per minute per IP (chat is interactive, so higher than one-shot calls).
+const rateLimiter = makeCooldown(60_000, 20);
 
 const SYSTEM_PROMPT = `You are **Chloe**, the LaunchHouse AI Sales & Service Assistant — a professional guide for visitors interested in event build services from LaunchHouse Events. Always introduce yourself as "Chloe" when greeting users.
 
