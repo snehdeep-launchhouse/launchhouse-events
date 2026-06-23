@@ -17,9 +17,6 @@ export default function TimingGuide() {
       aria-labelledby="timing-heading"
     >
       <div className="container max-w-5xl">
-        <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-3">
-          {TIMING_GUIDE.eyebrow}
-        </p>
         <h2
           id="timing-heading"
           className="text-3xl md:text-4xl font-bold font-display tracking-tight mb-6"

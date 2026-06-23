@@ -14,14 +14,16 @@ export default function CheckCard({ sectionLetter, check }: Props) {
     <article
       id={anchorId}
       tabIndex={-1}
-      className="scroll-mt-[var(--nav-height)] py-4 outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm"
+      className="group relative scroll-mt-[var(--nav-height)] py-4 pl-3 pr-2 -mx-2 outline-none rounded-md border-l-2 border-transparent transition-colors duration-200 hover:bg-primary/[0.04] hover:border-primary/60 focus-within:bg-primary/[0.05] focus-within:border-primary/70 focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none"
       aria-labelledby={`${anchorId}-title`}
     >
       <h3
         id={`${anchorId}-title`}
-        className="text-[15px] md:text-base font-semibold leading-snug text-foreground"
+        className="text-[15px] md:text-base font-semibold leading-snug text-foreground transition-colors duration-200 group-hover:text-foreground group-focus-within:text-foreground motion-reduce:transition-none"
       >
-        <span className="text-primary font-semibold mr-2">{label}</span>
+        <span className="text-primary font-semibold mr-2 transition-colors duration-200 group-hover:text-primary group-focus-within:text-primary motion-reduce:transition-none">
+          {label}
+        </span>
         <span>{check.title}</span>
       </h3>
 

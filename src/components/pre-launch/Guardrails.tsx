@@ -33,14 +33,16 @@ export default function Guardrails() {
         </ul>
 
         <div className="mt-8 pt-6 border-t border-border space-y-2">
-          {GUARDRAILS.footer.map((line, i) => (
-            <p
-              key={i}
-              className="text-xs uppercase tracking-widest text-muted-foreground"
-            >
-              {line}
-            </p>
-          ))}
+          {GUARDRAILS.footer
+            .filter((line) => !/^End of Cvent Pre-Launch QA Checklist/i.test(line))
+            .map((line, i) => (
+              <p
+                key={i}
+                className="text-xs uppercase tracking-widest text-muted-foreground"
+              >
+                {line}
+              </p>
+            ))}
         </div>
 
       </div>
