@@ -17,6 +17,8 @@ import Guardrails from "@/components/pre-launch/Guardrails";
 import DownloadPdfBlock from "@/components/pre-launch/DownloadPdfBlock";
 import FloatingResourceActions from "@/components/pre-launch/FloatingResourceActions";
 import ReadingProgress from "@/components/pre-launch/ReadingProgress";
+import { DownloadGateProvider } from "@/components/pre-launch/DownloadGateContext";
+import DownloadGateDialog from "@/components/pre-launch/DownloadGateDialog";
 
 const PATH = "/pre-launch-checks";
 const SITE = "https://launchhouse.events";
@@ -90,40 +92,43 @@ export default function PreLaunchChecks() {
   );
 
   return (
-    <div className="min-h-screen bg-background pre-launch-print">
-      <BreadcrumbJsonLd
-        items={[{ name: "Pre-Launch Checks", path: PATH }]}
-      />
-      <JsonLd id="pre-launch-article-jsonld" data={articleSchema} />
+    <DownloadGateProvider>
+      <div className="min-h-screen bg-background pre-launch-print">
+        <BreadcrumbJsonLd
+          items={[{ name: "Pre-Launch Checks", path: PATH }]}
+        />
+        <JsonLd id="pre-launch-article-jsonld" data={articleSchema} />
 
-      {/* Skip link */}
-      <a
-        href="#index"
-        className="pl-skip-link sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[100] focus:px-3 focus:py-2 focus:rounded-md focus:bg-primary focus:text-primary-foreground focus:shadow-btn"
-      >
-        Skip to checklist index
-      </a>
+        {/* Skip link */}
+        <a
+          href="#index"
+          className="pl-skip-link sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[100] focus:px-3 focus:py-2 focus:rounded-md focus:bg-primary focus:text-primary-foreground focus:shadow-btn"
+        >
+          Skip to checklist index
+        </a>
 
-      <Navbar />
-      <ReadingProgress />
+        <Navbar />
+        <ReadingProgress />
 
-      <main id="main">
-        <HeroPreLaunch />
-        <OrientationBlock />
-        <TimingGuide />
-        <ChecklistIndex />
-        {SECTIONS.map((s) => (
-          <ChecklistSection key={s.letter} section={s} />
-        ))}
-        <RedFlags />
-        <LaunchHouseLens />
-        <SuggestedUsage />
-        <Guardrails />
-        <DownloadPdfBlock />
-      </main>
+        <main id="main">
+          <HeroPreLaunch />
+          <OrientationBlock />
+          <TimingGuide />
+          <ChecklistIndex />
+          {SECTIONS.map((s) => (
+            <ChecklistSection key={s.letter} section={s} />
+          ))}
+          <RedFlags />
+          <LaunchHouseLens />
+          <SuggestedUsage />
+          <Guardrails />
+          <DownloadPdfBlock />
+        </main>
 
-      <FloatingResourceActions />
-      <Footer />
-    </div>
+        <FloatingResourceActions />
+        <Footer />
+        <DownloadGateDialog />
+      </div>
+    </DownloadGateProvider>
   );
 }

@@ -87,17 +87,9 @@ export default function TimingGuide() {
           ))}
         </ul>
 
-        {/* Rule of thumb */}
-        <div className="mt-8 rounded-lg border-l-4 border-primary bg-primary/5 p-4">
-          <p className="text-sm">
-            <span className="font-semibold text-foreground">
-              {TIMING_GUIDE.ruleOfThumbLabel}
-            </span>{" "}
-            <span className="text-muted-foreground">
-              {TIMING_GUIDE.ruleOfThumb}
-            </span>
-          </p>
-        </div>
+        {/* Rule of thumb intentionally omitted from the webpage — it remains in the source PDF / content.ts. */}
+
+
 
         {/* At a glance */}
         <h3 className="text-xl font-bold font-display mt-12 mb-4">
