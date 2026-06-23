@@ -447,7 +447,7 @@ export function ReceptionistWidget() {
             ))}
             {showTypingIndicator && (
               <div className="flex justify-start animate-widget-message-slide">
-                <div className="flex items-center gap-1.5 rounded-2xl border border-white/15 bg-white/[0.08] backdrop-blur-md px-3 py-2" role="status" aria-label="Chloe is typing">
+                <div className="flex items-center gap-1.5 rounded-2xl border border-white/20 bg-white/15 backdrop-blur-md px-3 py-2" role="status" aria-label="Chloe is typing">
                   <span className="h-2 w-2 rounded-full bg-sky-200/80 animate-typing-dot" />
                   <span className="h-2 w-2 rounded-full bg-sky-200/80 animate-typing-dot [animation-delay:0.2s]" />
                   <span className="h-2 w-2 rounded-full bg-sky-200/80 animate-typing-dot [animation-delay:0.4s]" />
