@@ -1,29 +1,47 @@
-## Problem
+## Goal
 
-Chloe's chat panel uses the same liquid-glass palette as Quick Index (dark slate + white text), but Quick Index sits over a dimmed full-screen scrim while Chloe floats directly over a light page. The translucent `bg-slate-900/55` + heavy blur lets the bright page bleed through, washing out the white text and message bubbles.
+Bring the same liquid-glass aesthetic from Chloe / Quick Index to the **Book a Free Consultation** (`RequestDemoPanel`) and **Contact Us** (`ContactUsPanel`) side-panels, while keeping every form input, label, error, and helper text fully readable and on-brand (Signature Blue `#006AE1`).
 
-## Fix (UI only, `src/components/ReceptionistWidget.tsx`)
+## Direction (brand-tuned, not dark slate)
 
-1. **Panel surface** — raise opacity so text contrast matches Quick Index over its scrim.
-   - `bg-slate-900/55` → `bg-slate-900/90`
-   - Drop the `supports-[backdrop-filter]:bg-white/[0.06]` override that was thinning the surface
-   - Keep `backdrop-blur-xl`, ring, hairline highlight, sky-glow underlay
+Chloe/Quick Index use a dark slate glass because they float as small surfaces. A full-height side panel with dense forms can't use that palette — labels, helper text, calendar, checkboxes, and `Input`s would all need overrides and contrast would suffer. Instead, apply a **light brand-tinted glass** that reads the same liquid-glass language (hairline highlight, sky/blue glow, backdrop blur, ring) but keeps text on a light surface for readability.
 
-2. **Header** — strengthen divider (`border-white/15`) so the title block reads as a distinct band.
+Tokens (all via `bg-*/opacity` + brand blue, no new design tokens):
+- Panel surface: `bg-white/75 supports-[backdrop-filter]:bg-white/60 backdrop-blur-2xl backdrop-saturate-150`
+- Border + ring: `border border-primary/20 ring-1 ring-inset ring-white/40`
+- Top hairline sheen + bottom primary-tinted glow (matching the `before:` + bottom-glow pattern from Quick Index, swapped to brand primary instead of sky)
+- Shadow: `shadow-[0_30px_80px_-20px_rgba(0,106,225,0.25)]` (Signature Blue tinted drop)
+- Overlay scrim: keep Sheet's default but soften to `bg-slate-950/40 backdrop-blur-[2px]` so the page reads softly behind, matching Quick Index
 
-3. **Message bubbles** — make both roles solid enough to read:
-   - Assistant: `bg-white/[0.08]` → `bg-white/15`, text `text-slate-50`
-   - User: `bg-sky-300/20` → `bg-sky-400/30`, border `border-sky-200/60`, text `text-white`
-   - Keep rounded shape and shadow
+## Changes
 
-4. **Typing indicator + action buttons + input** — bump background to `bg-white/15` / `bg-white/[0.18]` and use `text-slate-50` / `placeholder:text-slate-300/70` so they match the readable Quick Index list items.
+### 1. `src/components/RequestDemoPanel.tsx`
+- Add liquid-glass classes to `<SheetContent>` (desktop) and `<DrawerContent>` (mobile) via `className`
+- Add a top hairline + bottom brand glow as absolutely-positioned `aria-hidden` siblings inside the panel wrapper
+- `SheetHeader` / `DrawerHeader`: transparent background, keep title in `text-foreground`, description in `text-muted-foreground` — both stay readable on the light glass
+- Inner form cards (`rounded-xl border border-border bg-card`) → `rounded-xl border border-primary/15 bg-white/70 backdrop-blur-md shadow-card` so they feel like floating glass cards on the panel
+- Inputs, EmailInput, Calendar, Checkboxes, Buttons: **no changes** (they already render on light surface and stay readable)
+- Step indicator pills: keep current primary/muted treatment (already on-brand)
 
-5. **Send button** — `bg-white/[0.18]` with `text-slate-50` for the same contrast level as Quick Index's close button.
+### 2. `src/components/ContactUsPanel.tsx`
+- Same `SheetContent` / `DrawerContent` glass treatment
+- Same inner-card softening to `bg-white/70 backdrop-blur-md`
+- Service-offering checkbox tiles: soften background to `bg-white/60 hover:bg-white/80 border-primary/15` for cohesion
+- Confirmation panel card: same glass-card treatment
+- All copy, validation, fields, and logic untouched
 
-No logic, no copy, no layout, no pill changes — the floating "Ask me anything" pill stays exactly as it is (it already matches Quick Index).
+### 3. Optional shared scrim
+- Pass a `bg-slate-950/40 backdrop-blur-[2px]` overlay class via the existing `SheetContent`/`DrawerContent` — handled inside the two panel files only; do not modify `src/components/ui/sheet.tsx` or `drawer.tsx` (keeps the change scoped to these two surfaces).
+
+## Readability guarantees
+- Text stays on a light surface (`bg-white/60`+) so foreground tokens render at full contrast — no white-on-translucent issues.
+- Labels keep `text-sm font-semibold` on `text-foreground`.
+- Helper / muted copy keeps `text-muted-foreground` which already passes contrast on white.
+- Error text keeps `text-destructive`.
+- Brand blue accents (border, glow, hairline) reinforce LaunchHouse identity without dimming text.
 
 ## Out of scope
-
-- Edge function, prompts, routing, auto-open behavior
-- The Quick Index component itself
-- Any non-checklist page
+- No logic, copy, validation, routing, or analytics changes.
+- No edits to shared `sheet.tsx` / `drawer.tsx` primitives.
+- Chloe and Quick Index stay as-is.
+- No new design tokens or Tailwind config changes.
