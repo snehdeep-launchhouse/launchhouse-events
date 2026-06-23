@@ -99,7 +99,7 @@ export default function QuickIndexDrawer({
       <DialogPrimitive.Portal>
         {/* Soft translucent scrim — page remains softly visible. */}
         <DialogPrimitive.Overlay
-          className="fixed inset-0 z-50 bg-slate-950/40 backdrop-blur-[2px] data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0"
+          className="fixed inset-0 z-50 bg-slate-950/40 backdrop-blur-[2px] data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:duration-300 data-[state=closed]:duration-200 data-[state=open]:ease-out data-[state=closed]:ease-in motion-reduce:transition-none motion-reduce:animate-none"
         />
 
         <DialogPrimitive.Content
@@ -115,7 +115,7 @@ export default function QuickIndexDrawer({
               }
             }
           }}
-          className="fixed inset-0 z-50 flex items-stretch justify-start outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:zoom-in-95 data-[state=closed]:zoom-out-95"
+          className="fixed inset-0 z-50 flex items-stretch justify-start outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:slide-in-from-left-4 data-[state=closed]:slide-out-to-left-4 data-[state=open]:duration-300 data-[state=closed]:duration-200 data-[state=open]:ease-out data-[state=closed]:ease-in motion-reduce:transition-none motion-reduce:animate-none"
         >
           {/* Click-outside layer — clicking empty space closes overlay. */}
           <button
