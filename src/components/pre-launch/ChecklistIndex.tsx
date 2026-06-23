@@ -1,8 +1,6 @@
 import { useId, useMemo, useRef, useState } from "react";
 import {
   SECTIONS,
-  ORIENTATION,
-  TIMING_GUIDE,
   RED_FLAGS_META,
   LAUNCHHOUSE_LENS,
   SUGGESTED_USAGE,
@@ -26,55 +24,63 @@ type IndexItem = {
   category: Category;
   /** Heading label shown in the result list */
   label: string;
-  /** Optional sub-label / search-only body */
+  /** Short description displayed under the heading */
   sublabel?: string;
+  /** Searchable text — for sections this aggregates every child check. */
   haystack: string;
   href: string;
 };
+
+const TOTAL_SECTIONS = 20;
 
 function buildItems(): IndexItem[] {
   const items: IndexItem[] = [];
 
   items.push({
     category: "Orientation",
-    label: ORIENTATION.heading,
-    sublabel: ORIENTATION.intro,
-    haystack: [ORIENTATION.heading, ORIENTATION.intro].join(" "),
+    label: "Orientation",
+    sublabel: "Why this checklist exists and how to use it.",
+    haystack: [
+      "Orientation",
+      "Why this checklist exists",
+      "attendee experience",
+      "stakeholder confidence",
+      "reporting readiness",
+      "Event Managers Meetings Events Cvent Owners mid-market enterprise",
+    ].join(" "),
     href: "#orientation",
   });
 
   items.push({
     category: "Timing Guide",
-    label: TIMING_GUIDE.heading,
-    sublabel: TIMING_GUIDE.intro,
-    haystack: [TIMING_GUIDE.heading, TIMING_GUIDE.intro, TIMING_GUIDE.ruleOfThumb].join(" "),
+    label: "Timing Guide",
+    sublabel: "When to run the pass across the event cycle.",
+    haystack: [
+      "Timing Guide",
+      "Before registration launch",
+      "Before invite sends",
+      "Before reminder emails fire",
+      "Before event week",
+      "Before publishing the Attendee Hub",
+      "After major registration changes",
+    ].join(" "),
     href: "#timing-guide",
   });
 
   for (const s of SECTIONS) {
     const sectionHref = `#${sectionAnchorId(s)}`;
+    // Parent-only card; aggregate every child check's searchable text so
+    // a search for "ICS" or "comp code" still surfaces the parent.
+    const childHaystack = s.checks
+      .map((c) => [c.title, c.why ?? "", c.commonIssue].join(" "))
+      .join(" ");
     items.push({
       category: `Section ${s.letter}` as Category,
-      label: `Section ${s.letter}: ${s.title}`,
+      label: `Section ${s.letter} — ${s.title}`,
       sublabel: s.why,
-      haystack: [s.letter, s.title, s.why].join(" "),
+      haystack: [`Section ${s.letter}`, s.letter, s.title, s.why, childHaystack].join(" "),
       href: sectionHref,
     });
-    for (const c of s.checks) {
-      items.push({
-        category: `Section ${s.letter}` as Category,
-        label: `${s.letter}.${c.number} — ${c.title}`,
-        sublabel: c.commonIssue,
-        haystack: [
-          `Section ${s.letter}`,
-          s.title,
-          c.title,
-          c.why ?? "",
-          c.commonIssue,
-        ].join(" "),
-        href: `#check-${s.letter.toLowerCase()}-${c.number}`,
-      });
-    }
   }
 
   items.push({
@@ -143,8 +149,6 @@ export default function ChecklistIndex() {
   const clearAll = () => {
     setQuery("");
     setFilter("All");
-    // Restore focus to the search input after React commits the state update
-    // (the Clear button itself unmounts on the next render).
     requestAnimationFrame(() => {
       searchRef.current?.focus();
     });
@@ -167,7 +171,7 @@ export default function ChecklistIndex() {
           id="index-heading"
           className="text-3xl md:text-4xl font-bold font-display tracking-tight mb-6"
         >
-          Find a check or section.
+          Find a section.
         </h2>
 
         <nav aria-label="Checklist index" className="space-y-5">
@@ -177,7 +181,7 @@ export default function ChecklistIndex() {
               htmlFor={searchId}
               className="block text-sm font-medium text-foreground mb-2"
             >
-              Search checks and sections
+              Search sections
             </label>
             <Input
               id={searchId}
@@ -227,14 +231,7 @@ export default function ChecklistIndex() {
               aria-live="polite"
               className="text-sm text-muted-foreground"
             >
-              {filtered.length} result{filtered.length === 1 ? "" : "s"}
-              {isFiltered && (
-                <>
-                  {" "}
-                  · filtered{filter !== "All" ? ` to ${filter}` : ""}
-                  {query ? ` matching "${query}"` : ""}
-                </>
-              )}
+              Showing {filtered.length} of {TOTAL_SECTIONS} sections
             </p>
             {isFiltered && (
               <button
@@ -251,7 +248,7 @@ export default function ChecklistIndex() {
           {/* Results list */}
           {filtered.length === 0 ? (
             <p className="text-sm text-muted-foreground py-6">
-              No matches. Try a different keyword or clear filters.
+              No sections match. Try a different keyword or clear filters.
             </p>
           ) : (
             <ul className="grid gap-2 sm:grid-cols-2">
