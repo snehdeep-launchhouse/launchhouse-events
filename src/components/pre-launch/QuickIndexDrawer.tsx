@@ -45,14 +45,10 @@ function useActiveSection(ids: string[]): string | null {
     let rafId: number | null = null;
 
     const measureHeaderOffset = (): number => {
-      const navVar = getComputedStyle(document.documentElement)
-        .getPropertyValue("--nav-height")
-        .trim();
-      const navVarPx = parseInt(navVar, 10) || 0;
-
+      const navVarPx = readNavHeightPx();
       let renderedBottom = 0;
       const candidates = document.querySelectorAll<HTMLElement>(
-        "header, [data-site-header], nav[role='navigation']",
+        "header, [data-site-header], nav",
       );
       for (const node of Array.from(candidates)) {
         const style = window.getComputedStyle(node);
@@ -64,6 +60,7 @@ function useActiveSection(ids: string[]): string | null {
       }
       return Math.max(renderedBottom, navVarPx, 0);
     };
+
 
     const compute = () => {
       rafId = null;
