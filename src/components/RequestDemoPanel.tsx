@@ -430,7 +430,7 @@ const RequestDemoPanel = ({ open, onOpenChange }: RequestDemoPanelProps) => {
             </p>
           </div>
 
-          <div className="rounded-xl border border-primary/15 bg-white/70 backdrop-blur-md p-5 space-y-3 text-left shadow-card">
+          <div className="rounded-xl border border-sky-200/50 bg-white/55 supports-[backdrop-filter]:bg-white/40 backdrop-blur-md p-5 space-y-3 text-left shadow-card">
             <div className="flex items-center gap-2 text-sm">
               <CalendarDays className="w-4 h-4 text-primary" />
               <span className="font-medium">{confirmationData.date}</span>
@@ -476,7 +476,7 @@ const RequestDemoPanel = ({ open, onOpenChange }: RequestDemoPanelProps) => {
             )}
           </div>
 
-          <div className="rounded-xl border border-primary/15 bg-white/70 backdrop-blur-md p-5 space-y-4 text-left shadow-card">
+          <div className="rounded-xl border border-sky-200/50 bg-white/55 supports-[backdrop-filter]:bg-white/40 backdrop-blur-md p-5 space-y-4 text-left shadow-card">
             <h4 className="text-sm font-semibold border-b border-border pb-2">
               Need to reach us sooner?
             </h4>
@@ -546,7 +546,7 @@ const RequestDemoPanel = ({ open, onOpenChange }: RequestDemoPanelProps) => {
           {/* ── Step 1 ─────────────────────────────────────── */}
           {step === 1 && (
             <form onSubmit={handleSubmit(onStep1Submit)} className="space-y-5">
-              <div className="rounded-xl border border-primary/15 bg-white/70 backdrop-blur-md p-5 space-y-4 shadow-card">
+              <div className="rounded-xl border border-sky-200/50 bg-white/55 supports-[backdrop-filter]:bg-white/40 backdrop-blur-md p-5 space-y-4 shadow-card">
                 <h2 className="text-base font-bold font-display border-b border-border pb-2">
                   Your Information
                 </h2>
@@ -594,7 +594,7 @@ const RequestDemoPanel = ({ open, onOpenChange }: RequestDemoPanelProps) => {
           {/* ── Step 2 ─────────────────────────────────────── */}
           {step === 2 && (
             <div className="space-y-5">
-              <div className="rounded-xl border border-primary/15 bg-white/70 backdrop-blur-md p-5 space-y-4 shadow-card">
+              <div className="rounded-xl border border-sky-200/50 bg-white/55 supports-[backdrop-filter]:bg-white/40 backdrop-blur-md p-5 space-y-4 shadow-card">
                 <h2 className="text-base font-bold font-display border-b border-border pb-2">
                   What would you like a demo of?
                 </h2>
@@ -611,7 +611,7 @@ const RequestDemoPanel = ({ open, onOpenChange }: RequestDemoPanelProps) => {
                           "flex items-center gap-2.5 rounded-lg border px-3 py-2 cursor-pointer transition-colors text-sm min-h-[44px] backdrop-blur-sm",
                           selectedProducts.includes(product)
                             ? "border-primary bg-primary/15"
-                            : "border-primary/15 bg-white/60 hover:bg-white/80 hover:border-primary/40"
+                            : "border-sky-200/50 bg-white/45 hover:bg-white/70 hover:border-primary/40"
                         )}
                       >
                         <Checkbox
@@ -645,7 +645,7 @@ const RequestDemoPanel = ({ open, onOpenChange }: RequestDemoPanelProps) => {
           {/* ── Step 3 ─────────────────────────────────────── */}
           {step === 3 && (
             <div className="space-y-5">
-              <div className="rounded-xl border border-primary/15 bg-white/70 backdrop-blur-md p-5 space-y-4 shadow-card">
+              <div className="rounded-xl border border-sky-200/50 bg-white/55 supports-[backdrop-filter]:bg-white/40 backdrop-blur-md p-5 space-y-4 shadow-card">
               <h2 className="text-base font-bold font-display border-b border-border pb-2">
                   Pick a Date & Time
                 </h2>
@@ -719,7 +719,7 @@ const RequestDemoPanel = ({ open, onOpenChange }: RequestDemoPanelProps) => {
               </div>
 
               {/* Additional Attendees */}
-              <div className="rounded-xl border border-primary/15 bg-white/70 backdrop-blur-md p-5 space-y-3 shadow-card">
+              <div className="rounded-xl border border-sky-200/50 bg-white/55 supports-[backdrop-filter]:bg-white/40 backdrop-blur-md p-5 space-y-3 shadow-card">
                 <h2 className="text-base font-bold font-display border-b border-border pb-2">
                   Additional Attendees <span className="text-muted-foreground font-normal text-sm">(Optional)</span>
                 </h2>
@@ -798,18 +798,18 @@ const RequestDemoPanel = ({ open, onOpenChange }: RequestDemoPanelProps) => {
 
   /* ── Render: Drawer on mobile, Sheet on desktop ────────────── */
   const glassPanelClass =
-    "bg-white/75 supports-[backdrop-filter]:bg-white/60 backdrop-blur-2xl backdrop-saturate-150 ring-1 ring-inset ring-white/40 shadow-[0_30px_80px_-20px_rgba(0,106,225,0.25)] before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-primary/40 before:to-transparent after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:h-32 after:bg-gradient-to-t after:from-primary/10 after:to-transparent";
+    "bg-sky-50/55 supports-[backdrop-filter]:bg-sky-100/35 backdrop-blur-2xl backdrop-saturate-150 ring-1 ring-inset ring-white/50 shadow-[0_30px_80px_-20px_rgba(0,106,225,0.25)] before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/60 before:to-transparent after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:h-32 after:bg-gradient-to-t after:from-sky-300/20 after:to-transparent";
 
   if (isMobile) {
     return (
       <Drawer open={open} onOpenChange={handleOpenChange}>
-        <DrawerContent className={cn("max-h-[95vh] flex flex-col overflow-hidden border-primary/20", glassPanelClass)}>
-          <DrawerHeader className="relative px-6 pt-4 pb-3 border-b border-primary/15 flex-shrink-0 bg-transparent">
+        <DrawerContent className={cn("max-h-[95vh] flex flex-col overflow-hidden border-sky-200/50", glassPanelClass)}>
+          <DrawerHeader className="relative px-6 pt-4 pb-3 border-b border-sky-200/40 flex-shrink-0 bg-transparent">
             <DrawerTitle className="text-xl font-bold font-display text-foreground">Book a Free Consultation</DrawerTitle>
             <DrawerDescription className="text-sm text-muted-foreground">
               Talk to a member of our team about your event build. We will ask the right questions, understand your timeline and requirements, and let you know exactly how we can help. No sales pitch. No commitment.
             </DrawerDescription>
-            <DrawerClose className="absolute right-4 top-4 rounded-full border border-primary/20 bg-white/70 backdrop-blur-md p-2 hover:bg-white/90 transition-colors">
+            <DrawerClose className="absolute right-4 top-4 rounded-full border border-sky-200/50 bg-white/55 backdrop-blur-md p-2 hover:bg-white/75 transition-colors">
               <X className="w-5 h-5" />
               <span className="sr-only">Close</span>
             </DrawerClose>
@@ -826,9 +826,9 @@ const RequestDemoPanel = ({ open, onOpenChange }: RequestDemoPanelProps) => {
     <Sheet open={open} onOpenChange={handleOpenChange}>
       <SheetContent
         side="right"
-        className={cn("w-full sm:max-w-md md:max-w-lg p-0 flex flex-col overflow-hidden border-l border-primary/20", glassPanelClass)}
+        className={cn("w-full sm:max-w-md md:max-w-lg p-0 flex flex-col overflow-hidden border-l border-sky-200/50", glassPanelClass)}
       >
-        <SheetHeader className="relative px-6 pt-6 pb-4 border-b border-primary/15 flex-shrink-0 bg-transparent">
+        <SheetHeader className="relative px-6 pt-6 pb-4 border-b border-sky-200/40 flex-shrink-0 bg-transparent">
           <SheetTitle className="text-xl font-bold font-display text-foreground">Book a Free Consultation</SheetTitle>
           <SheetDescription className="text-sm text-muted-foreground">
             Tell us about your event needs and pick a time that works for you
