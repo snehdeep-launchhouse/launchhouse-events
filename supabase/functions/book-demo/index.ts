@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { isAllowedOrigin, hashedIp, makeCooldown } from "../_shared/abuse-guard.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -8,6 +9,20 @@ const corsHeaders = {
 };
 
 const EMAIL_RE = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
+// Best-effort, instance-local: max 3 bookings per minute per IP and per email.
+const ipLimiter = makeCooldown(60_000, 3);
+const emailLimiter = makeCooldown(60_000, 3);
+
+function isValidIanaTimezone(tz: string): boolean {
+  try {
+    // Throws RangeError for invalid IANA identifiers.
+    new Intl.DateTimeFormat("en-US", { timeZone: tz });
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 function sanitize(val: unknown, maxLen = 500): string {
   if (typeof val !== "string") return "";
