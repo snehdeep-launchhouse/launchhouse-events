@@ -26,6 +26,8 @@ import {
 } from "@/lib/calculator-v2/scope-summary";
 import { downloadResultsPdfV2 } from "@/lib/generate-results-pdf-v2";
 import { useContactPanel } from "@/components/ContactPanelProvider";
+import { useEffect, useRef } from "react";
+import { track } from "@/lib/analytics";
 
 const tierBadgeColor: Record<string, string> = {
   Simple: "bg-success text-success-foreground",
