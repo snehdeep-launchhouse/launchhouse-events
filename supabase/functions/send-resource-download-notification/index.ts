@@ -102,16 +102,17 @@ async function ipKey(req: Request): Promise<string | null> {
 }
 
 serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+  // ── Strict Origin allow-list ──
+  // This endpoint is only called by the public site. Any request without an
+  // exact-match approved Origin — including missing/blank Origin, preview
+  // domains, localhost, or server-to-server callers — is rejected.
+  const origin = req.headers.get("origin");
+  if (!origin || !ALLOWED_ORIGINS.has(origin)) {
+    return jsonResponse(403, { success: false, error: "Forbidden." });
   }
 
-  // ── Origin allow-list (browser requests only) ──
-  // No-Origin requests are permitted (server-to-server, health probes, curl);
-  // an explicit, unapproved Origin is rejected.
-  const origin = req.headers.get("origin");
-  if (origin && !ALLOWED_ORIGINS.has(origin)) {
-    return jsonResponse(403, { success: false, error: "Forbidden." });
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
