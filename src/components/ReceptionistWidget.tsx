@@ -450,17 +450,17 @@ export function ReceptionistWidget() {
           </div>
 
           {/* Action buttons */}
-          <div className="border-t border-border px-3 py-2 flex gap-2">
+          <div className="border-t border-primary/20 px-3 py-2 flex gap-2 bg-card/40 backdrop-blur-md">
             <button
               onClick={handleConsultation}
-              className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-accent px-3 py-2 text-xs font-medium text-accent-foreground hover:bg-accent/80 transition-colors min-h-[44px] touch-manipulation"
+              className="flex flex-1 items-center justify-center gap-1.5 rounded-full border border-primary/30 bg-primary/15 text-primary backdrop-blur-md px-3 py-2 text-xs font-medium hover:bg-primary/25 hover:border-primary/50 active:scale-[0.98] transition-colors min-h-[44px] touch-manipulation"
             >
               <Calendar className="h-3.5 w-3.5" />
               Schedule Consultation
             </button>
             <button
               onClick={handleCalculator}
-              className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-primary/10 px-3 py-2 text-xs font-medium text-primary hover:bg-primary/20 transition-colors min-h-[44px] touch-manipulation"
+              className="flex flex-1 items-center justify-center gap-1.5 rounded-full border border-primary/30 bg-primary/15 text-primary backdrop-blur-md px-3 py-2 text-xs font-medium hover:bg-primary/25 hover:border-primary/50 active:scale-[0.98] transition-colors min-h-[44px] touch-manipulation"
             >
               <BarChart3 className="h-3.5 w-3.5" />
               Try Calculator
@@ -468,7 +468,7 @@ export function ReceptionistWidget() {
           </div>
 
           {/* Input */}
-          <div className="border-t border-border px-3 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
+          <div className="border-t border-primary/20 bg-card/40 backdrop-blur-md px-3 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
             <div className="flex items-end gap-2">
               <textarea
                 ref={inputRef}
@@ -481,13 +481,13 @@ export function ReceptionistWidget() {
                 onFocus={handleUserInteraction}
                 placeholder="Ask a question..."
                 rows={1}
-                className="flex-1 resize-none rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                className="flex-1 resize-none rounded-full border border-primary/30 bg-background/60 backdrop-blur-md px-4 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
                 style={{ fontSize: "16px" }}
                 disabled={loading}
               />
               <Button
                 size="icon"
-                className="h-9 w-9 shrink-0"
+                className="h-9 w-9 shrink-0 rounded-full border border-primary/30 bg-primary/15 text-primary backdrop-blur-md hover:bg-primary/25 hover:border-primary/50 shadow-md"
                 onClick={send}
                 disabled={loading || !input.trim()}
               >
