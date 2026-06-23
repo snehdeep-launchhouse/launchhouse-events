@@ -26,6 +26,8 @@ import {
 } from "@/lib/calculator-v2/scope-summary";
 import { downloadResultsPdfV2 } from "@/lib/generate-results-pdf-v2";
 import { useContactPanel } from "@/components/ContactPanelProvider";
+import { useEffect, useRef } from "react";
+import { track } from "@/lib/analytics";
 
 const tierBadgeColor: Record<string, string> = {
   Simple: "bg-success text-success-foreground",
@@ -62,6 +64,18 @@ export function ResultCardV2({ trace, answers }: ResultCardV2Props) {
   const eventBuildPrice = parsePrice(result.price);
   const eventAppPriceN = trace.eventAppSelected ? parsePrice(EVENT_APP_PRICE) : 0;
   const total = eventBuildPrice + eventAppPriceN;
+
+  const sentRef = useRef(false);
+  useEffect(() => {
+    if (sentRef.current) return;
+    const tier = (result.complexity ?? "").toString().trim().toLowerCase();
+    if (!tier) return;
+    const sent = track("calculator_result_viewed", {
+      recommended_tier: tier,
+      event_app_selected: Boolean(trace.eventAppSelected),
+    });
+    if (sent) sentRef.current = true;
+  }, [result.complexity, trace.eventAppSelected]);
 
   const handleDownloadPdf = () => {
     const scopeBullets = generateV2ScopeSummary(
