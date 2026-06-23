@@ -25,23 +25,58 @@ const DEFAULT_PREFS: CookiePreferences = {
   performance: true,
 };
 
+const GA_SCRIPT_ID = `ga4-gtag-${GA_MEASUREMENT_ID}`;
+
+function dispatchReadyIfAllowed() {
+  if (typeof window === "undefined") return;
+  if (!isProductionHost()) return;
+  if ((window as any)[`ga-disable-${GA_MEASUREMENT_ID}`] === true) return;
+  window.dispatchEvent(new Event(ANALYTICS_READY_EVENT));
+}
+
 function enableGA() {
   // Hard gate: GA4 must never load on preview, lovable.app, localhost, or unknown hosts.
   if (!isProductionHost()) return;
   if (typeof document === "undefined" || typeof window === "undefined") return;
-  if (document.querySelector(`script[src*="googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}"]`)) return;
+
+  // Deterministic duplicate-script guard for this exact Measurement ID.
+  const existing = document.getElementById(GA_SCRIPT_ID) as HTMLScriptElement | null;
+  if (existing) {
+    // Script already injected during this page lifecycle.
+    // If it has finished loading, just re-signal readiness (idempotent listeners are fine).
+    // If it is still loading, the original load handler will fire readiness; do nothing.
+    if (existing.dataset.loaded === "true") {
+      dispatchReadyIfAllowed();
+    }
+    return;
+  }
+
+  // Canonical GA4 bootstrap: initialize dataLayer and gtag shim BEFORE injecting the script.
+  window.dataLayer = window.dataLayer || [];
+  function gtag() {
+    // eslint-disable-next-line prefer-rest-params
+    window.dataLayer.push(arguments);
+  }
+  (window as any).gtag = gtag;
+  (gtag as any)("js", new Date());
+  // send_page_view disabled here; SPA page_view tracking is handled by RouteChangeTracker.
+  (gtag as any)("config", GA_MEASUREMENT_ID, { send_page_view: false });
+
   const script = document.createElement("script");
+  script.id = GA_SCRIPT_ID;
   script.async = true;
   script.src = `https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`;
+  script.addEventListener("load", () => {
+    script.dataset.loaded = "true";
+    // Readiness signal so RouteChangeTracker can send the first page_view for the current route.
+    dispatchReadyIfAllowed();
+  });
+  script.addEventListener("error", () => {
+    // Do not dispatch readiness on failure.
+    // eslint-disable-next-line no-console
+    console.warn("GA4 gtag.js failed to load");
+  });
   document.head.appendChild(script);
-  window.dataLayer = window.dataLayer || [];
-  function gtag(...args: any[]) { window.dataLayer.push(args); }
-  (window as any).gtag = gtag;
-  gtag("js", new Date());
-  // send_page_view disabled here; SPA page_view tracking is handled by RouteChangeTracker.
-  gtag("config", GA_MEASUREMENT_ID, { send_page_view: false });
-  // Readiness signal so RouteChangeTracker can send the first page_view for the current route.
-  window.dispatchEvent(new Event(ANALYTICS_READY_EVENT));
 }
 
 function disableGA() {
