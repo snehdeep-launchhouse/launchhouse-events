@@ -139,14 +139,10 @@ export default function QuickIndexDrawer({
   };
 
   const measureHeaderClearance = (): number => {
-    const navVar = getComputedStyle(document.documentElement)
-      .getPropertyValue("--nav-height")
-      .trim();
-    const navVarPx = parseInt(navVar, 10) || 0;
-
+    const navVarPx = readNavHeightPx();
     let renderedBottom = 0;
     const candidates = document.querySelectorAll<HTMLElement>(
-      "header, [data-site-header], nav[role='navigation']",
+      "header, [data-site-header], nav",
     );
     for (const node of Array.from(candidates)) {
       const style = window.getComputedStyle(node);
@@ -160,6 +156,7 @@ export default function QuickIndexDrawer({
     const base = Math.max(renderedBottom, navVarPx, 0);
     return base + 40;
   };
+
 
   const resolveHeadingElement = (targetId: string): HTMLElement | null => {
     const section = document.getElementById(targetId);
