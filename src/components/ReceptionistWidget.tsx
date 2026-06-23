@@ -384,7 +384,7 @@ export function ReceptionistWidget() {
       {open && (
         <div
           className={cn(
-            "fixed z-50 flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl animate-widget-panel-enter",
+            "fixed z-50 flex flex-col overflow-hidden rounded-2xl border border-primary/30 bg-card/70 backdrop-blur-xl shadow-2xl animate-widget-panel-enter",
             isMobile
               ? mobilePanelPos
               : "bottom-5 right-5 h-[500px] w-[360px]"
@@ -394,18 +394,19 @@ export function ReceptionistWidget() {
           onClick={handleUserInteraction}
         >
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-border bg-primary px-4 py-3">
+          <div className="flex items-center justify-between border-b border-primary/20 bg-primary/15 backdrop-blur-md px-4 py-3">
             <div>
-              <p className="text-sm font-semibold text-primary-foreground">Chloe</p>
-              <p className="text-xs text-primary-foreground/70">Launchhouse AI Assistant</p>
+              <p className="text-sm font-semibold text-primary">Chloe</p>
+              <p className="text-xs text-primary/70">Launchhouse AI Assistant</p>
             </div>
             <button
               onClick={handleClose}
-              className="rounded-full p-2 min-w-[44px] min-h-[44px] flex items-center justify-center text-primary-foreground/80 hover:bg-primary-foreground/10 hover:text-primary-foreground touch-manipulation"
+              className="rounded-full p-2 min-w-[44px] min-h-[44px] flex items-center justify-center text-primary/80 hover:bg-primary/15 hover:text-primary touch-manipulation"
             >
               <X className="h-4 w-4" />
             </button>
           </div>
+
 
           {/* Messages */}
           <div className="flex-1 overflow-y-auto px-3 py-3 space-y-3">
