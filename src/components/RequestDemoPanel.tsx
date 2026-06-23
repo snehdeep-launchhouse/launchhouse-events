@@ -608,10 +608,10 @@ const RequestDemoPanel = ({ open, onOpenChange }: RequestDemoPanelProps) => {
                       <label
                         key={product}
                         className={cn(
-                          "flex items-center gap-2.5 rounded-lg border px-3 py-2 cursor-pointer transition-colors text-sm min-h-[44px]",
+                          "flex items-center gap-2.5 rounded-lg border px-3 py-2 cursor-pointer transition-colors text-sm min-h-[44px] backdrop-blur-sm",
                           selectedProducts.includes(product)
-                            ? "border-primary bg-secondary/50"
-                            : "border-border hover:border-primary/50"
+                            ? "border-primary bg-primary/15"
+                            : "border-primary/15 bg-white/60 hover:bg-white/80 hover:border-primary/40"
                         )}
                       >
                         <Checkbox
