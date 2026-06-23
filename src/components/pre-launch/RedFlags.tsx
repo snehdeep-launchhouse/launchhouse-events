@@ -15,7 +15,8 @@ export default function RedFlags() {
         </p>
         <h2
           id="red-flags-heading"
-          className="text-3xl md:text-4xl font-bold font-display tracking-tight mb-4 flex items-center gap-3"
+          data-quick-index-heading
+          className="scroll-mt-[calc(var(--nav-height)+2.5rem)] text-3xl md:text-4xl font-bold font-display tracking-tight mb-4 flex items-center gap-3"
         >
           <AlertTriangle className="w-7 h-7 text-destructive" aria-hidden="true" />
           {RED_FLAGS_META.heading}
