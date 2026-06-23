@@ -148,7 +148,7 @@ const Services = () => {
     <section className="py-20 md:py-28">
       <div className="container">
         <p className="text-muted-foreground text-center max-w-2xl mx-auto mb-12 leading-relaxed">
-          Event teams using Cvent often run into the same operational pressure points: builds that take longer than the timeline allows, reporting that does not work properly because the setup was not configured correctly from the start, app and check-in workflows that get left until the last minute, and not enough internal bandwidth to manage it all alongside the rest of the event workload.
+          Event teams using Cvent often run into the same operational pressure points: builds that take longer than the timeline allows, reporting that does not work properly because the setup was not configured correctly from the start, app and check-in workflows that get left until the last minute, and not enough internal bandwidth to manage it all alongside the rest of the event workload. Teams running a structured pass before invites can work from our <a href="/pre-launch-checks" className="text-primary hover:underline">Cvent pre-launch QA checklist</a>.
         </p>
         <div className="text-center mb-4">
           <p className="text-sm font-semibold uppercase tracking-widest text-primary mb-3">Timeline</p>
