@@ -17,6 +17,7 @@ export default function ChecklistSection({ section }: { section: Section }) {
       <div className="container max-w-5xl">
         <h2
           id={`${id}-title`}
+          data-quick-index-heading
           className="text-xl md:text-2xl font-bold font-display tracking-tight mb-3"
         >
           <span className="text-primary">Section {section.letter}</span>
