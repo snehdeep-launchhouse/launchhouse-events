@@ -489,13 +489,13 @@ export function ReceptionistWidget() {
                 onFocus={handleUserInteraction}
                 placeholder="Ask a question..."
                 rows={1}
-                className="flex-1 resize-none rounded-full border border-white/20 bg-white/[0.08] backdrop-blur-md px-4 py-2 text-sm text-sky-50 placeholder:text-sky-100/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-300/70 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
+                className="flex-1 resize-none rounded-full border border-white/25 bg-white/15 backdrop-blur-md px-4 py-2 text-sm text-slate-50 placeholder:text-slate-300/70 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-300/70 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
                 style={{ fontSize: "16px" }}
                 disabled={loading}
               />
               <Button
                 size="icon"
-                className="h-9 w-9 shrink-0 rounded-full border border-white/25 bg-white/[0.12] text-sky-50 backdrop-blur-md hover:bg-white/[0.2] hover:border-white/40 shadow-[0_8px_24px_-14px_rgba(8,47,112,0.55)]"
+                className="h-9 w-9 shrink-0 rounded-full border border-white/30 bg-white/20 text-slate-50 backdrop-blur-md hover:bg-white/30 hover:border-white/45 shadow-[0_8px_24px_-14px_rgba(8,47,112,0.55)]"
                 onClick={send}
                 disabled={loading || !input.trim()}
               >
