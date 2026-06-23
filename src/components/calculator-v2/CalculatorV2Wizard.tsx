@@ -156,6 +156,7 @@ export function CalculatorV2Wizard() {
     setAiSuggestedEventApp(r.eventAppSelected);
     setStage("questions");
     setCurrentStep(0);
+    trackStarted();
   };
 
   const handleDescribeSkip = () => {
