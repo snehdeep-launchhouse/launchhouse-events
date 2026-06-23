@@ -113,8 +113,22 @@ export function ReceptionistWidget() {
     return () => clearTimeout(timer);
   }, []);
 
-  // Auto-open after 30s idle — desktop only, once per session
+  // Suppress idle auto-open + attention pulse on the checklist route.
+  // The widget stays manually accessible; we only disable interruption.
+  const suppressInterruption = location.pathname === "/pre-launch-checks";
+
+  // Auto-open after 30s idle — desktop only, once per session.
+  // Re-keyed on pathname so SPA navigation re-evaluates suppression and
+  // pending timers from a previous route are torn down via cleanup.
   useEffect(() => {
+    if (suppressInterruption) {
+      // Drop any pulse already showing; clear any pending timers from
+      // a previous route. Do NOT mutate session engagement flags here.
+      setShowPulse(false);
+      if (idleTimerRef.current) { clearTimeout(idleTimerRef.current); idleTimerRef.current = null; }
+      if (pulseTimerRef.current) { clearTimeout(pulseTimerRef.current); pulseTimerRef.current = null; }
+      return;
+    }
     if (
       isMobile ||
       getSessionFlag(SESSION_KEYS.hasInteracted) ||
@@ -135,7 +149,7 @@ export function ReceptionistWidget() {
     }, 30000);
 
     return clearAllTimers;
-  }, [isMobile, clearAllTimers]);
+  }, [isMobile, clearAllTimers, suppressInterruption]);
 
   // Auto-collapse after 15s of no interaction (only when auto-opened)
   useEffect(() => {

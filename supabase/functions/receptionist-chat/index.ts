@@ -17,7 +17,12 @@ const corsHeaders = {
 // Allow ~20 chat turns per minute per IP (chat is interactive, so higher than one-shot calls).
 const rateLimiter = makeCooldown(60_000, 20);
 
-const SYSTEM_PROMPT = `You are **Chloe**, the LaunchHouse AI Sales & Service Assistant — a professional guide for visitors interested in event build services from LaunchHouse Events. Always introduce yourself as "Chloe" when greeting users.
+// BASE_SYSTEM_PROMPT contains every shared rule EXCEPT the Cvent / Attendee
+// Hub portion of the legacy Rule 9. The vendor-naming rule is supplied
+// separately as either GLOBAL_VENDOR_RULE (every non-checklist route) or
+// PRE_LAUNCH_VENDOR_RULE (only on /pre-launch-checks). This avoids
+// composing a final prompt that simultaneously forbids and permits Cvent.
+const BASE_SYSTEM_PROMPT = `You are **Chloe**, the LaunchHouse AI Sales & Service Assistant — a professional guide for visitors interested in event build services from LaunchHouse Events. Always introduce yourself as "Chloe" when greeting users.
 
 You speak with authority, warmth, and a consultative tone. You position LaunchHouse as a specialist in complex event implementations.
 
@@ -163,8 +168,35 @@ When recommending the calculator, mention: "Click the **📊 Try Calculator** bu
 When recommending a consultation, mention: "Click the **📅 Schedule Consultation** button below this chat."
 These buttons are always visible in the chat interface.
 
-**RULE 9 — Confidentiality / forbidden wording:**
-Never name or reference any specific third-party event-technology vendor, platform, or product (including but not limited to Cvent, Attendee Hub, or "Hub"). Never expose internal scoring, raw scores, aggregate scores, internal hours, category signals, source references, debug fields, or internal calibration language. If asked, politely redirect to a consultation.`;
+**RULE 9a — Confidentiality (always in force):**
+Never expose internal scoring, raw scores, aggregate scores, internal hours, category signals, source references, debug fields, or internal calibration language. If asked, politely redirect to a consultation.`;
+
+// Vendor-naming variants. Exactly one of these is appended to BASE_SYSTEM_PROMPT
+// depending on the route. They are mutually exclusive by construction.
+const GLOBAL_VENDOR_RULE = `\n\n**RULE 9b — Third-party vendor naming (global):**
+Never name or reference any specific third-party event-technology vendor, platform, or product (including but not limited to Cvent, Attendee Hub, or "Hub"). If asked about specific platforms, politely redirect to a consultation.`;
+
+const PRE_LAUNCH_VENDOR_RULE = `\n\n**RULE 9b — Third-party vendor naming (route-scoped to /pre-launch-checks):**
+On this page only, you may refer to Cvent and Attendee Hub because the visitor is viewing LaunchHouse's published Cvent Pre-Launch QA Checklist.
+Do not claim Cvent partnership, certification, official support status, account access, or ability to make changes in the visitor's Cvent account.
+Do not name or compare other third-party event-technology vendors.`;
+
+function buildSystemPrompt(
+  isPreLaunchRoute: boolean,
+  focusLetter: ReturnType<typeof normalizeSectionLetter>,
+): string {
+  if (!isPreLaunchRoute) {
+    return BASE_SYSTEM_PROMPT + GLOBAL_VENDOR_RULE;
+  }
+  return (
+    BASE_SYSTEM_PROMPT +
+    PRE_LAUNCH_VENDOR_RULE +
+    "\n" +
+    PRE_LAUNCH_ROUTE_RULES +
+    "\n" +
+    buildPreLaunchGroundingBlock(focusLetter)
+  );
+}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -218,9 +250,7 @@ serve(async (req) => {
       ? normalizeSectionLetter(focus_section)
       : null;
 
-    const systemContent = isPreLaunchRoute
-      ? `${SYSTEM_PROMPT}\n${PRE_LAUNCH_ROUTE_RULES}\n${buildPreLaunchGroundingBlock(focusLetter)}`
-      : SYSTEM_PROMPT;
+    const systemContent = buildSystemPrompt(isPreLaunchRoute, focusLetter);
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
