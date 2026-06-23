@@ -107,6 +107,7 @@ export function CalculatorV2Wizard() {
       eventAppFeatures: features,
     });
     setTrace(result);
+    trackCompleted(result);
     setStage("lead");
   };
 
