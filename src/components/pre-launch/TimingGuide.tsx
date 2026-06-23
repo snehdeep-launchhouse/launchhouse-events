@@ -19,7 +19,8 @@ export default function TimingGuide() {
       <div className="container max-w-5xl">
         <h2
           id="timing-heading"
-          className="text-3xl md:text-4xl font-bold font-display tracking-tight mb-6"
+          data-quick-index-heading
+          className="scroll-mt-[calc(var(--nav-height)+2.5rem)] text-3xl md:text-4xl font-bold font-display tracking-tight mb-6"
         >
           {TIMING_GUIDE.heading}
         </h2>

@@ -36,7 +36,8 @@ export default function OrientationBlock() {
         </p>
         <h2
           id="orientation-heading"
-          className="text-3xl md:text-4xl font-bold font-display tracking-tight mb-6"
+          data-quick-index-heading
+          className="scroll-mt-[calc(var(--nav-height)+2.5rem)] text-3xl md:text-4xl font-bold font-display tracking-tight mb-6"
         >
           Why this checklist exists.
         </h2>
