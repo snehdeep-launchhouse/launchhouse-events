@@ -431,8 +431,8 @@ export function ReceptionistWidget() {
                   className={cn(
                     "relative max-w-[85%] rounded-2xl px-3 py-2 text-sm border backdrop-blur-md shadow-[0_8px_24px_-14px_rgba(8,47,112,0.5)]",
                     msg.role === "user"
-                      ? "border-sky-200/40 bg-sky-300/20 text-sky-50 rounded-br-sm"
-                      : "border-white/15 bg-white/[0.08] text-sky-50 rounded-bl-sm"
+                      ? "border-sky-200/60 bg-sky-400/30 text-white rounded-br-sm"
+                      : "border-white/20 bg-white/15 text-slate-50 rounded-bl-sm"
                   )}
                 >
                   {msg.role === "assistant" ? (
