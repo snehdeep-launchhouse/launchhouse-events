@@ -55,24 +55,47 @@ export default function QuickIndexDrawer({
     onOpenChange(false);
   };
 
-  const performScroll = (targetId: string) => {
-    const el = document.getElementById(targetId);
-    if (!el) return;
-
+  const measureHeaderClearance = (): number => {
+    // CSS variable fallback
     const navVar = getComputedStyle(document.documentElement)
       .getPropertyValue("--nav-height")
       .trim();
-    const navOffset = parseInt(navVar, 10) || 64;
+    const navVarPx = parseInt(navVar, 10) || 0;
+
+    // Measure the actual rendered fixed/sticky top header at runtime.
+    let renderedBottom = 0;
+    const candidates = document.querySelectorAll<HTMLElement>(
+      "header, [data-site-header], nav[role='navigation']",
+    );
+    for (const node of Array.from(candidates)) {
+      const style = window.getComputedStyle(node);
+      if (style.position !== "fixed" && style.position !== "sticky") continue;
+      if (style.visibility === "hidden" || style.display === "none") continue;
+      const rect = node.getBoundingClientRect();
+      // Only consider elements anchored near the top of the viewport.
+      if (rect.top > 8 || rect.bottom <= 0) continue;
+      if (rect.bottom > renderedBottom) renderedBottom = rect.bottom;
+    }
+
+    const base = Math.max(renderedBottom, navVarPx, 0);
+    // Comfortable breathing room below the header.
+    return base + 24;
+  };
+
+  const performScroll = (targetId: string) => {
+    const el = document.getElementById(targetId);
+    if (!el) return;
 
     const prefersReducedMotion = window.matchMedia(
       "(prefers-reduced-motion: reduce)",
     ).matches;
 
-    const top =
-      el.getBoundingClientRect().top + window.scrollY - navOffset - 8;
+    const clearance = measureHeaderClearance();
+    const targetY =
+      window.scrollY + el.getBoundingClientRect().top - clearance;
 
     window.scrollTo({
-      top: Math.max(0, top),
+      top: Math.max(0, targetY),
       behavior: prefersReducedMotion ? "auto" : "smooth",
     });
 
