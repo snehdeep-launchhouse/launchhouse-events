@@ -157,6 +157,22 @@ serve(async (req) => {
     if (resource_name !== ALLOWED_RESOURCE_NAME) return badRequest("Invalid resource_name.");
     if (page_path !== ALLOWED_PAGE_PATH) return badRequest("Invalid page_path.");
 
+    // ── Best-effort per-IP cooldown (instance-local, not durable) ──
+    const now = Date.now();
+    pruneCooldown(now);
+    const key = await ipKey(req);
+    if (key) {
+      const expiresAt = cooldown.get(key);
+      if (expiresAt && expiresAt > now) {
+        return jsonResponse(429, {
+          success: false,
+          error: "Please wait a moment before requesting another download.",
+        });
+      }
+      // Reserve the slot before sending so in-flight duplicates also collide.
+      cooldown.set(key, now + COOLDOWN_MS);
+    }
+
     const timestamp = new Date().toISOString();
     const safeEmail = escapeHtml(email);
 
