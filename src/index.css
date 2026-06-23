@@ -279,3 +279,62 @@
     animation: typing-dot 1.2s ease-in-out infinite;
   }
 }
+
+/* ============================================================
+   Pre-Launch Checks — scoped print styles
+   Only affects content inside .pre-launch-print wrapper.
+   ============================================================ */
+@media print {
+  .pre-launch-print {
+    background: #fff !important;
+    color: #111 !important;
+  }
+  .pre-launch-print * {
+    color: #111 !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+  .pre-launch-print nav,
+  .pre-launch-print footer,
+  .pre-launch-print .pl-skip-link,
+  .pre-launch-print [data-back-to-index],
+  .pre-launch-print [data-pl-filter],
+  .pre-launch-print [data-pl-search],
+  .pre-launch-print [data-pl-clear],
+  .pre-launch-print input[type="search"],
+  .pre-launch-print [data-pl-index-controls] {
+    display: none !important;
+  }
+  /* Hide decorative hero image + overlay, keep hero text */
+  .pre-launch-print header > div.absolute,
+  .pre-launch-print section > div.absolute.inset-0:has(img.banner-img) {
+    display: none !important;
+  }
+  .pre-launch-print img.banner-img {
+    display: none !important;
+  }
+  .pre-launch-print section {
+    background: #fff !important;
+    background-image: none !important;
+    padding-top: 0.5rem !important;
+    padding-bottom: 0.5rem !important;
+  }
+  /* Avoid splitting cards/checks across pages */
+  .pre-launch-print article,
+  .pre-launch-print [data-check-card],
+  .pre-launch-print .pl-check-card,
+  .pre-launch-print dl,
+  .pre-launch-print table {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  .pre-launch-print h1,
+  .pre-launch-print h2,
+  .pre-launch-print h3 {
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+  .pre-launch-print a {
+    text-decoration: none !important;
+  }
+}
