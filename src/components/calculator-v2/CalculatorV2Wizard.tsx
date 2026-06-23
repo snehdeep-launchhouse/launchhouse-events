@@ -52,7 +52,7 @@ export function CalculatorV2Wizard() {
     const calculator_path = getCalculatorPath();
     const params: Record<string, unknown> = {};
     if (calculator_path) params.calculator_path = calculator_path;
-    if (result?.complexity) params.recommended_tier = String(result.complexity).toLowerCase();
+    if (result?.finalTier) params.recommended_tier = String(result.finalTier).toLowerCase();
     params.event_app_selected = Boolean(result?.eventAppSelected);
     if (track("calculator_completed", params)) {
       completedRef.current = true;
