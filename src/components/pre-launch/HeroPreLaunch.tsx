@@ -1,8 +1,22 @@
 import { PRE_LAUNCH_META } from "@/lib/pre-launch/content";
+import heroBanner from "@/assets/banners/pre-launch-checks-banner.jpg";
 
 export default function HeroPreLaunch() {
   return (
-    <section className="relative pt-[var(--nav-height)] overflow-hidden bg-gradient-to-br from-[hsl(220,90%,12%)] via-[hsl(212,100%,22%)] to-[hsl(212,100%,30%)]">
+    <section className="relative pt-[var(--nav-height)] overflow-hidden">
+      <div className="absolute inset-0">
+        <img
+          src={heroBanner}
+          alt=""
+          className="banner-img"
+          loading="eager"
+          fetchPriority="high"
+          decoding="async"
+          width={1920}
+          height={1080}
+        />
+        <div className="absolute inset-0 bg-[hsl(220,90%,10%)]/65" />
+      </div>
       <div className="container relative py-20 md:py-32 flex flex-col items-center text-center gap-6 animate-fade-in">
         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 text-white text-xs sm:text-sm font-medium tracking-widest uppercase backdrop-blur-sm">
           {PRE_LAUNCH_META.eyebrow}
