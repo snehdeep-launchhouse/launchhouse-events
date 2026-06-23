@@ -2,6 +2,8 @@ import {
   TIMING_GUIDE,
   TIMING_ROWS,
   AT_A_GLANCE,
+  SECTIONS,
+  type SectionLetter,
 } from "@/lib/pre-launch/content";
 import {
   Table,
@@ -11,6 +13,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { ArrowRight } from "lucide-react";
+
+const SECTION_HREF: Record<SectionLetter, string> = SECTIONS.reduce(
+  (acc, s) => {
+    acc[s.letter] = `#section-${s.letter.toLowerCase()}-${s.slug}`;
+    return acc;
+  },
+  {} as Record<SectionLetter, string>,
+);
 
 export default function TimingGuide() {
   return (
@@ -103,9 +114,20 @@ export default function TimingGuide() {
             </TableHeader>
             <TableBody>
               {AT_A_GLANCE.map((r) => (
-                <TableRow key={r.letter}>
+                <TableRow key={r.letter} className="group">
                   <TableCell className="font-semibold">{r.letter}</TableCell>
-                  <TableCell>{r.title}</TableCell>
+                  <TableCell className="p-0">
+                    <a
+                      href={SECTION_HREF[r.letter]}
+                      className="flex items-center justify-between gap-2 px-4 py-3 text-foreground hover:text-primary hover:underline underline-offset-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm"
+                    >
+                      <span>{r.title}</span>
+                      <ArrowRight
+                        className="h-4 w-4 opacity-0 -translate-x-1 transition-all group-hover:opacity-100 group-hover:translate-x-0 text-primary"
+                        aria-hidden="true"
+                      />
+                    </a>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -114,14 +136,17 @@ export default function TimingGuide() {
 
         <ul className="md:hidden space-y-2">
           {AT_A_GLANCE.map((r) => (
-            <li
-              key={r.letter}
-              className="rounded-lg border border-border bg-card p-3 flex gap-3 items-baseline"
-            >
-              <span className="font-semibold text-primary w-6 shrink-0">
-                {r.letter}
-              </span>
-              <span className="text-sm text-foreground">{r.title}</span>
+            <li key={r.letter}>
+              <a
+                href={SECTION_HREF[r.letter]}
+                className="rounded-lg border border-border bg-card p-3 flex gap-3 items-baseline hover:border-primary/50 hover:bg-primary/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors"
+              >
+                <span className="font-semibold text-primary w-6 shrink-0">
+                  {r.letter}
+                </span>
+                <span className="text-sm text-foreground flex-1">{r.title}</span>
+                <ArrowRight className="h-4 w-4 text-primary shrink-0" aria-hidden="true" />
+              </a>
             </li>
           ))}
         </ul>

@@ -48,30 +48,6 @@ export default function CheckCard({ sectionLetter, check }: Props) {
         </p>
       </div>
 
-      {/* Owner / Status — non-editable visual-reference slots */}
-      <dl
-        className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-3"
-        aria-label="Reference fields (non-editable)"
-      >
-        <div className="rounded-md border border-dashed border-border bg-muted/40 p-3">
-          <dt className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-            Owner
-          </dt>
-          <dd
-            aria-label="Owner — reference field, not editable on this page"
-            className="mt-2 h-5 border-b border-border/70"
-          />
-        </div>
-        <div className="rounded-md border border-dashed border-border bg-muted/40 p-3">
-          <dt className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-            Status
-          </dt>
-          <dd
-            aria-label="Status — reference field, not editable on this page"
-            className="mt-2 h-5 border-b border-border/70"
-          />
-        </div>
-      </dl>
     </article>
   );
 }

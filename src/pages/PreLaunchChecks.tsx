@@ -15,6 +15,8 @@ import LaunchHouseLens from "@/components/pre-launch/LaunchHouseLens";
 import SuggestedUsage from "@/components/pre-launch/SuggestedUsage";
 import Guardrails from "@/components/pre-launch/Guardrails";
 import DownloadPdfBlock from "@/components/pre-launch/DownloadPdfBlock";
+import FloatingResourceActions from "@/components/pre-launch/FloatingResourceActions";
+import ReadingProgress from "@/components/pre-launch/ReadingProgress";
 
 const PATH = "/pre-launch-checks";
 const SITE = "https://launchhouse.events";
@@ -103,6 +105,7 @@ export default function PreLaunchChecks() {
       </a>
 
       <Navbar />
+      <ReadingProgress />
 
       <main id="main">
         <HeroPreLaunch />
@@ -119,6 +122,7 @@ export default function PreLaunchChecks() {
         <DownloadPdfBlock />
       </main>
 
+      <FloatingResourceActions />
       <Footer />
     </div>
   );
