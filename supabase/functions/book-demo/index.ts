@@ -154,6 +154,21 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Strict Origin allow-list — only the public site / preview may book demos.
+  if (!isAllowedOrigin(req.headers.get("origin"))) {
+    return new Response(JSON.stringify({ error: "Forbidden." }), {
+      status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  // Best-effort per-IP cooldown (instance-local, not durable).
+  const ipKey = await hashedIp(req);
+  if (ipKey && ipLimiter.isLimited(ipKey)) {
+    return new Response(JSON.stringify({ error: "Too many booking attempts. Please try again shortly." }), {
+      status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
   try {
     const serviceAccountKey = Deno.env.get("GOOGLE_SERVICE_ACCOUNT_KEY");
     const calendarId = Deno.env.get("GOOGLE_CALENDAR_ID");
@@ -200,6 +215,30 @@ serve(async (req) => {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    if (typeof timezone !== "string" || timezone.length > 64 || !isValidIanaTimezone(timezone)) {
+      return new Response(JSON.stringify({ error: "Invalid timezone." }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    // Basic shape checks for date (YYYY-MM-DD) and time (HH:MM).
+    if (typeof date !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      return new Response(JSON.stringify({ error: "Invalid date." }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    if (typeof time !== "string" || !/^\d{2}:\d{2}$/.test(time)) {
+      return new Response(JSON.stringify({ error: "Invalid time." }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Per-email cooldown to dampen targeted spam against a single mailbox.
+    if (emailLimiter.isLimited(email.trim().toLowerCase())) {
+      return new Response(JSON.stringify({ error: "Too many booking attempts for this email. Please try again shortly." }), {
+        status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
 
     const extraAttendees: string[] = Array.isArray(additionalAttendees)
       ? additionalAttendees.filter((a: unknown) => typeof a === "string" && EMAIL_RE.test(a.trim())).slice(0, 10)
