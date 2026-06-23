@@ -1,47 +1,43 @@
 ## Goal
+Replace the current white/grey panel surface on **Contact Us** and **Book a Consultation** with a more transparent, light sky-blue-tinted liquid-glass look — inspired by the Quick Index drawer, but kept light so the dark form copy stays readable.
 
-Bring the same liquid-glass aesthetic from Chloe / Quick Index to the **Book a Free Consultation** (`RequestDemoPanel`) and **Contact Us** (`ContactUsPanel`) side-panels, while keeping every form input, label, error, and helper text fully readable and on-brand (Signature Blue `#006AE1`).
-
-## Direction (brand-tuned, not dark slate)
-
-Chloe/Quick Index use a dark slate glass because they float as small surfaces. A full-height side panel with dense forms can't use that palette — labels, helper text, calendar, checkboxes, and `Input`s would all need overrides and contrast would suffer. Instead, apply a **light brand-tinted glass** that reads the same liquid-glass language (hairline highlight, sky/blue glow, backdrop blur, ring) but keeps text on a light surface for readability.
-
-Tokens (all via `bg-*/opacity` + brand blue, no new design tokens):
-- Panel surface: `bg-white/75 supports-[backdrop-filter]:bg-white/60 backdrop-blur-2xl backdrop-saturate-150`
-- Border + ring: `border border-primary/20 ring-1 ring-inset ring-white/40`
-- Top hairline sheen + bottom primary-tinted glow (matching the `before:` + bottom-glow pattern from Quick Index, swapped to brand primary instead of sky)
-- Shadow: `shadow-[0_30px_80px_-20px_rgba(0,106,225,0.25)]` (Signature Blue tinted drop)
-- Overlay scrim: keep Sheet's default but soften to `bg-slate-950/40 backdrop-blur-[2px]` so the page reads softly behind, matching Quick Index
+## Files
+- `src/components/ContactUsPanel.tsx`
+- `src/components/RequestDemoPanel.tsx`
 
 ## Changes
 
-### 1. `src/components/RequestDemoPanel.tsx`
-- Add liquid-glass classes to `<SheetContent>` (desktop) and `<DrawerContent>` (mobile) via `className`
-- Add a top hairline + bottom brand glow as absolutely-positioned `aria-hidden` siblings inside the panel wrapper
-- `SheetHeader` / `DrawerHeader`: transparent background, keep title in `text-foreground`, description in `text-muted-foreground` — both stay readable on the light glass
-- Inner form cards (`rounded-xl border border-border bg-card`) → `rounded-xl border border-primary/15 bg-white/70 backdrop-blur-md shadow-card` so they feel like floating glass cards on the panel
-- Inputs, EmailInput, Calendar, Checkboxes, Buttons: **no changes** (they already render on light surface and stay readable)
-- Step indicator pills: keep current primary/muted treatment (already on-brand)
+### 1. Panel surface (`glassPanelClass` in both files)
+Swap the white base for a translucent sky tint with stronger blur, plus a soft sky highlight/glow borrowed from Quick Index:
 
-### 2. `src/components/ContactUsPanel.tsx`
-- Same `SheetContent` / `DrawerContent` glass treatment
-- Same inner-card softening to `bg-white/70 backdrop-blur-md`
-- Service-offering checkbox tiles: soften background to `bg-white/60 hover:bg-white/80 border-primary/15` for cohesion
-- Confirmation panel card: same glass-card treatment
-- All copy, validation, fields, and logic untouched
+- Background: `bg-sky-50/55 supports-[backdrop-filter]:bg-sky-100/35`
+- Blur: keep `backdrop-blur-2xl backdrop-saturate-150`
+- Inset ring: `ring-1 ring-inset ring-white/50` (light sheen)
+- Border: `border-sky-200/50` (replace `border-primary/20`)
+- Shadow: keep `shadow-[0_30px_80px_-20px_rgba(0,106,225,0.25)]`
+- Top hairline: `before:via-white/60` (brighter sheen)
+- Bottom glow: `after:from-sky-300/20` (sky wash, like Quick Index's `from-sky-400/15`)
 
-### 3. Optional shared scrim
-- Pass a `bg-slate-950/40 backdrop-blur-[2px]` overlay class via the existing `SheetContent`/`DrawerContent` — handled inside the two panel files only; do not modify `src/components/ui/sheet.tsx` or `drawer.tsx` (keeps the change scoped to these two surfaces).
+### 2. Headers
+- Border: `border-sky-200/40` instead of `border-primary/15`
+- Keep `text-foreground` / `text-muted-foreground` for readability
 
-## Readability guarantees
-- Text stays on a light surface (`bg-white/60`+) so foreground tokens render at full contrast — no white-on-translucent issues.
-- Labels keep `text-sm font-semibold` on `text-foreground`.
-- Helper / muted copy keeps `text-muted-foreground` which already passes contrast on white.
-- Error text keeps `text-destructive`.
-- Brand blue accents (border, glow, hairline) reinforce LaunchHouse identity without dimming text.
+### 3. Inner cards (step containers, confirmation card, "Need to reach us sooner?" card)
+- Replace `bg-white/70` with `bg-white/55 supports-[backdrop-filter]:bg-white/40`
+- Border: `border-sky-200/50`
+- Keep `backdrop-blur-md` and `shadow-card`
+
+### 4. Selectable tiles (service-offering / product checkboxes)
+- Unselected: `border-sky-200/50 bg-white/45`
+- Selected: `border-primary/45 bg-sky-100/60`
+- Hover: `hover:bg-white/70 hover:border-primary/40`
+
+### 5. Drawer close button (RequestDemoPanel)
+- `bg-white/55 backdrop-blur-md hover:bg-white/75` with `border-sky-200/50`
 
 ## Out of scope
-- No logic, copy, validation, routing, or analytics changes.
-- No edits to shared `sheet.tsx` / `drawer.tsx` primitives.
-- Chloe and Quick Index stay as-is.
-- No new design tokens or Tailwind config changes.
+- No changes to inputs, EmailInput, Calendar, Checkbox primitives, Buttons, step indicator pills, validation, copy, routing, or analytics.
+- No changes to Chloe, Quick Index, shared `sheet.tsx` / `drawer.tsx`, design tokens, or Tailwind config.
+
+## Readability guarantee
+Surfaces stay light (sky-50/55 to white/40 range) so dark `text-foreground` / `text-muted-foreground` retain full contrast. Sky tint is decorative only.
