@@ -11,7 +11,7 @@ export default function ChecklistSection({ section }: { section: Section }) {
     <section
       id={id}
       tabIndex={-1}
-      className="scroll-mt-[var(--nav-height)] py-8 md:py-10 outline-none"
+      className="scroll-mt-[var(--nav-height)] py-5 md:py-7 outline-none"
       aria-labelledby={`${id}-title`}
     >
       <div className="container max-w-5xl">
