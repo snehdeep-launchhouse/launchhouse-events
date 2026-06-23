@@ -25,6 +25,7 @@ const AdminReport = lazy(() => import("./pages/AdminReport"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 
 const CalculatorV2 = lazy(() => import("./pages/CalculatorV2"));
+const PreLaunchChecks = lazy(() => import("./pages/PreLaunchChecks"));
 const ReceptionistWidget = lazy(() => import("./components/ReceptionistWidget").then(m => ({ default: m.ReceptionistWidget })));
 
 const queryClient = new QueryClient();
@@ -96,6 +97,7 @@ const App = () => (
                 <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/calculator" element={<CalculatorV2 />} />
                 <Route path="/calculator-v2" element={<CalculatorV2 />} />
+                <Route path="/pre-launch-checks" element={<PreLaunchChecks />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
