@@ -458,17 +458,17 @@ export function ReceptionistWidget() {
           </div>
 
           {/* Action buttons */}
-          <div className="relative border-t border-white/10 px-3 py-2 flex gap-2">
+          <div className="relative border-t border-white/15 px-3 py-2 flex gap-2">
             <button
               onClick={handleConsultation}
-              className="flex flex-1 items-center justify-center gap-1.5 rounded-full border border-white/20 bg-white/[0.1] text-sky-50 backdrop-blur-md px-3 py-2 text-xs font-medium shadow-[0_8px_24px_-14px_rgba(8,47,112,0.5)] hover:border-white/40 hover:bg-white/[0.18] active:scale-[0.98] transition-colors min-h-[44px] touch-manipulation"
+              className="flex flex-1 items-center justify-center gap-1.5 rounded-full border border-white/25 bg-white/15 text-slate-50 backdrop-blur-md px-3 py-2 text-xs font-medium shadow-[0_8px_24px_-14px_rgba(8,47,112,0.5)] hover:border-white/45 hover:bg-white/25 active:scale-[0.98] transition-colors min-h-[44px] touch-manipulation"
             >
               <Calendar className="h-3.5 w-3.5" />
               Schedule Consultation
             </button>
             <button
               onClick={handleCalculator}
-              className="flex flex-1 items-center justify-center gap-1.5 rounded-full border border-white/20 bg-white/[0.1] text-sky-50 backdrop-blur-md px-3 py-2 text-xs font-medium shadow-[0_8px_24px_-14px_rgba(8,47,112,0.5)] hover:border-white/40 hover:bg-white/[0.18] active:scale-[0.98] transition-colors min-h-[44px] touch-manipulation"
+              className="flex flex-1 items-center justify-center gap-1.5 rounded-full border border-white/25 bg-white/15 text-slate-50 backdrop-blur-md px-3 py-2 text-xs font-medium shadow-[0_8px_24px_-14px_rgba(8,47,112,0.5)] hover:border-white/45 hover:bg-white/25 active:scale-[0.98] transition-colors min-h-[44px] touch-manipulation"
             >
               <BarChart3 className="h-3.5 w-3.5" />
               Try Calculator
@@ -476,7 +476,7 @@ export function ReceptionistWidget() {
           </div>
 
           {/* Input */}
-          <div className="relative border-t border-white/10 px-3 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
+          <div className="relative border-t border-white/15 px-3 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
             <div className="flex items-end gap-2">
               <textarea
                 ref={inputRef}
