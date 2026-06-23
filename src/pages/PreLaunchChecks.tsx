@@ -14,6 +14,7 @@ import RedFlags from "@/components/pre-launch/RedFlags";
 import LaunchHouseLens from "@/components/pre-launch/LaunchHouseLens";
 import SuggestedUsage from "@/components/pre-launch/SuggestedUsage";
 import Guardrails from "@/components/pre-launch/Guardrails";
+import DownloadPdfBlock from "@/components/pre-launch/DownloadPdfBlock";
 
 const PATH = "/pre-launch-checks";
 const SITE = "https://launchhouse.events";
@@ -87,7 +88,7 @@ export default function PreLaunchChecks() {
   );
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pre-launch-print">
       <BreadcrumbJsonLd
         items={[{ name: "Pre-Launch Checks", path: PATH }]}
       />
@@ -96,7 +97,7 @@ export default function PreLaunchChecks() {
       {/* Skip link */}
       <a
         href="#index"
-        className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[100] focus:px-3 focus:py-2 focus:rounded-md focus:bg-primary focus:text-primary-foreground focus:shadow-btn"
+        className="pl-skip-link sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[100] focus:px-3 focus:py-2 focus:rounded-md focus:bg-primary focus:text-primary-foreground focus:shadow-btn"
       >
         Skip to checklist index
       </a>
@@ -115,6 +116,7 @@ export default function PreLaunchChecks() {
         <LaunchHouseLens />
         <SuggestedUsage />
         <Guardrails />
+        <DownloadPdfBlock />
       </main>
 
       <Footer />
