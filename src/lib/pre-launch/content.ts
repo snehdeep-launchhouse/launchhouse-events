@@ -1277,6 +1277,5 @@ export const GUARDRAILS = {
   ],
   footer: [
     "End of Cvent Pre-Launch QA Checklist v03.",
-    "Phase 2 production asset for the LaunchHouse Events campaign · Solving Registration Complexity with Strategic Registration Technology Support.",
   ],
 } as const;
