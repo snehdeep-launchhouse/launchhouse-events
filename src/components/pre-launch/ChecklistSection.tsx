@@ -18,7 +18,7 @@ export default function ChecklistSection({ section }: { section: Section }) {
         <h2
           id={`${id}-title`}
           data-quick-index-heading
-          className="text-xl md:text-2xl font-bold font-display tracking-tight mb-3"
+          className="scroll-mt-[calc(var(--nav-height)+2.5rem)] text-xl md:text-2xl font-bold font-display tracking-tight mb-3"
         >
           <span className="text-primary">Section {section.letter}</span>
           <span className="text-foreground/70 font-normal mx-2">—</span>
