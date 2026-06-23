@@ -1,13 +1,6 @@
 import { useRef } from "react";
-import { ArrowUp, ListChecks } from "lucide-react";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
+import { ArrowUp, ListChecks, X } from "lucide-react";
+import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { SECTIONS } from "@/lib/pre-launch/content";
 import { sectionAnchorId } from "./ChecklistSection";
 
@@ -38,27 +31,24 @@ type QuickIndexDrawerProps = {
   onOpenChange: (open: boolean) => void;
 };
 
+/**
+ * Floating dock-like Quick Index overlay.
+ *
+ * Renders as a translucent layer above the page with independent
+ * glass bubbles instead of a side drawer / sheet. Uses Radix Dialog
+ * primitives directly so we control the layout fully (no centered
+ * card chrome), while keeping focus trap, Escape-to-close, backdrop
+ * click, and return-focus behavior.
+ */
 export default function QuickIndexDrawer({
   open,
   onOpenChange,
 }: QuickIndexDrawerProps) {
-  // True only when the latest close was triggered by a bubble click,
-  // so we can suppress Sheet's default return-focus-to-trigger for
-  // navigation closes while preserving it for Escape / overlay / X.
   const bubbleCloseRef = useRef(false);
-  // Pending scroll target captured at bubble click time; consumed once
-  // the Sheet has finished closing.
   const pendingScrollRef = useRef<string | null>(null);
 
   const destinations = buildDestinations();
 
-  /**
-   * One shared smooth-scroll helper used by every bubble (including
-   * Scroll to Top). Closes the drawer first, then on the next frame
-   * after Radix has released the scroll lock, scrolls with the
-   * existing --nav-height offset and moves keyboard focus to the
-   * destination section. Honors prefers-reduced-motion.
-   */
   const handleNavigate = (targetId: string) => {
     bubbleCloseRef.current = true;
     pendingScrollRef.current = targetId;
@@ -86,16 +76,14 @@ export default function QuickIndexDrawer({
       behavior: prefersReducedMotion ? "auto" : "smooth",
     });
 
-    // Section wrappers already carry tabIndex={-1}. preventScroll
-    // avoids the browser undoing the smooth scroll we just started.
     if (typeof (el as HTMLElement).focus === "function") {
       (el as HTMLElement).focus({ preventScroll: true });
     }
   };
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetTrigger asChild>
+    <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
+      <DialogPrimitive.Trigger asChild>
         <button
           type="button"
           data-pl-quick-index
@@ -106,74 +94,104 @@ export default function QuickIndexDrawer({
           <ListChecks className="h-4 w-4" aria-hidden="true" />
           <span>Quick Index</span>
         </button>
-      </SheetTrigger>
+      </DialogPrimitive.Trigger>
 
-      <SheetContent
-        side="left"
-        className="w-[88vw] max-w-[22rem] border-r border-white/10 bg-slate-950/85 p-0 text-slate-100 backdrop-blur-xl"
-        onCloseAutoFocus={(event) => {
-          if (bubbleCloseRef.current) {
-            // Bubble-driven close: skip the default return-focus to
-            // the trigger so focus lands on the destination section.
-            event.preventDefault();
-            bubbleCloseRef.current = false;
-            const target = pendingScrollRef.current;
-            pendingScrollRef.current = null;
-            if (target) {
-              // Defer until after the close animation so the body
-              // scroll lock is fully released.
-              window.setTimeout(() => performScroll(target), 0);
+      <DialogPrimitive.Portal>
+        {/* Soft translucent scrim — page remains softly visible. */}
+        <DialogPrimitive.Overlay
+          className="fixed inset-0 z-50 bg-slate-950/40 backdrop-blur-[2px] data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0"
+        />
+
+        <DialogPrimitive.Content
+          aria-label="Quick index"
+          onCloseAutoFocus={(event) => {
+            if (bubbleCloseRef.current) {
+              event.preventDefault();
+              bubbleCloseRef.current = false;
+              const target = pendingScrollRef.current;
+              pendingScrollRef.current = null;
+              if (target) {
+                window.setTimeout(() => performScroll(target), 0);
+              }
             }
-          }
-        }}
-      >
-        <div
-          className="flex h-full flex-col"
-          style={{
-            paddingTop: "max(1.25rem, env(safe-area-inset-top))",
-            paddingBottom: "max(1.25rem, env(safe-area-inset-bottom))",
           }}
+          className="fixed inset-0 z-50 flex items-stretch justify-start outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:zoom-in-95 data-[state=closed]:zoom-out-95"
         >
-          <SheetHeader className="px-5 pb-4 text-left">
-            <SheetTitle className="text-base font-semibold text-slate-100">
-              Quick Index
-            </SheetTitle>
-            <SheetDescription className="text-sm text-slate-300">
-              Jump to a section.
-            </SheetDescription>
-          </SheetHeader>
+          {/* Click-outside layer — clicking empty space closes overlay. */}
+          <button
+            type="button"
+            aria-hidden="true"
+            tabIndex={-1}
+            onClick={() => onOpenChange(false)}
+            className="absolute inset-0 h-full w-full cursor-default bg-transparent"
+          />
 
-          <nav
-            aria-label="Quick index"
-            className="flex-1 overflow-y-auto px-5 pb-2"
+          {/* Floating cluster — soft glass surface, not a hard panel. */}
+          <div
+            className="relative pointer-events-none flex h-full w-full max-w-[28rem] flex-col"
+            style={{
+              paddingTop:
+                "max(calc(var(--nav-height, 64px) + 1rem), env(safe-area-inset-top))",
+              paddingBottom:
+                "max(7rem, calc(env(safe-area-inset-bottom) + 6rem))",
+              paddingLeft: "max(1rem, env(safe-area-inset-left))",
+              paddingRight: "1rem",
+            }}
           >
-            <ul className="flex flex-col gap-2">
-              {destinations.map((d) => (
-                <li key={d.id}>
+            <div className="pointer-events-auto relative flex min-h-0 flex-1 flex-col rounded-3xl border border-white/10 bg-slate-950/30 p-5 shadow-[0_20px_60px_-20px_rgba(0,0,0,0.6)] backdrop-blur-xl">
+              <div className="flex items-start justify-between gap-3 pb-3">
+                <div>
+                  <DialogPrimitive.Title className="text-base font-semibold text-slate-50">
+                    Quick Index
+                  </DialogPrimitive.Title>
+                  <DialogPrimitive.Description className="mt-0.5 text-sm text-slate-300/90">
+                    Jump to a section.
+                  </DialogPrimitive.Description>
+                </div>
+                <DialogPrimitive.Close asChild>
                   <button
                     type="button"
-                    onClick={() => handleNavigate(d.id)}
-                    className="min-h-[44px] w-full rounded-2xl border border-emerald-300/25 bg-emerald-300/10 px-4 py-3 text-left text-sm font-medium leading-snug text-emerald-50 backdrop-blur-md transition-colors hover:border-emerald-300/45 hover:bg-emerald-300/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/70 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
+                    aria-label="Close quick index"
+                    className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/5 text-slate-200 transition-colors hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/70 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
                   >
-                    {d.label}
+                    <X className="h-4 w-4" aria-hidden="true" />
                   </button>
-                </li>
-              ))}
-            </ul>
-          </nav>
+                </DialogPrimitive.Close>
+              </div>
 
-          <div className="border-t border-white/10 px-5 pt-4">
-            <button
-              type="button"
-              onClick={() => handleNavigate("orientation")}
-              className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-2xl border border-emerald-300/35 bg-emerald-300/15 px-4 py-3 text-sm font-semibold text-emerald-50 backdrop-blur-md transition-colors hover:border-emerald-300/55 hover:bg-emerald-300/25 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/70 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
-            >
-              <ArrowUp className="h-4 w-4" aria-hidden="true" />
-              <span>Scroll to Top</span>
-            </button>
+              <nav
+                aria-label="Quick index destinations"
+                className="-mx-1 flex-1 overflow-y-auto px-1 py-2"
+              >
+                <ul className="flex flex-col gap-2.5">
+                  {destinations.map((d) => (
+                    <li key={d.id} className="flex">
+                      <button
+                        type="button"
+                        onClick={() => handleNavigate(d.id)}
+                        className="min-h-[44px] w-full rounded-2xl border border-emerald-200/20 bg-emerald-300/10 px-4 py-3 text-left text-sm font-medium leading-snug text-emerald-50 shadow-[0_8px_24px_-12px_rgba(16,185,129,0.45)] backdrop-blur-md transition-all duration-200 hover:-translate-y-0.5 hover:border-emerald-200/40 hover:bg-emerald-300/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/70 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
+                      >
+                        {d.label}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </nav>
+
+              <div className="pt-3">
+                <button
+                  type="button"
+                  onClick={() => handleNavigate("orientation")}
+                  className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-2xl border border-emerald-200/30 bg-emerald-300/15 px-4 py-3 text-sm font-semibold text-emerald-50 shadow-[0_10px_28px_-14px_rgba(16,185,129,0.55)] backdrop-blur-md transition-all duration-200 hover:-translate-y-0.5 hover:border-emerald-200/50 hover:bg-emerald-300/25 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/70 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
+                >
+                  <ArrowUp className="h-4 w-4" aria-hidden="true" />
+                  <span>Scroll to Top</span>
+                </button>
+              </div>
+            </div>
           </div>
-        </div>
-      </SheetContent>
-    </Sheet>
+        </DialogPrimitive.Content>
+      </DialogPrimitive.Portal>
+    </DialogPrimitive.Root>
   );
 }
