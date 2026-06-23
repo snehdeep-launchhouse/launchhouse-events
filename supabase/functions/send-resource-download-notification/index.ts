@@ -46,16 +46,72 @@ function escapeHtml(val: string): string {
   );
 }
 
+function jsonResponse(status: number, body: object) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
+
 function badRequest(message: string) {
-  return new Response(
-    JSON.stringify({ success: false, error: message }),
-    { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-  );
+  return jsonResponse(400, { success: false, error: message });
+}
+
+// ── Approved browser origins (defense-in-depth on top of CORS) ──
+const ALLOWED_ORIGINS = new Set<string>([
+  "https://launchhouse.events",
+  "https://www.launchhouse.events",
+]);
+
+const ALLOWED_KEYS = new Set([
+  "email",
+  "lead_type",
+  "form_name",
+  "resource_name",
+  "page_path",
+]);
+
+/**
+ * Best-effort, instance-local cooldown.
+ * NOT a durable / distributed rate limit — each edge instance has its own map,
+ * entries are lost on cold start, and a determined caller can rotate IPs.
+ * Goal: dampen accidental rapid resubmits from a single browser.
+ */
+const COOLDOWN_MS = 60_000;
+const cooldown = new Map<string, number>();
+
+function pruneCooldown(now: number) {
+  // Opportunistic cleanup to keep the map bounded.
+  if (cooldown.size < 256) return;
+  for (const [k, expiresAt] of cooldown) {
+    if (expiresAt <= now) cooldown.delete(k);
+  }
+}
+
+async function ipKey(req: Request): Promise<string | null> {
+  // Match Supabase Edge runtime convention used by other functions: trust the
+  // first IP in x-forwarded-for, fall back to x-real-ip. Never log the value.
+  const fwd = req.headers.get("x-forwarded-for");
+  const raw = (fwd ? fwd.split(",")[0] : req.headers.get("x-real-ip") || "").trim();
+  if (!raw) return null;
+  // Hash so the raw IP never lives in memory verbatim.
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(raw));
+  return Array.from(new Uint8Array(buf))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
 }
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  // ── Origin allow-list (browser requests only) ──
+  // No-Origin requests are permitted (server-to-server, health probes, curl);
+  // an explicit, unapproved Origin is rejected.
+  const origin = req.headers.get("origin");
+  if (origin && !ALLOWED_ORIGINS.has(origin)) {
+    return jsonResponse(403, { success: false, error: "Forbidden." });
   }
 
   try {
@@ -69,6 +125,15 @@ serve(async (req) => {
       payload = await req.json();
     } catch {
       return badRequest("Invalid request body.");
+    }
+
+    if (payload === null || typeof payload !== "object" || Array.isArray(payload)) {
+      return badRequest("Invalid request body.");
+    }
+
+    // Reject any unexpected top-level key — no silent ignores.
+    for (const k of Object.keys(payload)) {
+      if (!ALLOWED_KEYS.has(k)) return badRequest("Unexpected field in request body.");
     }
 
     // ── Strict request contract ──
