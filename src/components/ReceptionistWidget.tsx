@@ -402,7 +402,7 @@ export function ReceptionistWidget() {
           <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 h-32 rounded-b-3xl bg-gradient-to-t from-sky-400/15 to-transparent" />
 
           {/* Header */}
-          <div className="relative flex items-center justify-between border-b border-white/10 px-4 py-3">
+          <div className="relative flex items-center justify-between border-b border-white/15 px-4 py-3">
             <div>
               <p className="text-sm font-semibold text-slate-50">Chloe</p>
               <p className="text-xs text-sky-100/80">Launchhouse AI Assistant</p>
