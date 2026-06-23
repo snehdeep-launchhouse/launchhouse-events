@@ -67,14 +67,19 @@ export function ResultCardV2({ trace, answers }: ResultCardV2Props) {
 
   const sentRef = useRef(false);
   useEffect(() => {
-    if (sentRef.current) return;
-    const tier = (result.complexity ?? "").toString().trim().toLowerCase();
-    if (!tier) return;
-    const sent = track("calculator_result_viewed", {
-      recommended_tier: tier,
-      event_app_selected: Boolean(trace.eventAppSelected),
-    });
-    if (sent) sentRef.current = true;
+    const send = () => {
+      if (sentRef.current) return;
+      const tier = (result.complexity ?? "").toString().trim().toLowerCase();
+      if (!tier) return;
+      const sent = track("calculator_result_viewed", {
+        recommended_tier: tier,
+        event_app_selected: Boolean(trace.eventAppSelected),
+      });
+      if (sent) sentRef.current = true;
+    };
+    send();
+    window.addEventListener(ANALYTICS_READY_EVENT, send);
+    return () => window.removeEventListener(ANALYTICS_READY_EVENT, send);
   }, [result.complexity, trace.eventAppSelected]);
 
   const handleDownloadPdf = () => {
