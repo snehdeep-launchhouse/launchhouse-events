@@ -797,21 +797,24 @@ const RequestDemoPanel = ({ open, onOpenChange }: RequestDemoPanelProps) => {
   );
 
   /* ── Render: Drawer on mobile, Sheet on desktop ────────────── */
+  const glassPanelClass =
+    "bg-white/75 supports-[backdrop-filter]:bg-white/60 backdrop-blur-2xl backdrop-saturate-150 ring-1 ring-inset ring-white/40 shadow-[0_30px_80px_-20px_rgba(0,106,225,0.25)] before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-primary/40 before:to-transparent after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:h-32 after:bg-gradient-to-t after:from-primary/10 after:to-transparent";
+
   if (isMobile) {
     return (
       <Drawer open={open} onOpenChange={handleOpenChange}>
-        <DrawerContent className="max-h-[95vh] flex flex-col">
-          <DrawerHeader className="px-6 pt-4 pb-3 border-b border-border flex-shrink-0 relative">
-            <DrawerTitle className="text-xl font-bold font-display">Book a Free Consultation</DrawerTitle>
+        <DrawerContent className={cn("max-h-[95vh] flex flex-col overflow-hidden border-primary/20", glassPanelClass)}>
+          <DrawerHeader className="relative px-6 pt-4 pb-3 border-b border-primary/15 flex-shrink-0 bg-transparent">
+            <DrawerTitle className="text-xl font-bold font-display text-foreground">Book a Free Consultation</DrawerTitle>
             <DrawerDescription className="text-sm text-muted-foreground">
               Talk to a member of our team about your event build. We will ask the right questions, understand your timeline and requirements, and let you know exactly how we can help. No sales pitch. No commitment.
             </DrawerDescription>
-            <DrawerClose className="absolute right-4 top-4 rounded-full bg-muted p-2 hover:bg-muted/80 transition-colors">
+            <DrawerClose className="absolute right-4 top-4 rounded-full border border-primary/20 bg-white/70 backdrop-blur-md p-2 hover:bg-white/90 transition-colors">
               <X className="w-5 h-5" />
               <span className="sr-only">Close</span>
             </DrawerClose>
           </DrawerHeader>
-          <ScrollArea className="flex-1 overflow-y-auto">
+          <ScrollArea className="relative flex-1 overflow-y-auto">
             {formContent}
           </ScrollArea>
         </DrawerContent>
@@ -823,16 +826,16 @@ const RequestDemoPanel = ({ open, onOpenChange }: RequestDemoPanelProps) => {
     <Sheet open={open} onOpenChange={handleOpenChange}>
       <SheetContent
         side="right"
-        className="w-full sm:max-w-md md:max-w-lg p-0 flex flex-col"
+        className={cn("w-full sm:max-w-md md:max-w-lg p-0 flex flex-col overflow-hidden border-l border-primary/20", glassPanelClass)}
       >
-        <SheetHeader className="px-6 pt-6 pb-4 border-b border-border flex-shrink-0">
-          <SheetTitle className="text-xl font-bold font-display">Book a Free Consultation</SheetTitle>
+        <SheetHeader className="relative px-6 pt-6 pb-4 border-b border-primary/15 flex-shrink-0 bg-transparent">
+          <SheetTitle className="text-xl font-bold font-display text-foreground">Book a Free Consultation</SheetTitle>
           <SheetDescription className="text-sm text-muted-foreground">
             Tell us about your event needs and pick a time that works for you
           </SheetDescription>
         </SheetHeader>
 
-        <ScrollArea className="flex-1">
+        <ScrollArea className="relative flex-1">
           {formContent}
         </ScrollArea>
       </SheetContent>
