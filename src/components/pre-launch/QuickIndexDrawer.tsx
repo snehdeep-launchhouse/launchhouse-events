@@ -27,6 +27,30 @@ function buildDestinations(): Destination[] {
 }
 
 /**
+ * Parse `--nav-height` (e.g. "4.5rem", "72px") into a px number.
+ * `parseInt("4.5rem")` returns 4, so we resolve units explicitly.
+ */
+function readNavHeightPx(): number {
+  if (typeof window === "undefined") return 0;
+  const raw = getComputedStyle(document.documentElement)
+    .getPropertyValue("--nav-height")
+    .trim();
+  if (!raw) return 0;
+  const num = parseFloat(raw);
+  if (!Number.isFinite(num)) return 0;
+  if (raw.endsWith("px")) return num;
+  if (raw.endsWith("rem")) {
+    const rootFont = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+    return num * rootFont;
+  }
+  if (raw.endsWith("em")) {
+    const bodyFont = parseFloat(getComputedStyle(document.body).fontSize) || 16;
+    return num * bodyFont;
+  }
+  return num;
+}
+
+/**
  * Tracks the currently-visible destination as the user scrolls.
  *
  * Strategy: compute a "trigger line" placed just below the fixed site header
