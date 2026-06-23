@@ -138,13 +138,13 @@ export default function QuickIndexDrawer({
               paddingRight: "1rem",
             }}
           >
-            <div className="pointer-events-auto relative flex min-h-0 flex-1 flex-col rounded-3xl border border-white/10 bg-slate-950/30 p-5 shadow-[0_20px_60px_-20px_rgba(0,0,0,0.6)] backdrop-blur-xl">
+            <div className="pointer-events-auto relative flex min-h-0 flex-1 flex-col rounded-3xl border border-sky-200/15 bg-slate-950/30 p-5 shadow-[0_20px_60px_-20px_rgba(8,47,112,0.55)] backdrop-blur-xl ring-1 ring-inset ring-sky-200/5">
               <div className="flex items-start justify-between gap-3 pb-3">
                 <div>
                   <DialogPrimitive.Title className="text-base font-semibold text-slate-50">
                     Quick Index
                   </DialogPrimitive.Title>
-                  <DialogPrimitive.Description className="mt-0.5 text-sm text-slate-300/90">
+                  <DialogPrimitive.Description className="mt-0.5 text-sm text-sky-100/80">
                     Jump to a section.
                   </DialogPrimitive.Description>
                 </div>
@@ -152,7 +152,7 @@ export default function QuickIndexDrawer({
                   <button
                     type="button"
                     aria-label="Close quick index"
-                    className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/5 text-slate-200 transition-colors hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/70 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
+                    className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-sky-200/20 bg-sky-300/10 text-sky-50 transition-colors hover:bg-sky-300/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-300/70 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
                   >
                     <X className="h-4 w-4" aria-hidden="true" />
                   </button>
@@ -169,7 +169,7 @@ export default function QuickIndexDrawer({
                       <button
                         type="button"
                         onClick={() => handleNavigate(d.id)}
-                        className="min-h-[44px] w-full rounded-2xl border border-emerald-200/20 bg-emerald-300/10 px-4 py-3 text-left text-sm font-medium leading-snug text-emerald-50 shadow-[0_8px_24px_-12px_rgba(16,185,129,0.45)] backdrop-blur-md transition-all duration-200 hover:-translate-y-0.5 hover:border-emerald-200/40 hover:bg-emerald-300/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/70 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
+                        className="min-h-[44px] w-full rounded-2xl border border-sky-200/20 bg-sky-300/10 px-4 py-3 text-left text-sm font-medium leading-snug text-sky-50 shadow-[0_8px_24px_-12px_rgba(56,128,255,0.4)] backdrop-blur-md transition-all duration-200 hover:-translate-y-0.5 hover:border-sky-200/40 hover:bg-sky-300/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-300/70 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
                       >
                         {d.label}
                       </button>
@@ -182,7 +182,7 @@ export default function QuickIndexDrawer({
                 <button
                   type="button"
                   onClick={() => handleNavigate("orientation")}
-                  className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-2xl border border-emerald-200/30 bg-emerald-300/15 px-4 py-3 text-sm font-semibold text-emerald-50 shadow-[0_10px_28px_-14px_rgba(16,185,129,0.55)] backdrop-blur-md transition-all duration-200 hover:-translate-y-0.5 hover:border-emerald-200/50 hover:bg-emerald-300/25 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/70 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
+                  className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-2xl border border-sky-200/35 bg-sky-300/15 px-4 py-3 text-sm font-semibold text-sky-50 shadow-[0_10px_28px_-14px_rgba(56,128,255,0.55)] backdrop-blur-md transition-all duration-200 hover:-translate-y-0.5 hover:border-sky-200/55 hover:bg-sky-300/25 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-300/70 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
                 >
                   <ArrowUp className="h-4 w-4" aria-hidden="true" />
                   <span>Scroll to Top</span>
