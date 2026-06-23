@@ -1,4 +1,11 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
+import { track } from "@/lib/analytics";
+
+const getCalculatorPath = (): string | undefined => {
+  if (typeof window === "undefined") return undefined;
+  const path = window.location.pathname;
+  return path === "/calculator" || path === "/calculator-v2" ? path : undefined;
+};
 import { ArrowLeft, Calculator, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
