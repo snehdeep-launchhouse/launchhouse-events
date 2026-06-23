@@ -27,7 +27,7 @@ import {
 import { downloadResultsPdfV2 } from "@/lib/generate-results-pdf-v2";
 import { useContactPanel } from "@/components/ContactPanelProvider";
 import { useEffect, useRef } from "react";
-import { track } from "@/lib/analytics";
+import { track, ANALYTICS_READY_EVENT } from "@/lib/analytics";
 
 const tierBadgeColor: Record<string, string> = {
   Simple: "bg-success text-success-foreground",
