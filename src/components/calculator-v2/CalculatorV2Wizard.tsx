@@ -162,6 +162,7 @@ export function CalculatorV2Wizard() {
   const handleDescribeSkip = () => {
     setStage("questions");
     setCurrentStep(0);
+    trackStarted();
   };
 
   const headerLabel = (() => {
