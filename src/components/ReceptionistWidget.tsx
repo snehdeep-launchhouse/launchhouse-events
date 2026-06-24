@@ -146,12 +146,13 @@ function useAdaptiveSurface(
     const sample = () => {
       const el = ref.current;
       if (!el) return;
+      const cfg = getSurfaceConfig();
       const rect = el.getBoundingClientRect();
       const cx = rect.left + rect.width / 2;
       const cy = rect.top + rect.height / 2;
-      // Sample 5 points: center + 4 inset corners. Used both for the
-      // dominant tint (center) and to gauge how busy the area is.
-      const inset = 6;
+      // Sample 5 points: center + 4 inset corners. Center drives the
+      // dominant tint; the spread across all 5 gauges how busy the area is.
+      const inset = cfg.sampleInset;
       const pts: Array<[number, number]> = [
         [cx, cy],
         [rect.left + inset, rect.top + inset],
@@ -170,12 +171,11 @@ function useAdaptiveSurface(
       const range = max - min;
 
       // Theme follows the dominant (center) luminance.
-      const theme: "light" | "dark" = center > 0.6 ? "light" : "dark";
+      const theme: "light" | "dark" = center > cfg.lightThemeAt ? "light" : "dark";
       // Fallback to a near-opaque surface when:
       //  - background is very bright (translucent white-on-white vanishes), OR
-      //  - the area is visually busy (large luminance spread across samples),
-      //    which usually means imagery, gradients, or stacked content.
-      const solid = max > 0.85 || range > 0.35;
+      //  - the area is visually busy (large luminance spread across samples).
+      const solid = max > cfg.brightnessSolidAt || range > cfg.busySolidAt;
 
       setState((prev) =>
         prev.theme === theme && prev.solid === solid ? prev : { theme, solid }
