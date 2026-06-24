@@ -490,14 +490,22 @@ export function ReceptionistWidget() {
       )}
 
 
-      {/* Chat panel — liquid glass to match Quick Index */}
+      {/* Chat panel — adaptive liquid glass */}
       {open && (
         <div
+          ref={panelRef}
+          style={{
+            ...themeVars(panelTheme),
+            background: "var(--chloe-surface)",
+            color: "var(--chloe-fg)",
+            borderColor: "var(--chloe-border)",
+          }}
           className={cn(
-            "fixed z-50 flex flex-col overflow-hidden rounded-3xl border border-white/15 ring-1 ring-inset ring-white/10",
-            "bg-slate-900/55 supports-[backdrop-filter]:bg-white/[0.06] backdrop-blur-xl md:backdrop-blur-2xl backdrop-saturate-150",
-            "shadow-[0_30px_80px_-20px_rgba(8,47,112,0.6)]",
-            "before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-gradient-to-r before:from-transparent before:via-white/50 before:to-transparent",
+            "fixed z-50 flex flex-col overflow-hidden rounded-3xl border ring-1 ring-inset",
+            "backdrop-blur-xl md:backdrop-blur-2xl backdrop-saturate-150",
+            "shadow-[0_30px_80px_-20px_rgba(8,47,112,0.35)]",
+            "transition-[background-color,color,border-color] duration-300",
+            "before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-px before:[background:linear-gradient(to_right,transparent,var(--chloe-hairline),transparent)]",
             "animate-widget-panel-enter",
             isMobile
               ? mobilePanelPos
@@ -507,20 +515,24 @@ export function ReceptionistWidget() {
           onTouchStart={handleUserInteraction}
           onClick={handleUserInteraction}
         >
-          {/* Soft highlight sheen + bottom sky glow */}
-          <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-24 rounded-t-3xl bg-gradient-to-b from-white/15 to-transparent" />
-          <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 h-32 rounded-b-3xl bg-gradient-to-t from-sky-400/15 to-transparent" />
-
           {/* Header */}
-          <div className="relative flex items-center justify-between border-b border-white/10 px-4 py-3">
+          <div
+            className="relative flex items-center justify-between border-b px-4 py-3"
+            style={{ borderColor: "var(--chloe-divider)" }}
+          >
             <div>
-              <p className="text-sm font-semibold text-slate-50">Chloe</p>
-              <p className="text-xs text-sky-100/80">Launchhouse AI Assistant</p>
+              <p className="text-sm font-semibold" style={{ color: "var(--chloe-fg)" }}>Chloe</p>
+              <p className="text-xs" style={{ color: "var(--chloe-fg-muted)" }}>Launchhouse AI Assistant</p>
             </div>
             <button
               onClick={handleClose}
               aria-label="Close chat"
-              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/20 bg-white/10 text-sky-50 backdrop-blur-md transition-colors hover:bg-white/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-300/70 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
+              style={{
+                background: "var(--chloe-surface-strong)",
+                color: "var(--chloe-fg)",
+                borderColor: "var(--chloe-border)",
+              }}
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full border backdrop-blur-md transition-colors hover:[background:var(--chloe-surface-strong)] focus:outline-none focus-visible:ring-2 focus-visible:[--tw-ring-color:var(--chloe-ring)] focus-visible:ring-offset-2"
             >
               <X className="h-4 w-4" />
             </button>
@@ -538,15 +550,26 @@ export function ReceptionistWidget() {
                 style={{ animationDelay: `${i * 40}ms`, animationFillMode: "both" }}
               >
                 <div
-                  className={cn(
-                    "relative max-w-[85%] rounded-2xl px-3 py-2 text-sm border backdrop-blur-md shadow-[0_8px_24px_-14px_rgba(8,47,112,0.5)]",
+                  style={
                     msg.role === "user"
-                      ? "border-sky-200/40 bg-sky-300/20 text-sky-50 rounded-br-sm"
-                      : "border-white/15 bg-white/[0.08] text-sky-50 rounded-bl-sm"
+                      ? {
+                          background: "var(--chloe-user-bg)",
+                          color: "var(--chloe-user-fg)",
+                          borderColor: "var(--chloe-border)",
+                        }
+                      : {
+                          background: "var(--chloe-surface-strong)",
+                          color: "var(--chloe-fg)",
+                          borderColor: "var(--chloe-border)",
+                        }
+                  }
+                  className={cn(
+                    "relative max-w-[85%] rounded-2xl px-3 py-2 text-sm border backdrop-blur-md shadow-[0_8px_24px_-14px_rgba(8,47,112,0.35)] transition-[background-color,color,border-color] duration-300",
+                    msg.role === "user" ? "rounded-br-sm" : "rounded-bl-sm"
                   )}
                 >
                   {msg.role === "assistant" ? (
-                    <div className="prose prose-sm prose-invert max-w-none [&>p]:m-0 [&>ul]:my-1 [&>ol]:my-1 [&_a]:text-sky-200">
+                    <div className="prose prose-sm max-w-none [&>p]:m-0 [&>ul]:my-1 [&>ol]:my-1 [&_*]:!text-[color:var(--chloe-fg)] [&_a]:!underline">
                       <div><ReactMarkdown>{msg.content}</ReactMarkdown></div>
                     </div>
                   ) : (
@@ -557,10 +580,18 @@ export function ReceptionistWidget() {
             ))}
             {showTypingIndicator && (
               <div className="flex justify-start animate-widget-message-slide">
-                <div className="flex items-center gap-1.5 rounded-2xl border border-white/15 bg-white/[0.08] backdrop-blur-md px-3 py-2" role="status" aria-label="Chloe is typing">
-                  <span className="h-2 w-2 rounded-full bg-sky-200/80 animate-typing-dot" />
-                  <span className="h-2 w-2 rounded-full bg-sky-200/80 animate-typing-dot [animation-delay:0.2s]" />
-                  <span className="h-2 w-2 rounded-full bg-sky-200/80 animate-typing-dot [animation-delay:0.4s]" />
+                <div
+                  style={{
+                    background: "var(--chloe-surface-strong)",
+                    borderColor: "var(--chloe-border)",
+                  }}
+                  className="flex items-center gap-1.5 rounded-2xl border backdrop-blur-md px-3 py-2"
+                  role="status"
+                  aria-label="Chloe is typing"
+                >
+                  <span className="h-2 w-2 rounded-full animate-typing-dot" style={{ background: "var(--chloe-fg-muted)" }} />
+                  <span className="h-2 w-2 rounded-full animate-typing-dot [animation-delay:0.2s]" style={{ background: "var(--chloe-fg-muted)" }} />
+                  <span className="h-2 w-2 rounded-full animate-typing-dot [animation-delay:0.4s]" style={{ background: "var(--chloe-fg-muted)" }} />
                 </div>
               </div>
             )}
@@ -568,17 +599,30 @@ export function ReceptionistWidget() {
           </div>
 
           {/* Action buttons */}
-          <div className="relative border-t border-white/10 px-3 py-2 flex gap-2">
+          <div
+            className="relative border-t px-3 py-2 flex gap-2"
+            style={{ borderColor: "var(--chloe-divider)" }}
+          >
             <button
               onClick={handleConsultation}
-              className="flex flex-1 items-center justify-center gap-1.5 rounded-full border border-white/20 bg-white/[0.1] text-sky-50 backdrop-blur-md px-3 py-2 text-xs font-medium shadow-[0_8px_24px_-14px_rgba(8,47,112,0.5)] hover:border-white/40 hover:bg-white/[0.18] active:scale-[0.98] transition-colors min-h-[44px] touch-manipulation"
+              style={{
+                background: "var(--chloe-surface-strong)",
+                color: "var(--chloe-fg)",
+                borderColor: "var(--chloe-border)",
+              }}
+              className="flex flex-1 items-center justify-center gap-1.5 rounded-full border backdrop-blur-md px-3 py-2 text-xs font-medium shadow-[0_8px_24px_-14px_rgba(8,47,112,0.35)] active:scale-[0.98] transition-[background-color,color,border-color] duration-300 min-h-[44px] touch-manipulation"
             >
               <Calendar className="h-3.5 w-3.5" />
               Schedule Consultation
             </button>
             <button
               onClick={handleCalculator}
-              className="flex flex-1 items-center justify-center gap-1.5 rounded-full border border-white/20 bg-white/[0.1] text-sky-50 backdrop-blur-md px-3 py-2 text-xs font-medium shadow-[0_8px_24px_-14px_rgba(8,47,112,0.5)] hover:border-white/40 hover:bg-white/[0.18] active:scale-[0.98] transition-colors min-h-[44px] touch-manipulation"
+              style={{
+                background: "var(--chloe-surface-strong)",
+                color: "var(--chloe-fg)",
+                borderColor: "var(--chloe-border)",
+              }}
+              className="flex flex-1 items-center justify-center gap-1.5 rounded-full border backdrop-blur-md px-3 py-2 text-xs font-medium shadow-[0_8px_24px_-14px_rgba(8,47,112,0.35)] active:scale-[0.98] transition-[background-color,color,border-color] duration-300 min-h-[44px] touch-manipulation"
             >
               <BarChart3 className="h-3.5 w-3.5" />
               Try Calculator
@@ -586,7 +630,10 @@ export function ReceptionistWidget() {
           </div>
 
           {/* Input */}
-          <div className="relative border-t border-white/10 px-3 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
+          <div
+            className="relative border-t px-3 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]"
+            style={{ borderColor: "var(--chloe-divider)" }}
+          >
             <div className="flex items-end gap-2">
               <textarea
                 ref={inputRef}
@@ -599,13 +646,23 @@ export function ReceptionistWidget() {
                 onFocus={handleUserInteraction}
                 placeholder="Ask a question..."
                 rows={1}
-                className="flex-1 resize-none rounded-full border border-white/20 bg-white/[0.08] backdrop-blur-md px-4 py-2 text-sm text-sky-50 placeholder:text-sky-100/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-300/70 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
-                style={{ fontSize: "16px" }}
+                style={{
+                  fontSize: "16px",
+                  background: "var(--chloe-surface-strong)",
+                  color: "var(--chloe-fg)",
+                  borderColor: "var(--chloe-border)",
+                }}
+                className="flex-1 resize-none rounded-full border backdrop-blur-md px-4 py-2 text-sm placeholder:[color:var(--chloe-fg-muted)] focus:outline-none focus-visible:ring-2 focus-visible:[--tw-ring-color:var(--chloe-ring)] focus-visible:ring-offset-2"
                 disabled={loading}
               />
               <Button
                 size="icon"
-                className="h-9 w-9 shrink-0 rounded-full border border-white/25 bg-white/[0.12] text-sky-50 backdrop-blur-md hover:bg-white/[0.2] hover:border-white/40 shadow-[0_8px_24px_-14px_rgba(8,47,112,0.55)]"
+                style={{
+                  background: "var(--chloe-surface-strong)",
+                  color: "var(--chloe-fg)",
+                  borderColor: "var(--chloe-border)",
+                }}
+                className="h-9 w-9 shrink-0 rounded-full border backdrop-blur-md shadow-[0_8px_24px_-14px_rgba(8,47,112,0.35)] hover:opacity-90"
                 onClick={send}
                 disabled={loading || !input.trim()}
               >
@@ -615,6 +672,7 @@ export function ReceptionistWidget() {
           </div>
         </div>
       )}
+
     </>
   );
 }
