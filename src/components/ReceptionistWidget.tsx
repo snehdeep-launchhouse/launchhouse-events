@@ -69,6 +69,71 @@ function detectFocusSection(text: string): string | undefined {
 }
 
 
+// Sample the background behind a fixed-position element and report whether
+// it is visually light or dark. Re-samples on scroll/resize and when `active`
+// flips. Used to drive Chloe's adaptive glass tint in real time so the widget
+// stays legible over both the dark hero and white content sections.
+function useAdaptiveSurface(
+  ref: React.RefObject<HTMLElement>,
+  active: boolean
+): "light" | "dark" {
+  const [theme, setTheme] = useState<"light" | "dark">("light");
+
+  useEffect(() => {
+    if (!active || typeof window === "undefined") return;
+    let raf = 0;
+
+    const parseRgb = (s: string): [number, number, number, number] | null => {
+      const m = s.match(/rgba?\(([^)]+)\)/);
+      if (!m) return null;
+      const parts = m[1].split(",").map((p) => parseFloat(p.trim()));
+      if (parts.length < 3) return null;
+      return [parts[0], parts[1], parts[2], parts[3] ?? 1];
+    };
+
+    const sample = () => {
+      const el = ref.current;
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      const x = Math.max(1, Math.min(window.innerWidth - 1, rect.left + rect.width / 2));
+      const y = Math.max(1, Math.min(window.innerHeight - 1, rect.top + rect.height / 2));
+      const stack = document.elementsFromPoint(x, y);
+      let r = 255, g = 255, b = 255;
+      for (const node of stack) {
+        if (el.contains(node)) continue;
+        const bg = getComputedStyle(node as Element).backgroundColor;
+        const rgb = parseRgb(bg);
+        if (rgb && rgb[3] > 0.1) {
+          r = rgb[0]; g = rgb[1]; b = rgb[2];
+          break;
+        }
+      }
+      // perceived luminance (sRGB approx)
+      const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+      setTheme(lum > 0.6 ? "light" : "dark");
+    };
+
+    const schedule = () => {
+      if (raf) return;
+      raf = requestAnimationFrame(() => {
+        raf = 0;
+        sample();
+      });
+    };
+
+    sample();
+    window.addEventListener("scroll", schedule, { passive: true });
+    window.addEventListener("resize", schedule);
+    return () => {
+      window.removeEventListener("scroll", schedule);
+      window.removeEventListener("resize", schedule);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, [ref, active]);
+
+  return theme;
+}
+
 export function ReceptionistWidget() {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Msg[]>([
@@ -83,6 +148,8 @@ export function ReceptionistWidget() {
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const pillRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
   const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pulseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const autoCloseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -95,6 +162,11 @@ export function ReceptionistWidget() {
   const navigate = useNavigate();
   const location = useLocation();
   const { openDemoPanel } = useContactPanel();
+
+  // Sample the background behind whichever surface is currently shown.
+  const pillTheme = useAdaptiveSurface(pillRef, !open && mounted);
+  const panelTheme = useAdaptiveSurface(panelRef, open);
+
 
   const clearAllTimers = useCallback(() => {
     if (idleTimerRef.current) { clearTimeout(idleTimerRef.current); idleTimerRef.current = null; }
