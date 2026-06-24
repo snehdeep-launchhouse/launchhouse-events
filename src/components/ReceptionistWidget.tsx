@@ -422,18 +422,55 @@ export function ReceptionistWidget() {
     ? "bottom-32 right-3 left-3 h-[24rem]"
     : "bottom-20 right-3 left-3 h-[28rem]";
 
+  // Adaptive glass tokens — recomputed when sampled theme changes.
+  const themeVars = (theme: "light" | "dark"): React.CSSProperties =>
+    theme === "light"
+      ? ({
+          ["--chloe-surface" as any]: "rgba(255,255,255,0.55)",
+          ["--chloe-surface-strong" as any]: "rgba(255,255,255,0.75)",
+          ["--chloe-border" as any]: "rgba(15,23,42,0.14)",
+          ["--chloe-divider" as any]: "rgba(15,23,42,0.08)",
+          ["--chloe-fg" as any]: "rgb(15,23,42)",
+          ["--chloe-fg-muted" as any]: "rgba(15,23,42,0.65)",
+          ["--chloe-user-bg" as any]: "rgba(0,106,225,0.16)",
+          ["--chloe-user-fg" as any]: "rgb(15,23,42)",
+          ["--chloe-hairline" as any]: "rgba(15,23,42,0.18)",
+          ["--chloe-ring" as any]: "rgba(0,106,225,0.55)",
+          ["--chloe-ring-offset" as any]: "rgba(255,255,255,0.9)",
+        } as React.CSSProperties)
+      : ({
+          ["--chloe-surface" as any]: "rgba(15,23,42,0.55)",
+          ["--chloe-surface-strong" as any]: "rgba(15,23,42,0.75)",
+          ["--chloe-border" as any]: "rgba(255,255,255,0.18)",
+          ["--chloe-divider" as any]: "rgba(255,255,255,0.12)",
+          ["--chloe-fg" as any]: "rgb(240,249,255)",
+          ["--chloe-fg-muted" as any]: "rgba(224,242,254,0.75)",
+          ["--chloe-user-bg" as any]: "rgba(125,211,252,0.22)",
+          ["--chloe-user-fg" as any]: "rgb(240,249,255)",
+          ["--chloe-hairline" as any]: "rgba(255,255,255,0.5)",
+          ["--chloe-ring" as any]: "rgba(125,211,252,0.7)",
+          ["--chloe-ring-offset" as any]: "rgba(8,47,73,0.9)",
+        } as React.CSSProperties);
+
   return (
     <>
-      {/* Floating pill — entrance after 1s delay */}
+      {/* Floating pill — adaptive glass, entrance after 1s delay */}
       {!open && mounted && (
         <button
+          ref={pillRef}
           onClick={() => {
             setOpen(true);
             handleUserInteraction();
           }}
           aria-label="Ask Chloe anything"
+          style={{
+            ...themeVars(pillTheme),
+            background: "var(--chloe-surface)",
+            color: "var(--chloe-fg)",
+            borderColor: "var(--chloe-border)",
+          }}
           className={cn(
-            "fixed z-50 pointer-events-auto inline-flex items-center gap-2 rounded-full pl-3 pr-4 py-2 text-sm font-medium border border-border bg-background/70 text-foreground backdrop-blur-md shadow-md hover:bg-background/90 active:scale-[0.98] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+            "fixed z-50 pointer-events-auto inline-flex items-center gap-2 rounded-full pl-3 pr-4 py-2 text-sm font-medium border backdrop-blur-xl backdrop-saturate-150 shadow-[0_10px_30px_-12px_rgba(8,47,112,0.35)] hover:[background:var(--chloe-surface-strong)] active:scale-[0.98] transition-[background-color,color,border-color] duration-300 focus:outline-none focus-visible:ring-2 focus-visible:[--tw-ring-color:var(--chloe-ring)] focus-visible:ring-offset-2",
             "animate-widget-pill-entrance",
             showPulse && "animate-widget-pill-pulse",
             positionClass
@@ -451,6 +488,7 @@ export function ReceptionistWidget() {
           <span>Ask me anything</span>
         </button>
       )}
+
 
       {/* Chat panel — liquid glass to match Quick Index */}
       {open && (
