@@ -69,15 +69,18 @@ function detectFocusSection(text: string): string | undefined {
 }
 
 
-// Sample the background behind a fixed-position element and report whether
-// it is visually light or dark. Re-samples on scroll/resize and when `active`
-// flips. Used to drive Chloe's adaptive glass tint in real time so the widget
-// stays legible over both the dark hero and white content sections.
+// Sample the background behind a fixed-position element and report a
+// theme ("light"/"dark") plus a `solid` flag that flips on when the
+// surface is too light or visually busy (high luminance variance) for
+// translucent glass to stay legible. In `solid` mode the consumer
+// switches to a near-opaque surface so Chloe never disappears.
+type AdaptiveSurface = { theme: "light" | "dark"; solid: boolean };
+
 function useAdaptiveSurface(
   ref: React.RefObject<HTMLElement>,
   active: boolean
-): "light" | "dark" {
-  const [theme, setTheme] = useState<"light" | "dark">("light");
+): AdaptiveSurface {
+  const [state, setState] = useState<AdaptiveSurface>({ theme: "light", solid: false });
 
   useEffect(() => {
     if (!active || typeof window === "undefined") return;
@@ -91,26 +94,58 @@ function useAdaptiveSurface(
       return [parts[0], parts[1], parts[2], parts[3] ?? 1];
     };
 
+    // Walk the stack at (x,y) and return the first opaque-ish background
+    // luminance, defaulting to white when nothing qualifies.
+    const lumAt = (x: number, y: number, selfEl: HTMLElement): number => {
+      const stack = document.elementsFromPoint(x, y);
+      for (const node of stack) {
+        if (selfEl.contains(node)) continue;
+        const bg = getComputedStyle(node as Element).backgroundColor;
+        const rgb = parseRgb(bg);
+        if (rgb && rgb[3] > 0.1) {
+          return (0.299 * rgb[0] + 0.587 * rgb[1] + 0.114 * rgb[2]) / 255;
+        }
+      }
+      return 1; // assume white when transparent all the way down
+    };
+
     const sample = () => {
       const el = ref.current;
       if (!el) return;
       const rect = el.getBoundingClientRect();
-      const x = Math.max(1, Math.min(window.innerWidth - 1, rect.left + rect.width / 2));
-      const y = Math.max(1, Math.min(window.innerHeight - 1, rect.top + rect.height / 2));
-      const stack = document.elementsFromPoint(x, y);
-      let r = 255, g = 255, b = 255;
-      for (const node of stack) {
-        if (el.contains(node)) continue;
-        const bg = getComputedStyle(node as Element).backgroundColor;
-        const rgb = parseRgb(bg);
-        if (rgb && rgb[3] > 0.1) {
-          r = rgb[0]; g = rgb[1]; b = rgb[2];
-          break;
-        }
-      }
-      // perceived luminance (sRGB approx)
-      const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-      setTheme(lum > 0.6 ? "light" : "dark");
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+      // Sample 5 points: center + 4 inset corners. Used both for the
+      // dominant tint (center) and to gauge how busy the area is.
+      const inset = 6;
+      const pts: Array<[number, number]> = [
+        [cx, cy],
+        [rect.left + inset, rect.top + inset],
+        [rect.right - inset, rect.top + inset],
+        [rect.left + inset, rect.bottom - inset],
+        [rect.right - inset, rect.bottom - inset],
+      ].map(([x, y]) => [
+        Math.max(1, Math.min(window.innerWidth - 1, x)),
+        Math.max(1, Math.min(window.innerHeight - 1, y)),
+      ]);
+
+      const lums = pts.map(([x, y]) => lumAt(x, y, el));
+      const center = lums[0];
+      const min = Math.min(...lums);
+      const max = Math.max(...lums);
+      const range = max - min;
+
+      // Theme follows the dominant (center) luminance.
+      const theme: "light" | "dark" = center > 0.6 ? "light" : "dark";
+      // Fallback to a near-opaque surface when:
+      //  - background is very bright (translucent white-on-white vanishes), OR
+      //  - the area is visually busy (large luminance spread across samples),
+      //    which usually means imagery, gradients, or stacked content.
+      const solid = max > 0.85 || range > 0.35;
+
+      setState((prev) =>
+        prev.theme === theme && prev.solid === solid ? prev : { theme, solid }
+      );
     };
 
     const schedule = () => {
@@ -131,7 +166,7 @@ function useAdaptiveSurface(
     };
   }, [ref, active]);
 
-  return theme;
+  return state;
 }
 
 export function ReceptionistWidget() {
