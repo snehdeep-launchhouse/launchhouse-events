@@ -76,6 +76,40 @@ function detectFocusSection(text: string): string | undefined {
 // switches to a near-opaque surface so Chloe never disappears.
 type AdaptiveSurface = { theme: "light" | "dark"; solid: boolean };
 
+// Tunable thresholds for Chloe's adaptive glass surface. Luminance is
+// normalized [0,1] (Rec.601 weighted). Override at runtime via
+// `window.__CHLOE_SURFACE_CONFIG__` for live fine-tuning without a
+// rebuild — e.g. in devtools:
+//   window.__CHLOE_SURFACE_CONFIG__ = { brightnessSolidAt: 0.9 };
+export type ChloeSurfaceConfig = {
+  // Center-sample luminance above which the bg is treated as "light".
+  lightThemeAt: number;
+  // Max sampled luminance above which we force the opaque fallback
+  // (translucent white panel would vanish on near-white backgrounds).
+  brightnessSolidAt: number;
+  // Luminance spread (max - min across samples) above which we treat
+  // the area as "busy" (imagery, gradients, stacked content) and force
+  // the opaque fallback.
+  busySolidAt: number;
+  // Inset (px) from the panel's bounding rect for the 4 corner samples.
+  sampleInset: number;
+};
+
+export const CHLOE_SURFACE_DEFAULTS: ChloeSurfaceConfig = {
+  lightThemeAt: 0.6,
+  brightnessSolidAt: 0.85,
+  busySolidAt: 0.35,
+  sampleInset: 6,
+};
+
+function getSurfaceConfig(): ChloeSurfaceConfig {
+  if (typeof window === "undefined") return CHLOE_SURFACE_DEFAULTS;
+  const override = (window as any).__CHLOE_SURFACE_CONFIG__ as
+    | Partial<ChloeSurfaceConfig>
+    | undefined;
+  return override ? { ...CHLOE_SURFACE_DEFAULTS, ...override } : CHLOE_SURFACE_DEFAULTS;
+}
+
 function useAdaptiveSurface(
   ref: React.RefObject<HTMLElement>,
   active: boolean
