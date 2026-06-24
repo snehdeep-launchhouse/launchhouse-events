@@ -457,35 +457,41 @@ export function ReceptionistWidget() {
     ? "bottom-32 right-3 left-3 h-[24rem]"
     : "bottom-20 right-3 left-3 h-[28rem]";
 
-  // Adaptive glass tokens — recomputed when sampled theme changes.
-  const themeVars = (theme: "light" | "dark"): React.CSSProperties =>
-    theme === "light"
+  // Adaptive glass tokens — recomputed when sampled theme/solid changes.
+  // `solid` flips on over very bright or visually busy areas so the surface
+  // becomes near-opaque and stays legible without losing the glass look.
+  const themeVars = (
+    surface: { theme: "light" | "dark"; solid: boolean }
+  ): React.CSSProperties => {
+    const { theme, solid } = surface;
+    return theme === "light"
       ? ({
-          ["--chloe-surface" as any]: "rgba(255,255,255,0.55)",
-          ["--chloe-surface-strong" as any]: "rgba(255,255,255,0.75)",
-          ["--chloe-border" as any]: "rgba(15,23,42,0.14)",
-          ["--chloe-divider" as any]: "rgba(15,23,42,0.08)",
+          ["--chloe-surface" as any]: solid ? "rgba(255,255,255,0.92)" : "rgba(255,255,255,0.55)",
+          ["--chloe-surface-strong" as any]: solid ? "rgba(255,255,255,0.96)" : "rgba(255,255,255,0.75)",
+          ["--chloe-border" as any]: solid ? "rgba(15,23,42,0.22)" : "rgba(15,23,42,0.14)",
+          ["--chloe-divider" as any]: solid ? "rgba(15,23,42,0.14)" : "rgba(15,23,42,0.08)",
           ["--chloe-fg" as any]: "rgb(15,23,42)",
           ["--chloe-fg-muted" as any]: "rgba(15,23,42,0.65)",
-          ["--chloe-user-bg" as any]: "rgba(0,106,225,0.16)",
+          ["--chloe-user-bg" as any]: solid ? "rgba(0,106,225,0.22)" : "rgba(0,106,225,0.16)",
           ["--chloe-user-fg" as any]: "rgb(15,23,42)",
           ["--chloe-hairline" as any]: "rgba(15,23,42,0.18)",
           ["--chloe-ring" as any]: "rgba(0,106,225,0.55)",
           ["--chloe-ring-offset" as any]: "rgba(255,255,255,0.9)",
         } as React.CSSProperties)
       : ({
-          ["--chloe-surface" as any]: "rgba(15,23,42,0.55)",
-          ["--chloe-surface-strong" as any]: "rgba(15,23,42,0.75)",
-          ["--chloe-border" as any]: "rgba(255,255,255,0.18)",
-          ["--chloe-divider" as any]: "rgba(255,255,255,0.12)",
+          ["--chloe-surface" as any]: solid ? "rgba(8,15,32,0.92)" : "rgba(15,23,42,0.55)",
+          ["--chloe-surface-strong" as any]: solid ? "rgba(8,15,32,0.96)" : "rgba(15,23,42,0.75)",
+          ["--chloe-border" as any]: solid ? "rgba(255,255,255,0.28)" : "rgba(255,255,255,0.18)",
+          ["--chloe-divider" as any]: solid ? "rgba(255,255,255,0.18)" : "rgba(255,255,255,0.12)",
           ["--chloe-fg" as any]: "rgb(240,249,255)",
           ["--chloe-fg-muted" as any]: "rgba(224,242,254,0.75)",
-          ["--chloe-user-bg" as any]: "rgba(125,211,252,0.22)",
+          ["--chloe-user-bg" as any]: solid ? "rgba(125,211,252,0.32)" : "rgba(125,211,252,0.22)",
           ["--chloe-user-fg" as any]: "rgb(240,249,255)",
           ["--chloe-hairline" as any]: "rgba(255,255,255,0.5)",
           ["--chloe-ring" as any]: "rgba(125,211,252,0.7)",
           ["--chloe-ring-offset" as any]: "rgba(8,47,73,0.9)",
         } as React.CSSProperties);
+  };
 
   return (
     <>
